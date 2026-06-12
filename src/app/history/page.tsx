@@ -30,7 +30,6 @@ export default function HistoryPage() {
   }, [user])
 
   const stats = {
-    total: items.length,
     exact: items.filter(i => i.points_earned === 5).length,
     correct: items.filter(i => i.points_earned === 3).length,
     wrong: items.filter(i => i.points_earned === -1).length,
@@ -39,35 +38,33 @@ export default function HistoryPage() {
 
   if (loading || fetching) {
     return <div className="space-y-3">{[...Array(4)].map((_, i) => (
-      <div key={i} className="h-24 bg-gray-800 rounded-xl animate-pulse" />
+      <div key={i} className="h-24 bg-white rounded-xl border border-slate-200 animate-pulse" />
     ))}</div>
   }
 
   return (
     <div className="space-y-6">
-      <h1 className="text-2xl font-bold text-white">Lịch sử của tôi</h1>
+      <h1 className="text-2xl font-bold text-slate-800">📋 Lịch sử của tôi</h1>
 
-      {/* Stats */}
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
         {[
-          { label: 'Đúng tỉ số', value: stats.exact, color: 'text-green-400', pts: '+5 pts' },
-          { label: 'Đúng kết quả', value: stats.correct, color: 'text-blue-400', pts: '+3 pts' },
-          { label: 'Sai', value: stats.wrong, color: 'text-red-400', pts: '-1 pt' },
-          { label: 'Chờ kết quả', value: stats.pending, color: 'text-gray-400', pts: '—' },
+          { label: 'Đúng tỉ số', value: stats.exact, color: 'text-green-600', bg: 'bg-green-50', pts: '+5 pts' },
+          { label: 'Đúng kết quả', value: stats.correct, color: 'text-blue-600', bg: 'bg-blue-50', pts: '+3 pts' },
+          { label: 'Sai', value: stats.wrong, color: 'text-red-500', bg: 'bg-red-50', pts: '-1 pt' },
+          { label: 'Chờ kết quả', value: stats.pending, color: 'text-slate-500', bg: 'bg-slate-50', pts: '—' },
         ].map(s => (
-          <div key={s.label} className="bg-gray-800 rounded-xl p-4 border border-gray-700">
+          <div key={s.label} className={`${s.bg} rounded-xl p-4 border border-slate-200`}>
             <div className={`text-2xl font-bold ${s.color}`}>{s.value}</div>
-            <div className="text-xs text-gray-400 mt-0.5">{s.label}</div>
-            <div className="text-xs text-gray-500">{s.pts}</div>
+            <div className="text-xs text-slate-500 mt-0.5">{s.label}</div>
+            <div className="text-xs text-slate-400">{s.pts}</div>
           </div>
         ))}
       </div>
 
-      {/* List */}
       {items.length === 0 ? (
-        <div className="text-center text-gray-500 py-20">
+        <div className="text-center bg-white rounded-2xl border border-slate-200 py-20">
           <p className="text-4xl mb-3">🎯</p>
-          <p>Bạn chưa dự đoán trận nào.</p>
+          <p className="text-slate-500">Bạn chưa dự đoán trận nào.</p>
         </div>
       ) : (
         <div className="space-y-3">

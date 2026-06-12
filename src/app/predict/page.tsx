@@ -19,41 +19,25 @@ export default function PredictPage() {
   const [fetching, setFetching] = useState(true)
 
   useEffect(() => { init() }, [init])
-
-  useEffect(() => {
-    if (!loading && !user) router.replace('/login')
-  }, [user, loading, router])
+  useEffect(() => { if (!loading && !user) router.replace('/login') }, [user, loading, router])
 
   useEffect(() => {
     if (!user) return
     async function load() {
       setFetching(true)
-      const now = new Date().toISOString()
-
       const [{ data: ms }, { data: ps }] = await Promise.all([
-        supabase.from('matches').select('*')
-          .in('status', ['scheduled', 'live'])
-          .order('match_time', { ascending: true }),
+        supabase.from('matches').select('*').in('status', ['scheduled', 'live']).order('match_time', { ascending: true }),
         supabase.from('predictions').select('*').eq('user_id', user!.id),
       ])
-
       const matchList = ms ?? []
       const predMap: Record<string, Prediction> = {}
       const inputMap: Record<string, { home: string; away: string }> = {}
-
       ;(ps ?? []).forEach((p: Prediction) => { predMap[p.match_id] = p })
-
       matchList.forEach((m: Match) => {
-        if (predMap[m.id]) {
-          inputMap[m.id] = {
-            home: String(predMap[m.id].predicted_home),
-            away: String(predMap[m.id].predicted_away),
-          }
-        } else {
-          inputMap[m.id] = { home: '', away: '' }
-        }
+        inputMap[m.id] = predMap[m.id]
+          ? { home: String(predMap[m.id].predicted_home), away: String(predMap[m.id].predicted_away) }
+          : { home: '', away: '' }
       })
-
       setMatches(matchList)
       setPredictions(predMap)
       setInputs(inputMap)
@@ -65,24 +49,15 @@ export default function PredictPage() {
   async function savePrediction(matchId: string) {
     const inp = inputs[matchId]
     if (inp.home === '' || inp.away === '') return
-    const h = parseInt(inp.home)
-    const a = parseInt(inp.away)
+    const h = parseInt(inp.home), a = parseInt(inp.away)
     if (isNaN(h) || isNaN(a) || h < 0 || a < 0) return
-
     setSaving(matchId)
-    const payload = {
-      user_id: user!.id,
-      match_id: matchId,
-      predicted_home: h,
-      predicted_away: a,
-    }
-
-    const { error } = await supabase
-      .from('predictions')
-      .upsert(payload, { onConflict: 'user_id,match_id' })
-
+    const { error } = await supabase.from('predictions').upsert(
+      { user_id: user!.id, match_id: matchId, predicted_home: h, predicted_away: a },
+      { onConflict: 'user_id,match_id' }
+    )
     if (!error) {
-      setPredictions(prev => ({ ...prev, [matchId]: { ...payload, id: '', points_earned: null, scored_at: null, created_at: '' } }))
+      setPredictions(prev => ({ ...prev, [matchId]: { id: '', user_id: user!.id, match_id: matchId, predicted_home: h, predicted_away: a, points_earned: null, scored_at: null, created_at: '' } }))
       setSaved(matchId)
       setTimeout(() => setSaved(null), 2000)
     }
@@ -90,13 +65,9 @@ export default function PredictPage() {
   }
 
   if (loading || fetching) {
-    return (
-      <div className="space-y-3">
-        {[...Array(4)].map((_, i) => (
-          <div key={i} className="h-32 bg-gray-800 rounded-xl animate-pulse" />
-        ))}
-      </div>
-    )
+    return <div className="space-y-3">{[...Array(4)].map((_, i) => (
+      <div key={i} className="h-32 bg-white rounded-xl border border-slate-200 animate-pulse" />
+    ))}</div>
   }
 
   const unlocked = matches.filter(m => !m.is_locked)
@@ -105,53 +76,55 @@ export default function PredictPage() {
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-2xl font-bold text-white">Dự đoán</h1>
-        <p className="text-gray-400 text-sm mt-1">
-          Nhập tỉ số dự đoán trước khi trận bắt đầu. Đúng tỉ số: +5 pts · Đúng kết quả: +3 pts · Sai: -1 pt
-        </p>
+        <h1 className="text-2xl font-bold text-slate-800">🎯 Dự đoán</h1>
+        <div className="flex gap-4 mt-2">
+          <span className="text-xs bg-green-100 text-green-700 px-2.5 py-1 rounded-full font-medium">+5 pts đúng tỉ số</span>
+          <span className="text-xs bg-blue-100 text-blue-700 px-2.5 py-1 rounded-full font-medium">+3 pts đúng kết quả</span>
+          <span className="text-xs bg-red-100 text-red-700 px-2.5 py-1 rounded-full font-medium">-1 pt sai</span>
+        </div>
       </div>
 
       {unlocked.length === 0 && locked.length === 0 && (
-        <div className="text-center text-gray-500 py-20">
+        <div className="text-center bg-white rounded-2xl border border-slate-200 py-20">
           <p className="text-4xl mb-3">📅</p>
-          <p>Không có trận nào để dự đoán.</p>
+          <p className="text-slate-500">Không có trận nào để dự đoán.</p>
         </div>
       )}
 
       {unlocked.length > 0 && (
         <section className="space-y-3">
           {unlocked.map(match => (
-            <div key={match.id} className="bg-gray-800 rounded-xl p-4 border border-gray-700">
-              <MatchCard match={match} prediction={predictions[match.id]} />
-              <div className="mt-4 flex items-center gap-3">
+            <div key={match.id} className="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
+              <div className="p-4">
+                <MatchCard match={match} prediction={predictions[match.id]} />
+              </div>
+              <div className="px-4 pb-4 flex items-center gap-3 border-t border-slate-100 pt-3">
                 <div className="flex items-center gap-2 flex-1">
+                  <span className="text-sm text-slate-500 font-medium">{match.home_team.split(' ').pop()}</span>
                   <input
-                    type="number"
-                    min="0"
-                    max="20"
+                    type="number" min="0" max="20"
                     value={inputs[match.id]?.home ?? ''}
                     onChange={e => setInputs(p => ({ ...p, [match.id]: { ...p[match.id], home: e.target.value } }))}
                     placeholder="0"
-                    className="w-16 text-center bg-gray-700 border border-gray-600 rounded-lg py-2 text-white text-lg font-bold focus:outline-none focus:border-yellow-500"
+                    className="w-14 text-center border border-slate-300 rounded-lg py-2 text-slate-800 text-lg font-bold focus:outline-none focus:ring-2 focus:ring-green-500"
                   />
-                  <span className="text-gray-400 font-bold">–</span>
+                  <span className="text-slate-400 font-bold text-lg">–</span>
                   <input
-                    type="number"
-                    min="0"
-                    max="20"
+                    type="number" min="0" max="20"
                     value={inputs[match.id]?.away ?? ''}
                     onChange={e => setInputs(p => ({ ...p, [match.id]: { ...p[match.id], away: e.target.value } }))}
                     placeholder="0"
-                    className="w-16 text-center bg-gray-700 border border-gray-600 rounded-lg py-2 text-white text-lg font-bold focus:outline-none focus:border-yellow-500"
+                    className="w-14 text-center border border-slate-300 rounded-lg py-2 text-slate-800 text-lg font-bold focus:outline-none focus:ring-2 focus:ring-green-500"
                   />
+                  <span className="text-sm text-slate-500 font-medium">{match.away_team.split(' ').pop()}</span>
                 </div>
                 <button
                   onClick={() => savePrediction(match.id)}
                   disabled={saving === match.id}
-                  className={`px-4 py-2 rounded-lg font-semibold text-sm transition-colors ${
+                  className={`px-5 py-2 rounded-lg font-semibold text-sm transition-colors ${
                     saved === match.id
-                      ? 'bg-green-600 text-white'
-                      : 'bg-yellow-500 hover:bg-yellow-400 text-black'
+                      ? 'bg-green-100 text-green-700'
+                      : 'bg-green-600 hover:bg-green-700 text-white'
                   } disabled:opacity-50`}
                 >
                   {saved === match.id ? '✓ Đã lưu' : saving === match.id ? '...' : predictions[match.id] ? 'Cập nhật' : 'Lưu'}
@@ -164,11 +137,9 @@ export default function PredictPage() {
 
       {locked.length > 0 && (
         <section>
-          <h2 className="text-sm font-semibold text-gray-400 mb-3">🔒 Đã khóa dự đoán</h2>
+          <h2 className="text-sm font-semibold text-slate-400 mb-3">🔒 Đã khóa dự đoán</h2>
           <div className="space-y-3 opacity-60">
-            {locked.map(match => (
-              <MatchCard key={match.id} match={match} prediction={predictions[match.id]} />
-            ))}
+            {locked.map(match => <MatchCard key={match.id} match={match} prediction={predictions[match.id]} />)}
           </div>
         </section>
       )}

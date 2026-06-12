@@ -19,10 +19,10 @@ export default function Navbar() {
   ]
 
   return (
-    <nav className="sticky top-0 z-50 bg-gray-900 border-b border-gray-800">
+    <nav className="sticky top-0 z-50 bg-white border-b border-slate-200 shadow-sm">
       <div className="max-w-5xl mx-auto px-4 h-14 flex items-center justify-between">
-        <Link href="/" className="flex items-center gap-2 font-bold text-white text-lg">
-          ⚽ <span className="text-yellow-400">WorldCup</span> Predict
+        <Link href="/" className="flex items-center gap-2 font-bold text-slate-900 text-lg">
+          ⚽ <span className="text-green-600">WorldCup</span><span className="text-slate-700"> Predict</span>
         </Link>
 
         <div className="hidden md:flex items-center gap-1">
@@ -32,8 +32,8 @@ export default function Navbar() {
               href={l.href}
               className={`px-3 py-1.5 rounded-md text-sm font-medium transition-colors ${
                 pathname === l.href
-                  ? 'bg-gray-700 text-white'
-                  : 'text-gray-300 hover:text-white hover:bg-gray-800'
+                  ? 'bg-green-50 text-green-700 font-semibold'
+                  : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100'
               }`}
             >
               {l.label}
@@ -42,7 +42,11 @@ export default function Navbar() {
           {user?.role === 'admin' && (
             <Link
               href="/admin"
-              className="px-3 py-1.5 rounded-md text-sm font-medium text-yellow-400 hover:bg-gray-800"
+              className={`px-3 py-1.5 rounded-md text-sm font-medium transition-colors ${
+                pathname === '/admin'
+                  ? 'bg-amber-50 text-amber-700 font-semibold'
+                  : 'text-amber-600 hover:bg-amber-50'
+              }`}
             >
               Admin
             </Link>
@@ -51,16 +55,16 @@ export default function Navbar() {
 
         <div className="flex items-center gap-3">
           {loading ? (
-            <div className="w-20 h-7 bg-gray-700 rounded animate-pulse" />
+            <div className="w-20 h-7 bg-slate-200 rounded animate-pulse" />
           ) : user ? (
             <div className="flex items-center gap-2">
-              <span className="text-sm text-gray-300 hidden sm:block">{user.display_name}</span>
-              <span className="bg-yellow-500 text-black text-xs font-bold px-2 py-1 rounded-full">
+              <span className="text-sm text-slate-600 hidden sm:block">{user.display_name}</span>
+              <span className="bg-green-100 text-green-700 text-xs font-bold px-2.5 py-1 rounded-full">
                 {user.total_points} pts
               </span>
               <button
                 onClick={async () => { await signOut(); router.push('/login') }}
-                className="text-gray-400 hover:text-white text-sm"
+                className="text-slate-400 hover:text-slate-700 text-sm transition-colors"
               >
                 Đăng xuất
               </button>
@@ -68,7 +72,7 @@ export default function Navbar() {
           ) : (
             <Link
               href="/login"
-              className="bg-yellow-500 hover:bg-yellow-400 text-black font-semibold text-sm px-4 py-1.5 rounded-md transition-colors"
+              className="bg-green-600 hover:bg-green-700 text-white font-semibold text-sm px-4 py-1.5 rounded-md transition-colors"
             >
               Đăng nhập
             </Link>
