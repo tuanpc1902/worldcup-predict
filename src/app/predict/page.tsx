@@ -6,6 +6,8 @@ import { useAuthStore } from '@/store/auth'
 import { fmtTime, fmtDate, isStarted } from '@/lib/time'
 import FlagImg from '@/components/FlagImg'
 import { isPlaceholder } from '@/lib/team-utils'
+import LazyList from '@/components/LazyList'
+import { MatchCardSkeleton } from '@/components/Skeleton'
 import type { Match, Prediction } from '@/types'
 
 const STAGE_LABELS: Record<string, string> = {
@@ -84,9 +86,8 @@ export default function PredictPage() {
   if (loading || fetching) {
     return (
       <div className="max-w-2xl mx-auto space-y-3">
-        {[...Array(4)].map((_, i) => (
-          <div key={i} className="h-32 bg-white rounded-xl border border-slate-200 animate-pulse" />
-        ))}
+        <div className="h-8 w-32 bg-slate-200 rounded animate-pulse" />
+        {[...Array(4)].map((_, i) => <MatchCardSkeleton key={i} />)}
       </div>
     )
   }
@@ -191,32 +192,38 @@ export default function PredictPage() {
 
       {locked.length > 0 && (
         <section>
-          <h2 className="text-sm font-semibold text-slate-400 uppercase tracking-wide mb-3">🔒 Đã khoá dự đoán</h2>
+          <h2 className="text-sm font-semibold text-slate-400 uppercase tracking-wide mb-3">
+            🔒 Đã khoá dự đoán · {locked.length} trận
+          </h2>
           <div className="space-y-2 opacity-70">
-            {locked.map(match => {
-              const pred = predictions[match.id]
-              return (
-                <div key={match.id} className="bg-white rounded-xl border border-slate-200 px-4 py-3 flex items-center gap-3">
-                  <div className="flex items-center gap-1.5 flex-1 min-w-0">
-                    <FlagImg team={match.home_team} flag={match.home_flag} size="xs" />
-                    <span className="text-sm font-medium text-slate-700 truncate">{match.home_team}</span>
-                  </div>
-                  <div className="text-center flex-shrink-0">
-                    <div className="text-xs font-bold text-slate-500">{fmtTime(match.match_time)}</div>
-                    <div className="text-xs text-slate-400">{fmtDate(match.match_time)}</div>
-                  </div>
-                  <div className="flex items-center gap-1.5 flex-1 min-w-0 justify-end">
-                    <span className="text-sm font-medium text-slate-700 truncate text-right">{match.away_team}</span>
-                    <FlagImg team={match.away_team} flag={match.away_flag} size="xs" />
-                  </div>
-                  {pred && (
-                    <div className="ml-2 text-xs bg-slate-100 text-slate-600 px-2 py-1 rounded-lg font-semibold flex-shrink-0">
-                      {pred.predicted_home}–{pred.predicted_away}
+            <LazyList
+              items={locked}
+              pageSize={15}
+              renderItem={(match) => {
+                const pred = predictions[match.id]
+                return (
+                  <div key={match.id} className="bg-white rounded-xl border border-slate-200 px-4 py-3 flex items-center gap-3">
+                    <div className="flex items-center gap-1.5 flex-1 min-w-0">
+                      <FlagImg team={match.home_team} flag={match.home_flag} size="xs" />
+                      <span className="text-sm font-medium text-slate-700 truncate">{match.home_team}</span>
                     </div>
-                  )}
-                </div>
-              )
-            })}
+                    <div className="text-center flex-shrink-0">
+                      <div className="text-xs font-bold text-slate-500">{fmtTime(match.match_time)}</div>
+                      <div className="text-xs text-slate-400">{fmtDate(match.match_time)}</div>
+                    </div>
+                    <div className="flex items-center gap-1.5 flex-1 min-w-0 justify-end">
+                      <span className="text-sm font-medium text-slate-700 truncate text-right">{match.away_team}</span>
+                      <FlagImg team={match.away_team} flag={match.away_flag} size="xs" />
+                    </div>
+                    {pred && (
+                      <div className="ml-2 text-xs bg-slate-100 text-slate-600 px-2 py-1 rounded-lg font-semibold flex-shrink-0">
+                        {pred.predicted_home}–{pred.predicted_away}
+                      </div>
+                    )}
+                  </div>
+                )
+              }}
+            />
           </div>
         </section>
       )}

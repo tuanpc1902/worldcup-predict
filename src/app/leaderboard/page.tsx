@@ -1,6 +1,7 @@
 'use client'
 import { useEffect, useState } from 'react'
 import { createClient } from '@/lib/supabase'
+import { LeaderboardRowSkeleton } from '@/components/Skeleton'
 import type { LeaderboardEntry } from '@/types'
 
 export default function LeaderboardPage() {
@@ -27,9 +28,13 @@ export default function LeaderboardPage() {
   const medals = ['🥇', '🥈', '🥉']
 
   if (loading) return (
-    <div className="space-y-3">{[...Array(8)].map((_, i) => (
-      <div key={i} className="h-14 bg-white rounded-xl border border-slate-200 animate-pulse" />
-    ))}</div>
+    <div className="space-y-6">
+      <div className="h-8 w-48 bg-slate-200 rounded animate-pulse" />
+      <div className="bg-white rounded-2xl border border-slate-200 overflow-hidden">
+        <div className="h-36 bg-amber-50 animate-pulse border-b border-slate-100" />
+        {[...Array(8)].map((_, i) => <LeaderboardRowSkeleton key={i} />)}
+      </div>
+    </div>
   )
 
   return (
