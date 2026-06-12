@@ -26,11 +26,11 @@ export default function Navbar() {
 
         {/* Logo */}
         <Link href="/" className="flex items-center gap-1.5 flex-shrink-0 select-none">
-          <span className="flex items-center justify-center w-8 h-8 rounded-lg text-white text-base font-black leading-none" style={{ background: 'var(--brand)' }}>
+          <span className="flex items-center justify-center w-8 h-8 rounded-lg text-white text-base font-black leading-none" style={{ background: 'var(--brand) !important' }}>
             ⚽
           </span>
-          <span className="font-black text-[17px] tracking-tight leading-none" style={{ color: 'var(--brand)' }}>
-            WC<span style={{ color: 'var(--accent)' }}>88</span>
+          <span className="font-black text-[25px] tracking-tight leading-none" style={{ color: 'var(--brand) !important' }}>
+            WC<span style={{ color: 'var(--accent) !important' }}> 88</span>
           </span>
         </Link>
 
@@ -43,7 +43,7 @@ export default function Navbar() {
                   ? 'bg-slate-100 font-semibold'
                   : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100'
               }`}
-              style={pathname === l.href ? { color: 'var(--brand)' } : undefined}
+              style={pathname === l.href ? { color: 'var(--brand) !important' } : undefined}
             >
               {l.label}
             </Link>
@@ -73,12 +73,12 @@ export default function Navbar() {
           ) : user ? (
             <div className="flex items-center gap-2">
               <Link href={`/profile/${user.id}`} className="flex items-center gap-1.5 hover:opacity-80 transition-opacity">
-                <div className="w-7 h-7 rounded-full flex items-center justify-center text-xs font-bold text-white" style={{ background: 'var(--brand)' }}>
+                <div className="w-7 h-7 rounded-full flex items-center justify-center text-xs font-bold text-white" style={{ background: 'var(--brand) !important' }}>
                   {user.display_name[0]?.toUpperCase()}
                 </div>
                 <span className="hidden sm:block text-sm text-slate-600 max-w-[6rem] truncate">{user.display_name}</span>
               </Link>
-              <span className="text-xs font-bold px-2 py-1 rounded-full whitespace-nowrap" style={{ background: 'var(--brand-bg)', color: 'var(--brand)' }}>
+              <span className="text-xs font-bold px-2 py-1 rounded-full whitespace-nowrap" style={{ background: 'var(--brand-bg)', color: 'var(--brand) !important' }}>
                 {user.total_points} pts
               </span>
               <button
@@ -91,7 +91,7 @@ export default function Navbar() {
           ) : (
             <Link href="/login"
               className="text-white font-semibold text-sm px-4 py-1.5 rounded-md transition-colors"
-              style={{ background: 'var(--brand)' }}
+              style={{ background: 'var(--brand) !important' }}
             >
               Đăng nhập
             </Link>
