@@ -18,6 +18,16 @@ create table public.groups (
   owner_id uuid not null references public.profiles on delete cascade,
   created_at timestamptz not null default now()
 );
+
+-- Group members (tạo TRƯỚC khi add policy cho groups)
+create table public.group_members (
+  group_id uuid not null references public.groups on delete cascade,
+  user_id uuid not null references public.profiles on delete cascade,
+  joined_at timestamptz not null default now(),
+  primary key (group_id, user_id)
+);
+
+-- RLS groups (sau khi group_members đã tồn tại)
 alter table public.groups enable row level security;
 create policy "Group members can view" on public.groups for select using (
   exists (select 1 from public.group_members gm where gm.group_id = id and gm.user_id = auth.uid())
@@ -26,13 +36,7 @@ create policy "Group members can view" on public.groups for select using (
 create policy "Anyone can create group" on public.groups for insert with check (auth.uid() = owner_id);
 create policy "Owner can update" on public.groups for update using (auth.uid() = owner_id);
 
--- Group members
-create table public.group_members (
-  group_id uuid not null references public.groups on delete cascade,
-  user_id uuid not null references public.profiles on delete cascade,
-  joined_at timestamptz not null default now(),
-  primary key (group_id, user_id)
-);
+-- RLS group_members
 alter table public.group_members enable row level security;
 create policy "Members can view group members" on public.group_members for select using (
   exists (select 1 from public.group_members gm where gm.group_id = group_id and gm.user_id = auth.uid())
@@ -67,7 +71,7 @@ select
 from public.group_members gm
 join public.profiles p on p.id = gm.user_id;
 
--- Score champion picks (call when tournament winner is known)
+-- Score champion picks
 create or replace function public.score_champion(p_winner text)
 returns void language plpgsql security definer as $$
 begin
