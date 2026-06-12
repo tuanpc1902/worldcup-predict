@@ -1,7 +1,7 @@
 import { createServiceSupabase } from '@/lib/supabase-server'
 import { notFound } from 'next/navigation'
 import MatchDetailClient from './MatchDetailClient'
-import type { Match, Comment, PredictionStats } from '@/types'
+import type { Match, Comment, PredictionStats, MatchGoal } from '@/types'
 
 export const dynamic = 'force-dynamic'
 
@@ -25,7 +25,7 @@ export default async function MatchDetailPage({ params }: { params: Promise<{ id
   const { id } = await params
   const supabase = createServiceSupabase()
 
-  const [{ data: match }, { data: predictions }, { data: comments }] = await Promise.all([
+  const [{ data: match }, { data: predictions }, { data: comments }, { data: goals }] = await Promise.all([
     supabase.from('matches').select('*').eq('id', id).single(),
     supabase.from('predictions')
       .select('predicted_home, predicted_away, points_earned, user_id, profiles(display_name, avatar_url)')
@@ -34,6 +34,10 @@ export default async function MatchDetailPage({ params }: { params: Promise<{ id
       .select('id, content, created_at, reactions, user_id, profiles(display_name, avatar_url)')
       .eq('match_id', id)
       .order('created_at', { ascending: true }),
+    supabase.from('match_goals')
+      .select('*')
+      .eq('match_id', id)
+      .order('minute', { ascending: true }),
   ])
 
   if (!match) notFound()
@@ -46,7 +50,14 @@ export default async function MatchDetailPage({ params }: { params: Promise<{ id
     profiles: Array.isArray(c.profiles) ? c.profiles[0] : c.profiles,
   }))
 
-  return <MatchDetailClient match={match as Match} stats={stats} comments={flatComments} />
+  return (
+    <MatchDetailClient
+      match={match as Match}
+      stats={stats}
+      comments={flatComments}
+      goals={(goals ?? []) as MatchGoal[]}
+    />
+  )
 }
 
 function buildPredictionStats(predictions: RawPrediction[]): PredictionStats {

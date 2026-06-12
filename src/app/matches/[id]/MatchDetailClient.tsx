@@ -7,7 +7,8 @@ import { useAuthStore } from '@/store/auth'
 import FlagImg from '@/components/FlagImg'
 import ShareCard from '@/components/ShareCard'
 import { fmtDate, fmtTime, fmtDateTime, isStarted } from '@/lib/time'
-import type { Match, Comment, PredictionStats } from '@/types'
+import type { Match, Comment, PredictionStats, MatchGoal } from '@/types'
+import type { RealtimePostgresInsertPayload, RealtimePostgresUpdatePayload } from '@supabase/supabase-js'
 
 const STAGE_LABELS: Record<string, string> = {
   group: 'Vòng bảng', round_of_32: 'Vòng 1/16', round_of_16: 'Vòng 1/8',
@@ -31,24 +32,49 @@ interface Props {
   match: Match
   stats: PredictionStats
   comments: Comment[]
+  goals: MatchGoal[]
 }
 
 const REACTIONS = ['🔥', '😱', '👍', '😂']
 
-export default function MatchDetailClient({ match, stats, comments: initialComments }: Props) {
+function useElapsed(matchTime: string, active: boolean) {
+  const [min, setMin] = useState(0)
+  useEffect(() => {
+    if (!active) return
+    function calc() {
+      setMin(Math.max(0, Math.floor((Date.now() - new Date(matchTime).getTime()) / 60000)))
+    }
+    calc()
+    const t = setInterval(calc, 30_000)
+    return () => clearInterval(t)
+  }, [matchTime, active])
+  return min
+}
+
+export default function MatchDetailClient({ match, stats, comments: initialComments, goals: initialGoals }: Props) {
   const { user, init } = useAuthStore()
   const router = useRouter()
   const supabase = createClient()
 
-  const isFinished = match.status === 'finished'
-  const isLive = match.status === 'live'
-  const locked = match.is_locked || isStarted(match.match_time)
+  // Realtime match state (score/status updates)
+  const [liveMatch, setLiveMatch] = useState<Match>(match)
+  const isFinished = liveMatch.status === 'finished'
+  const isLive = liveMatch.status === 'live' || (
+    !isFinished &&
+    new Date(liveMatch.match_time) <= new Date() &&
+    (Date.now() - new Date(liveMatch.match_time).getTime()) / 60000 <= 115
+  )
+  const locked = liveMatch.is_locked || isStarted(liveMatch.match_time)
 
+  const elapsed = useElapsed(liveMatch.match_time, isLive)
+  const half = elapsed <= 45 ? '1' : elapsed <= 90 ? '2' : 'ET'
+  const dispMin = elapsed <= 45 ? elapsed : elapsed <= 90 ? elapsed - 45 : elapsed - 90
+
+  const [liveGoals, setLiveGoals] = useState<MatchGoal[]>(initialGoals)
   const [myPrediction, setMyPrediction] = useState<{ home: string; away: string }>({ home: '', away: '' })
   const [savedPrediction, setSavedPrediction] = useState<SavedPrediction | null>(null)
   const [saving, setSaving] = useState(false)
   const [predSaved, setPredSaved] = useState(false)
-
   const [liveStats, setLiveStats] = useState<PredictionStats>(stats)
   const [comments, setComments] = useState<Comment[]>(initialComments)
   const [commentText, setCommentText] = useState('')
@@ -57,6 +83,33 @@ export default function MatchDetailClient({ match, stats, comments: initialComme
 
   useEffect(() => { init() }, [init])
 
+  // Realtime: match score & status
+  useEffect(() => {
+    const ch = supabase
+      .channel(`match:${match.id}`)
+      .on('postgres_changes', {
+        event: 'UPDATE', schema: 'public', table: 'matches', filter: `id=eq.${match.id}`,
+      }, (payload: RealtimePostgresUpdatePayload<Match>) => {
+        setLiveMatch(payload.new)
+      })
+      .subscribe()
+    return () => { supabase.removeChannel(ch) }
+  }, [match.id])
+
+  // Realtime: new goals
+  useEffect(() => {
+    const ch = supabase
+      .channel(`goals:${match.id}`)
+      .on('postgres_changes', {
+        event: 'INSERT', schema: 'public', table: 'match_goals', filter: `match_id=eq.${match.id}`,
+      }, (payload: RealtimePostgresInsertPayload<MatchGoal>) => {
+        setLiveGoals(prev => [...prev, payload.new].sort((a, b) => (a.minute ?? 0) - (b.minute ?? 0)))
+      })
+      .subscribe()
+    return () => { supabase.removeChannel(ch) }
+  }, [match.id])
+
+  // Load user prediction
   useEffect(() => {
     if (!user) return
     supabase.from('predictions')
@@ -86,7 +139,6 @@ export default function MatchDetailClient({ match, stats, comments: initialComme
       setSavedPrediction({ predicted_home: h, predicted_away: a, points_earned: null })
       setPredSaved(true)
       setTimeout(() => setPredSaved(false), 2500)
-      // Re-fetch stats to reflect new prediction count
       refreshStats()
     }
     setSaving(false)
@@ -153,6 +205,11 @@ export default function MatchDetailClient({ match, stats, comments: initialComme
     savedPrediction?.points_earned === -1 ? 'bg-red-100 text-red-700 border-red-200' :
     'bg-slate-50 text-slate-600 border-slate-200'
 
+  // Separate goals by team
+  const homeGoals = liveGoals.filter(g => g.team_name === liveMatch.home_team && !g.is_own_goal)
+  const awayGoals = liveGoals.filter(g => g.team_name === liveMatch.away_team && !g.is_own_goal)
+  const ownGoals  = liveGoals.filter(g => g.is_own_goal)
+
   return (
     <div className="max-w-2xl mx-auto space-y-4 pb-20">
       {/* Back */}
@@ -160,16 +217,40 @@ export default function MatchDetailClient({ match, stats, comments: initialComme
         Quay lại
       </button>
 
-      {/* Match Hero */}
-      <div className="bg-white rounded-2xl border border-slate-200 p-6">
+      {/* ── LIVE WATCH BANNER ── */}
+      {isLive && (
+        <a
+          href="https://vtvgo.vn/"
+          target="_blank"
+          rel="noopener noreferrer"
+          className="flex items-center gap-3 rounded-2xl px-5 py-4 text-white shadow-lg transition-opacity hover:opacity-90"
+          style={{ background: 'linear-gradient(135deg, #8b0000, #cc0000)' }}
+        >
+          <div className="flex-shrink-0 w-12 h-12 rounded-full bg-white/20 flex items-center justify-center text-2xl">
+            ▶
+          </div>
+          <div className="flex-1 min-w-0">
+            <p className="font-bold text-base leading-tight">Xem trực tiếp ngay</p>
+            <p className="text-red-200 text-sm mt-0.5">VTVGo · vtvgo.vn</p>
+          </div>
+          <div className="flex items-center gap-1.5 flex-shrink-0 bg-white/20 rounded-full px-3 py-1">
+            <span className="w-2 h-2 bg-red-300 rounded-full animate-pulse" />
+            <span className="text-xs font-bold">LIVE</span>
+          </div>
+        </a>
+      )}
+
+      {/* ── MATCH HERO ── */}
+      <div className={`bg-white rounded-2xl border p-6 ${isLive ? 'border-red-200' : 'border-slate-200'}`}>
         <div className="flex items-center justify-between mb-4">
           <span className="text-xs font-medium text-slate-500 bg-slate-100 px-3 py-1 rounded-full">
-            {STAGE_LABELS[match.stage] ?? match.stage}
-            {match.group_name && ` · ${match.group_name}`}
+            {STAGE_LABELS[liveMatch.stage] ?? liveMatch.stage}
+            {liveMatch.group_name && ` · ${liveMatch.group_name}`}
           </span>
           {isLive && (
             <span className="flex items-center gap-1.5 text-xs font-bold text-red-500 bg-red-50 px-3 py-1 rounded-full">
-              <span className="w-2 h-2 bg-red-500 rounded-full animate-pulse" /> LIVE
+              <span className="w-2 h-2 bg-red-500 rounded-full animate-pulse" />
+              H{half} {dispMin}&apos;
             </span>
           )}
           {isFinished && (
@@ -180,39 +261,99 @@ export default function MatchDetailClient({ match, stats, comments: initialComme
         {/* Teams */}
         <div className="flex items-center justify-between gap-4">
           <div className="flex-1 min-w-0 flex flex-col items-center gap-2 text-center">
-            <FlagImg team={match.home_team} flag={match.home_flag} size="xl" />
-            <p className="font-bold text-slate-800 text-base leading-tight line-clamp-2 w-full px-1 break-words">{match.home_team}</p>
+            <FlagImg team={liveMatch.home_team} flag={liveMatch.home_flag} size="xl" />
+            <p className="font-bold text-slate-800 text-base leading-tight line-clamp-2 w-full px-1 break-words">{liveMatch.home_team}</p>
+            {/* Home scorers under flag */}
+            {homeGoals.length > 0 && (
+              <div className="text-xs text-slate-500 space-y-0.5 w-full">
+                {homeGoals.map(g => (
+                  <p key={g.id} className="truncate">⚽ {g.player_name}{g.minute ? ` ${g.minute}'` : ''}{g.is_penalty ? ' (pen)' : ''}</p>
+                ))}
+              </div>
+            )}
           </div>
 
-          <div className="flex-shrink-0 text-center">
+          <div className="flex-shrink-0 text-center min-w-[80px]">
             {isFinished || isLive ? (
               <div className={`text-4xl font-black tabular-nums px-4 py-2 rounded-2xl ${
                 isLive ? 'text-red-600 bg-red-50' : 'text-slate-800 bg-slate-100'
               }`}>
-                {match.home_score ?? 0} – {match.away_score ?? 0}
+                {liveMatch.home_score ?? 0} – {liveMatch.away_score ?? 0}
               </div>
             ) : (
               <div className="bg-slate-50 rounded-2xl px-6 py-3 text-center">
-                <div className="text-2xl font-black text-slate-800">{fmtTime(match.match_time)}</div>
-                <div className="text-sm text-slate-500 mt-0.5">{fmtDate(match.match_time)}</div>
+                <div className="text-2xl font-black text-slate-800">{fmtTime(liveMatch.match_time)}</div>
+                <div className="text-sm text-slate-500 mt-0.5">{fmtDate(liveMatch.match_time)}</div>
               </div>
             )}
             <div className="text-xs text-slate-400 mt-2">VS</div>
           </div>
 
           <div className="flex-1 min-w-0 flex flex-col items-center gap-2 text-center">
-            <FlagImg team={match.away_team} flag={match.away_flag} size="xl" />
-            <p className="font-bold text-slate-800 text-base leading-tight line-clamp-2 w-full px-1 break-words">{match.away_team}</p>
+            <FlagImg team={liveMatch.away_team} flag={liveMatch.away_flag} size="xl" />
+            <p className="font-bold text-slate-800 text-base leading-tight line-clamp-2 w-full px-1 break-words">{liveMatch.away_team}</p>
+            {awayGoals.length > 0 && (
+              <div className="text-xs text-slate-500 space-y-0.5 w-full">
+                {awayGoals.map(g => (
+                  <p key={g.id} className="truncate">⚽ {g.player_name}{g.minute ? ` ${g.minute}'` : ''}{g.is_penalty ? ' (pen)' : ''}</p>
+                ))}
+              </div>
+            )}
           </div>
         </div>
 
-        {match.venue && (
-          <p className="text-center text-xs text-slate-400 mt-4">📍 {match.venue}</p>
+        {/* Own goals */}
+        {ownGoals.length > 0 && (
+          <p className="text-center text-xs text-slate-400 mt-2">
+            OG: {ownGoals.map(g => `${g.player_name}${g.minute ? ` ${g.minute}'` : ''}`).join(', ')}
+          </p>
+        )}
+
+        {liveMatch.venue && (
+          <p className="text-center text-xs text-slate-400 mt-4">📍 {liveMatch.venue}</p>
         )}
       </div>
 
-      {/* Live stream links — show only for upcoming/live matches */}
-      {!isFinished && (
+      {/* ── GOAL TIMELINE ── */}
+      {liveGoals.length > 0 && (
+        <div className="bg-white rounded-2xl border border-slate-200 p-5">
+          <h2 className="font-bold text-sm text-slate-700 mb-4">⚽ Diễn biến bàn thắng</h2>
+          <div className="relative">
+            {/* Center line */}
+            <div className="absolute left-1/2 top-0 bottom-0 w-px bg-slate-100 -translate-x-1/2" />
+            <div className="space-y-3">
+              {liveGoals.map(g => {
+                const isHome = g.team_name === liveMatch.home_team
+                return (
+                  <div key={g.id} className={`flex items-center gap-3 ${isHome ? 'flex-row' : 'flex-row-reverse'}`}>
+                    {/* Player info */}
+                    <div className={`flex-1 ${isHome ? 'text-right' : 'text-left'}`}>
+                      <p className="text-sm font-semibold text-slate-800 leading-tight">
+                        {g.is_own_goal ? '(OG) ' : ''}{g.player_name}
+                        {g.is_penalty ? ' 🅿' : ''}
+                      </p>
+                      <p className="text-xs text-slate-400">{g.team_name}</p>
+                    </div>
+                    {/* Minute badge */}
+                    <div className="flex-shrink-0 w-12 flex justify-center">
+                      <span className="text-xs font-bold bg-slate-800 text-white rounded-full px-2 py-0.5 tabular-nums">
+                        {g.minute ?? '?'}&apos;
+                      </span>
+                    </div>
+                    {/* Flag side */}
+                    <div className="flex-1 flex items-center gap-1.5 min-w-0" style={{ flexDirection: isHome ? 'row-reverse' : 'row' }}>
+                      <FlagImg team={g.team_name} flag={g.team_flag} size="xs" />
+                    </div>
+                  </div>
+                )
+              })}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Live stream reminder (not-finished, not-yet-started) */}
+      {!isFinished && !isLive && (
         <div className="bg-white rounded-2xl border border-slate-200 p-4">
           <p className="text-xs font-semibold text-slate-500 uppercase tracking-wide mb-3">📺 Xem trực tiếp tại Việt Nam</p>
           <a
@@ -221,88 +362,87 @@ export default function MatchDetailClient({ match, stats, comments: initialComme
             rel="noopener noreferrer"
             className="flex items-center gap-3 px-4 py-3 rounded-xl border border-slate-200 hover:border-slate-300 hover:shadow-sm transition-all"
           >
-            <span className="w-2.5 h-2.5 rounded-full bg-red-500 animate-pulse flex-shrink-0" />
+            <span className="w-2.5 h-2.5 rounded-full bg-red-500 flex-shrink-0" />
             <span className="font-semibold text-sm" style={{ color: '#005baa' }}>VTVGo — Xem trực tiếp</span>
             <span className="ml-auto text-slate-400 text-xs">vtvgo.vn ↗</span>
           </a>
         </div>
       )}
 
-      {/* My Prediction */}
+      {/* ── MY PREDICTION ── */}
       {user && (
         <>
-        <div className={`bg-white rounded-2xl border p-5 ${pointsBg}`}>
-          <h2 className="font-bold text-sm mb-3">
-            {savedPrediction ? '⚽ Dự đoán của bạn' : '✏️ Nhập dự đoán'}
-          </h2>
+          <div className={`bg-white rounded-2xl border p-5 ${pointsBg}`}>
+            <h2 className="font-bold text-sm mb-3">
+              {savedPrediction ? '⚽ Dự đoán của bạn' : '✏️ Nhập dự đoán'}
+            </h2>
 
-          {savedPrediction && (
-            <div className="flex items-center justify-between mb-3">
-              <span className="text-2xl font-black tabular-nums">
-                {savedPrediction.predicted_home} – {savedPrediction.predicted_away}
-              </span>
-              {savedPrediction.points_earned !== null ? (
-                <span className="text-lg font-black">
-                  {savedPrediction.points_earned > 0 ? '+' : ''}{savedPrediction.points_earned} pts
+            {savedPrediction && (
+              <div className="flex items-center justify-between mb-3">
+                <span className="text-2xl font-black tabular-nums">
+                  {savedPrediction.predicted_home} – {savedPrediction.predicted_away}
                 </span>
-              ) : (
-                <span className="text-xs text-slate-400">Chờ kết quả</span>
-              )}
-            </div>
-          )}
-
-          {!locked && (
-            <div className="flex items-center gap-3">
-              <div className="flex items-center gap-2 flex-1">
-                <span className="text-xs text-slate-500 truncate flex-1 text-right">{match.home_team}</span>
-                <input
-                  type="number" min="0" max="20"
-                  value={myPrediction.home}
-                  onChange={e => setMyPrediction(p => ({ ...p, home: e.target.value }))}
-                  className="w-14 h-10 text-center text-lg font-bold border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500"
-                  placeholder="0"
-                />
-                <span className="text-slate-400 font-bold">–</span>
-                <input
-                  type="number" min="0" max="20"
-                  value={myPrediction.away}
-                  onChange={e => setMyPrediction(p => ({ ...p, away: e.target.value }))}
-                  className="w-14 h-10 text-center text-lg font-bold border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500"
-                  placeholder="0"
-                />
-                <span className="text-xs text-slate-500 truncate flex-1">{match.away_team}</span>
+                {savedPrediction.points_earned !== null ? (
+                  <span className="text-lg font-black">
+                    {savedPrediction.points_earned > 0 ? '+' : ''}{savedPrediction.points_earned} pts
+                  </span>
+                ) : (
+                  <span className="text-xs text-slate-400">Chờ kết quả</span>
+                )}
               </div>
-              <button
-                onClick={savePrediction}
-                disabled={saving || !myPrediction.home || !myPrediction.away}
-                className="px-4 py-2 bg-green-600 hover:bg-green-700 disabled:opacity-50 text-white text-sm font-bold rounded-lg transition-colors"
-              >
-                {saving ? '...' : predSaved ? '✓' : 'Lưu'}
-              </button>
+            )}
+
+            {!locked && (
+              <div className="flex items-center gap-3">
+                <div className="flex items-center gap-2 flex-1">
+                  <span className="text-xs text-slate-500 truncate flex-1 text-right">{liveMatch.home_team}</span>
+                  <input
+                    type="number" min="0" max="20"
+                    value={myPrediction.home}
+                    onChange={e => setMyPrediction(p => ({ ...p, home: e.target.value }))}
+                    className="w-14 h-10 text-center text-lg font-bold border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500"
+                    placeholder="0"
+                  />
+                  <span className="text-slate-400 font-bold">–</span>
+                  <input
+                    type="number" min="0" max="20"
+                    value={myPrediction.away}
+                    onChange={e => setMyPrediction(p => ({ ...p, away: e.target.value }))}
+                    className="w-14 h-10 text-center text-lg font-bold border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500"
+                    placeholder="0"
+                  />
+                  <span className="text-xs text-slate-500 truncate flex-1">{liveMatch.away_team}</span>
+                </div>
+                <button
+                  onClick={savePrediction}
+                  disabled={saving || !myPrediction.home || !myPrediction.away}
+                  className="px-4 py-2 bg-green-600 hover:bg-green-700 disabled:opacity-50 text-white text-sm font-bold rounded-lg transition-colors"
+                >
+                  {saving ? '...' : predSaved ? '✓' : 'Lưu'}
+                </button>
+              </div>
+            )}
+
+            {locked && !savedPrediction && (
+              <p className="text-sm text-slate-500">🔒 Trận đã bắt đầu, không thể dự đoán</p>
+            )}
+          </div>
+
+          {isFinished && savedPrediction?.points_earned !== null && savedPrediction?.points_earned !== undefined && (
+            <div className="bg-white rounded-2xl border border-slate-200 p-5">
+              <p className="font-bold text-sm text-slate-700 mb-3">📤 Chia sẻ kết quả</p>
+              <ShareCard
+                homeTeam={liveMatch.home_team}
+                awayTeam={liveMatch.away_team}
+                homeScore={liveMatch.home_score}
+                awayScore={liveMatch.away_score}
+                predictedHome={savedPrediction.predicted_home}
+                predictedAway={savedPrediction.predicted_away}
+                pointsEarned={savedPrediction.points_earned}
+                userName={user?.display_name ?? 'Bạn'}
+              />
             </div>
           )}
-
-          {locked && !savedPrediction && (
-            <p className="text-sm text-slate-500">🔒 Trận đã bắt đầu, không thể dự đoán</p>
-          )}
-        </div>
-
-        {/* Share card */}
-        {isFinished && savedPrediction?.points_earned !== null && savedPrediction?.points_earned !== undefined && (
-          <div className="bg-white rounded-2xl border border-slate-200 p-5">
-            <p className="font-bold text-sm text-slate-700 mb-3">📤 Chia sẻ kết quả</p>
-            <ShareCard
-              homeTeam={match.home_team}
-              awayTeam={match.away_team}
-              homeScore={match.home_score}
-              awayScore={match.away_score}
-              predictedHome={savedPrediction.predicted_home}
-              predictedAway={savedPrediction.predicted_away}
-              pointsEarned={savedPrediction.points_earned}
-              userName={user?.display_name ?? 'Bạn'}
-            />
-          </div>
-        )}
         </>
       )}
 
@@ -315,12 +455,10 @@ export default function MatchDetailClient({ match, stats, comments: initialComme
         </div>
       )}
 
-      {/* Community Stats */}
+      {/* ── COMMUNITY STATS ── */}
       {liveStats.total > 0 && (isFinished || locked) && (
         <div className="bg-white rounded-2xl border border-slate-200 p-5">
           <h2 className="font-bold text-sm text-slate-700 mb-4">📊 Dự đoán cộng đồng · {liveStats.total} người</h2>
-
-          {/* Win/Draw/Loss bar */}
           <div className="mb-4">
             <div className="flex h-3 rounded-full overflow-hidden gap-0.5">
               <div className="bg-blue-500 transition-all" style={{ width: `${liveStats.homeWin}%` }} />
@@ -328,13 +466,11 @@ export default function MatchDetailClient({ match, stats, comments: initialComme
               <div className="bg-orange-400 transition-all" style={{ width: `${liveStats.awayWin}%` }} />
             </div>
             <div className="flex justify-between text-xs mt-1.5">
-              <span className="text-blue-600 font-semibold">{match.home_team} thắng {liveStats.homeWin}%</span>
+              <span className="text-blue-600 font-semibold">{liveMatch.home_team} thắng {liveStats.homeWin}%</span>
               <span className="text-slate-500">Hòa {liveStats.draw}%</span>
-              <span className="text-orange-500 font-semibold">{liveStats.awayWin}% {match.away_team} thắng</span>
+              <span className="text-orange-500 font-semibold">{liveStats.awayWin}% {liveMatch.away_team} thắng</span>
             </div>
           </div>
-
-          {/* Top scores */}
           <div>
             <p className="text-xs text-slate-500 mb-2">Tỉ số phổ biến nhất</p>
             <div className="space-y-1.5">
@@ -352,10 +488,9 @@ export default function MatchDetailClient({ match, stats, comments: initialComme
         </div>
       )}
 
-      {/* Comments */}
+      {/* ── COMMENTS ── */}
       <div className="bg-white rounded-2xl border border-slate-200 p-5">
         <h2 className="font-bold text-sm text-slate-700 mb-4">💬 Bình luận · {comments.length}</h2>
-
         <div className="space-y-3 max-h-96 overflow-y-auto pr-1">
           {comments.length === 0 && (
             <p className="text-center text-slate-400 text-sm py-6">Chưa có bình luận. Hãy là người đầu tiên!</p>

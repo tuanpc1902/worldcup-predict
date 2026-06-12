@@ -220,7 +220,7 @@ export default function StandingsClient({ matches, topScorers }: Props) {
               <p className="text-slate-500 font-medium">Chưa có dữ liệu ghi bàn</p>
               <p className="text-slate-400 text-sm">Nhấn "Sync goals" ở trên sau khi các trận kết thúc</p>
               <p className="text-slate-300 text-xs mt-1">
-                Dữ liệu lấy từ openfootball/worldcup.json — cần chạy migration SQL trước
+                Dữ liệu lấy từ openfootball/worldcup.json
               </p>
             </div>
           ) : (

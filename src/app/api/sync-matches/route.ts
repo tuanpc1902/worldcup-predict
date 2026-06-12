@@ -105,6 +105,11 @@ export async function POST(req: NextRequest) {
       }
     }
 
+    // After syncing, update time-based live status
+    const now2 = new Date().toISOString()
+    await supabase.from('matches').update({ status: 'live' }).eq('status', 'scheduled').lte('match_time', now2)
+    await supabase.from('matches').update({ status: 'finished' }).eq('status', 'live').not('home_score', 'is', null).not('away_score', 'is', null)
+
     return NextResponse.json({
       message: `Inserted ${inserted}, updated ${updated}, skipped ${skipped}, scored ${scored}`,
       errors: errors.length > 0 ? errors : undefined,
