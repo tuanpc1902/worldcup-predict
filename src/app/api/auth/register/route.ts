@@ -35,12 +35,13 @@ export async function POST(req: NextRequest) {
     email,
     password,
     user_metadata: { full_name: name },
-    email_confirm: true, // skip email confirmation
+    email_confirm: true,
   })
 
-  if (authErr || !authData.user) {
+  if (authErr || !authData?.user) {
+    console.error('[register] createUser error:', authErr)
     return NextResponse.json(
-      { message: authErr?.message ?? 'Không thể tạo tài khoản' },
+      { message: authErr?.message ?? 'Không thể tạo tài khoản', debug: authErr },
       { status: 400 }
     )
   }
