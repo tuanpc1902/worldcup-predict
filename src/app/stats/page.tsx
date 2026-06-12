@@ -62,7 +62,7 @@ export default function StatsPage() {
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-2xl font-bold text-slate-800">📊 Thống kê của tôi</h1>
+        <h1 className="text-2xl font-bold text-slate-800">Thống kê của tôi</h1>
         <p className="text-slate-500 text-sm mt-1">Phân tích độ chính xác dự đoán</p>
       </div>
 
@@ -71,8 +71,8 @@ export default function StatsPage() {
         {[
           { label: 'Tổng điểm', value: totalPts, unit: 'pts', color: 'text-green-600', bg: 'bg-green-50' },
           { label: 'Độ chính xác', value: `${pct}%`, unit: '', color: 'text-blue-600', bg: 'bg-blue-50' },
-          { label: 'Chuỗi hiện tại', value: streak, unit: '🔥', color: 'text-orange-500', bg: 'bg-orange-50' },
-          { label: 'Chuỗi kỷ lục', value: maxStreak, unit: '⭐', color: 'text-amber-600', bg: 'bg-amber-50' },
+          { label: 'Chuỗi hiện tại', value: streak, unit: '', color: 'text-orange-500', bg: 'bg-orange-50' },
+          { label: 'Chuỗi kỷ lục', value: maxStreak, unit: '', color: 'text-amber-600', bg: 'bg-amber-50' },
         ].map(s => (
           <div key={s.label} className={`${s.bg} rounded-xl p-4 border border-slate-200`}>
             <div className={`text-2xl font-bold ${s.color}`}>{s.value} <span className="text-base">{s.unit}</span></div>

@@ -128,7 +128,7 @@ export default function PredictPage() {
   return (
     <div className="max-w-2xl mx-auto space-y-6 fade-in">
       <div>
-        <h1 className="text-2xl font-bold text-slate-800">🎯 Dự đoán</h1>
+        <h1 className="text-2xl font-bold text-slate-800">Dự đoán</h1>
         <div className="flex flex-wrap gap-2 mt-2">
           <span className="text-xs bg-green-100 text-green-700 px-2.5 py-1 rounded-full font-medium">+5 pts đúng tỉ số</span>
           <span className="text-xs bg-blue-100 text-blue-700 px-2.5 py-1 rounded-full font-medium">+3 pts đúng kết quả</span>
@@ -158,7 +158,7 @@ export default function PredictPage() {
                   : 'bg-green-600 hover:bg-green-700 text-white disabled:opacity-50'
               }`}
             >
-              {savingAll ? 'Đang lưu...' : savedAll ? '✓ Đã lưu tất cả' : '💾 Lưu tất cả'}
+              {savingAll ? 'Đang lưu...' : savedAll ? '✓ Đã lưu tất cả' : 'Lưu tất cả'}
             </button>
           </div>
           {unlocked.map(match => {

@@ -44,7 +44,7 @@ export default function HistoryPage() {
 
   return (
     <div className="space-y-6">
-      <h1 className="text-2xl font-bold text-slate-800">📋 Lịch sử của tôi</h1>
+      <h1 className="text-2xl font-bold text-slate-800">Lịch sử của tôi</h1>
 
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
         {[

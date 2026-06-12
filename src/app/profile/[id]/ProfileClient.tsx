@@ -89,7 +89,7 @@ export default function ProfileClient({ profile, predictions, rank }: Props) {
       {/* Head to head link */}
       <div className="bg-white rounded-xl border border-slate-200 p-4 flex items-center justify-between">
         <div>
-          <p className="font-semibold text-slate-700 text-sm">⚔️ So sánh với người khác</p>
+          <p className="font-semibold text-slate-700 text-sm">So sánh với người khác</p>
           <p className="text-xs text-slate-400 mt-0.5">Xem ai đoán chuẩn hơn theo từng trận</p>
         </div>
         <Link href={`/h2h?a=${profile.id}`} className="text-sm font-semibold text-green-600 hover:underline">
@@ -100,7 +100,7 @@ export default function ProfileClient({ profile, predictions, rank }: Props) {
       {/* Prediction history */}
       <div className="bg-white rounded-2xl border border-slate-200 overflow-hidden">
         <div className="px-4 py-3 border-b border-slate-100">
-          <h2 className="font-bold text-sm text-slate-700">📋 Lịch sử dự đoán · {predictions.length}</h2>
+          <h2 className="font-bold text-sm text-slate-700">Lịch sử dự đoán · {predictions.length}</h2>
         </div>
 
         {predictions.length === 0 ? (

@@ -310,14 +310,14 @@ export default function MatchDetailClient({ match, stats, comments: initialComme
         )}
 
         {liveMatch.venue && (
-          <p className="text-center text-xs text-slate-400 mt-4">📍 {liveMatch.venue}</p>
+          <p className="text-center text-xs text-slate-400 mt-4">{liveMatch.venue}</p>
         )}
       </div>
 
       {/* ── GOAL TIMELINE ── */}
       {liveGoals.length > 0 && (
         <div className="bg-white rounded-2xl border border-slate-200 p-5">
-          <h2 className="font-bold text-sm text-slate-700 mb-4">⚽ Diễn biến bàn thắng</h2>
+          <h2 className="font-bold text-sm text-slate-700 mb-4">Diễn biến bàn thắng</h2>
           <div className="relative">
             {/* Center line */}
             <div className="absolute left-1/2 top-0 bottom-0 w-px bg-slate-100 -translate-x-1/2" />
@@ -355,7 +355,7 @@ export default function MatchDetailClient({ match, stats, comments: initialComme
       {/* Live stream reminder (not-finished, not-yet-started) */}
       {!isFinished && !isLive && (
         <div className="bg-white rounded-2xl border border-slate-200 p-4">
-          <p className="text-xs font-semibold text-slate-500 uppercase tracking-wide mb-3">📺 Xem trực tiếp tại Việt Nam</p>
+          <p className="text-xs font-semibold text-slate-500 uppercase tracking-wide mb-3">Xem trực tiếp tại Việt Nam</p>
           <a
             href="https://vtvgo.vn/"
             target="_blank"
@@ -374,7 +374,7 @@ export default function MatchDetailClient({ match, stats, comments: initialComme
         <>
           <div className={`bg-white rounded-2xl border p-5 ${pointsBg}`}>
             <h2 className="font-bold text-sm mb-3">
-              {savedPrediction ? '⚽ Dự đoán của bạn' : '✏️ Nhập dự đoán'}
+              {savedPrediction ? 'Dự đoán của bạn' : 'Nhập dự đoán'}
             </h2>
 
             {savedPrediction && (
@@ -430,7 +430,7 @@ export default function MatchDetailClient({ match, stats, comments: initialComme
 
           {isFinished && savedPrediction?.points_earned !== null && savedPrediction?.points_earned !== undefined && (
             <div className="bg-white rounded-2xl border border-slate-200 p-5">
-              <p className="font-bold text-sm text-slate-700 mb-3">📤 Chia sẻ kết quả</p>
+              <p className="font-bold text-sm text-slate-700 mb-3">Chia sẻ kết quả</p>
               <ShareCard
                 homeTeam={liveMatch.home_team}
                 awayTeam={liveMatch.away_team}
@@ -458,7 +458,7 @@ export default function MatchDetailClient({ match, stats, comments: initialComme
       {/* ── COMMUNITY STATS ── */}
       {liveStats.total > 0 && (isFinished || locked) && (
         <div className="bg-white rounded-2xl border border-slate-200 p-5">
-          <h2 className="font-bold text-sm text-slate-700 mb-4">📊 Dự đoán cộng đồng · {liveStats.total} người</h2>
+          <h2 className="font-bold text-sm text-slate-700 mb-4">Dự đoán cộng đồng · {liveStats.total} người</h2>
           <div className="mb-4">
             <div className="flex h-3 rounded-full overflow-hidden gap-0.5">
               <div className="bg-blue-500 transition-all" style={{ width: `${liveStats.homeWin}%` }} />
@@ -490,7 +490,7 @@ export default function MatchDetailClient({ match, stats, comments: initialComme
 
       {/* ── COMMENTS ── */}
       <div className="bg-white rounded-2xl border border-slate-200 p-5">
-        <h2 className="font-bold text-sm text-slate-700 mb-4">💬 Bình luận · {comments.length}</h2>
+        <h2 className="font-bold text-sm text-slate-700 mb-4">Bình luận · {comments.length}</h2>
         <div className="space-y-3 max-h-96 overflow-y-auto pr-1">
           {comments.length === 0 && (
             <p className="text-center text-slate-400 text-sm py-6">Chưa có bình luận. Hãy là người đầu tiên!</p>

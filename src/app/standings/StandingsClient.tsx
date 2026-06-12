@@ -87,7 +87,7 @@ export default function StandingsClient({ matches, topScorers }: Props) {
     <div className="max-w-4xl mx-auto space-y-6">
       <div className="flex items-start justify-between gap-4 flex-wrap">
         <div>
-          <h1 className="text-2xl font-bold text-slate-800">📊 Bảng xếp hạng</h1>
+          <h1 className="text-2xl font-bold text-slate-800">Bảng xếp hạng</h1>
           <p className="text-slate-500 text-sm mt-1">
             Vòng bảng · {finishedCount}/{matches.length} trận đã hoàn thành
           </p>
@@ -99,7 +99,7 @@ export default function StandingsClient({ matches, topScorers }: Props) {
             disabled={syncing}
             className="text-xs px-3 py-1.5 rounded-lg border border-slate-200 text-slate-500 hover:border-slate-300 hover:text-slate-700 disabled:opacity-50 transition-colors"
           >
-            {syncing ? '⏳ Đang sync...' : '⚽ Sync goals'}
+            {syncing ? 'Đang sync...' : 'Sync goals'}
           </button>
           {syncMsg && <p className="text-xs text-slate-400">{syncMsg}</p>}
         </div>
@@ -226,7 +226,7 @@ export default function StandingsClient({ matches, topScorers }: Props) {
           ) : (
             <>
               <div className="px-4 py-3 bg-slate-50 border-b border-slate-100 flex items-center justify-between">
-                <h2 className="font-bold text-slate-700 text-sm">🥅 Danh sách ghi bàn · Vòng bảng</h2>
+                <h2 className="font-bold text-slate-700 text-sm">Danh sách ghi bàn · Vòng bảng</h2>
                 <span className="text-xs text-slate-400">{topScorers.length} cầu thủ</span>
               </div>
 
@@ -259,14 +259,6 @@ export default function StandingsClient({ matches, topScorers }: Props) {
                           {s.penalties} pen
                         </span>
                       )}
-                      <div className="flex items-center gap-1">
-                        {Array.from({ length: Math.min(s.goals, 6) }).map((_, j) => (
-                          <span key={j} className="text-base leading-none">⚽</span>
-                        ))}
-                        {s.goals > 6 && (
-                          <span className="text-sm font-bold text-slate-600">+{s.goals - 6}</span>
-                        )}
-                      </div>
                       <span className="text-lg font-black text-slate-800 w-6 text-right">{s.goals}</span>
                     </div>
                   </div>

@@ -60,7 +60,6 @@ export default async function HomePage() {
         />
       ) : (
         <div className="rounded-2xl p-8 text-white text-center shadow-lg" style={{ background: 'var(--brand)' }}>
-          <div className="text-5xl mb-3">⚽</div>
           <h1 className="text-3xl font-bold mb-2">World Cup 2026</h1>
           <p className="opacity-75 mb-5">Dự đoán kết quả · Ghi điểm</p>
           <Link href="/predict" className="inline-block bg-white font-bold px-6 py-2.5 rounded-xl hover:opacity-90 transition-opacity shadow" style={{ color: 'var(--brand)' }}>
@@ -86,7 +85,7 @@ export default async function HomePage() {
       {upcoming.length > 0 && (
         <section>
           <div className="flex items-center justify-between mb-3">
-            <h2 className="text-base font-bold text-slate-700">📅 Sắp diễn ra</h2>
+            <h2 className="text-base font-bold text-slate-700">Sắp diễn ra</h2>
             <Link href="/predict" className="text-sm font-medium" style={{ color: 'var(--brand)' }}>
               Dự đoán tất cả
             </Link>
@@ -100,7 +99,7 @@ export default async function HomePage() {
       {/* Recent results */}
       {finished.length > 0 && (
         <section>
-          <h2 className="text-base font-bold text-slate-700 mb-3">🏁 Kết quả gần đây</h2>
+          <h2 className="text-base font-bold text-slate-700 mb-3">Kết quả gần đây</h2>
           <div className="grid gap-3 sm:grid-cols-2">
             {finished.map((m: Match) => <MatchCard key={m.id} match={m} showResult />)}
           </div>

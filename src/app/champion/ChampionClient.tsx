@@ -42,12 +42,12 @@ const CONF: Record<string, string> = {
 
 const CONF_LABELS: Record<string, string> = {
   all: 'Tất cả',
-  UEFA: '🇪🇺 UEFA',
-  CONMEBOL: '🌎 CONMEBOL',
-  CONCACAF: '🌍 CONCACAF',
-  AFC: '🌏 AFC',
-  CAF: '🌍 CAF',
-  OFC: '🌊 OFC',
+  UEFA: 'UEFA',
+  CONMEBOL: 'CONMEBOL',
+  CONCACAF: 'CONCACAF',
+  AFC: 'AFC',
+  CAF: 'CAF',
+  OFC: 'OFC',
 }
 
 export default function ChampionClient({ teams, pickCount }: Props) {
@@ -80,20 +80,33 @@ export default function ChampionClient({ teams, pickCount }: Props) {
   }, [user])
 
   async function savePick(team: string) {
-    if (saving) return
+    if (saving || team === myPick) return
+    const prevPick = myPick   // capture before any await
+
+    // Optimistic update immediately — before network call
+    setMyPick(team)
+    setLivePickCount(prev => {
+      const next = { ...prev }
+      if (prevPick) next[prevPick] = Math.max(0, (next[prevPick] ?? 0) - 1)
+      next[team] = (next[team] ?? 0) + 1
+      return next
+    })
+
     setSaving(true)
     const { error } = await supabase
       .from('champion_picks')
       .upsert({ user_id: user!.id, team_name: team }, { onConflict: 'user_id' })
-    if (!error) {
-      // Optimistic update: decrement old pick, increment new
+
+    if (error) {
+      // Rollback on failure
+      setMyPick(prevPick)
       setLivePickCount(prev => {
         const next = { ...prev }
-        if (myPick && next[myPick]) next[myPick] = Math.max(0, next[myPick] - 1)
-        next[team] = (next[team] ?? 0) + 1
+        next[team] = Math.max(0, (next[team] ?? 0) - 1)
+        if (prevPick) next[prevPick] = (next[prevPick] ?? 0) + 1
         return next
       })
-      setMyPick(team)
+    } else {
       setSaved(true)
       setTimeout(() => setSaved(false), 2500)
     }
@@ -113,6 +126,7 @@ export default function ChampionClient({ teams, pickCount }: Props) {
 
   // Top picks sorted
   const topPicks = Object.entries(livePickCount)
+    .filter(([, count]) => (count as number) > 0)
     .sort(([, a], [, b]) => (b as number) - (a as number))
     .slice(0, 5)
 
@@ -142,7 +156,7 @@ export default function ChampionClient({ teams, pickCount }: Props) {
     <div className="max-w-3xl mx-auto space-y-5">
       {/* Header */}
       <div>
-        <h1 className="text-2xl font-bold text-slate-800">🏆 Đoán nhà vô địch</h1>
+        <h1 className="text-2xl font-bold text-slate-800">Đoán nhà vô địch</h1>
         <p className="text-slate-500 text-sm mt-1">
           Chọn 1 đội · Đúng: <span className="text-amber-600 font-semibold">+20 điểm</span> thưởng cuối giải
           · {teams.length} đội tham dự
@@ -173,13 +187,12 @@ export default function ChampionClient({ teams, pickCount }: Props) {
       {/* Search + filter */}
       <div className="flex flex-col sm:flex-row gap-2">
         <div className="relative flex-1">
-          <span className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-sm pointer-events-none">🔍</span>
           <input
             type="text"
             value={search}
             onChange={e => setSearch(e.target.value)}
             placeholder="Tìm kiếm đội bóng..."
-            className="w-full border border-slate-300 rounded-xl pl-9 pr-4 py-2.5 text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent bg-white"
+            className="w-full border border-slate-300 rounded-xl px-4 py-2.5 text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent bg-white"
           />
           {search && (
             <button
@@ -221,7 +234,7 @@ export default function ChampionClient({ teams, pickCount }: Props) {
       {/* Team grid */}
       {filtered.length === 0 ? (
         <div className="text-center bg-white rounded-2xl border border-slate-200 py-12">
-          <p className="text-3xl mb-2">🔍</p>
+          <p className="text-slate-400 text-sm mb-2">Không tìm thấy kết quả</p>
           <p className="text-slate-500 text-sm">Không tìm thấy đội nào</p>
           <button onClick={() => { setSearch(''); setConfFilter('all') }}
             className="text-green-600 hover:underline text-sm mt-2">
@@ -275,7 +288,7 @@ export default function ChampionClient({ teams, pickCount }: Props) {
       {/* Top picks */}
       {topPicks.length > 0 && (
         <div className="bg-white rounded-xl border border-slate-200 p-4">
-          <h2 className="text-sm font-bold text-slate-600 mb-3">📊 Được chọn nhiều nhất</h2>
+          <h2 className="text-sm font-bold text-slate-600 mb-3">Được chọn nhiều nhất</h2>
           <div className="space-y-2">
             {topPicks.map(([team, count], i) => {
               const t = teams.find(t => t.name === team)

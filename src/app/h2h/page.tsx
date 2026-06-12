@@ -79,7 +79,7 @@ function H2HContent() {
   return (
     <div className="max-w-2xl mx-auto space-y-5 pb-20 fade-in">
       <div>
-        <h1 className="text-2xl font-bold text-slate-800">⚔️ Head-to-head</h1>
+        <h1 className="text-2xl font-bold text-slate-800">Head-to-head</h1>
         <p className="text-slate-500 text-sm mt-1">So sánh dự đoán giữa hai người chơi</p>
       </div>
 
