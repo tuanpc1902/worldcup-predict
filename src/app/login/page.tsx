@@ -25,20 +25,18 @@ export default function LoginPage() {
         router.push('/')
         router.refresh()
       } else {
-        const { data, error } = await supabase.auth.signUp({
-          email,
-          password,
-          options: { data: { full_name: name } },
+        const res = await fetch('/api/auth/register', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ email, password, name }),
         })
-        if (error) throw error
-        if (data.session) {
-          // Email confirmation disabled — logged in immediately
-          router.push('/')
-          router.refresh()
-        } else {
-          // Email confirmation required
-          setSuccess('Tài khoản đã tạo! Kiểm tra email để xác nhận trước khi đăng nhập.')
-        }
+        const json = await res.json()
+        if (!res.ok) throw new Error(json.message)
+        // Auto login after register
+        const { error: loginErr } = await supabase.auth.signInWithPassword({ email, password })
+        if (loginErr) throw loginErr
+        router.push('/')
+        router.refresh()
       }
     } catch (err: any) {
       setError(err.message ?? 'Đã xảy ra lỗi')
