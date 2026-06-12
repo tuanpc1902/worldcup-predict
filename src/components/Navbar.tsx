@@ -2,14 +2,17 @@
 import Link from 'next/link'
 import { useEffect } from 'react'
 import { useAuthStore } from '@/store/auth'
+import { useThemeStore } from '@/store/theme'
 import { useRouter, usePathname } from 'next/navigation'
 
 export default function Navbar() {
   const { user, loading, init, signOut } = useAuthStore()
+  const { dark, toggle, init: initTheme } = useThemeStore()
   const router = useRouter()
   const pathname = usePathname()
 
   useEffect(() => { init() }, [init])
+  useEffect(() => { initTheme() }, [initTheme])
 
   const links = [
     { href: '/', label: 'Lịch thi đấu' },
@@ -18,7 +21,6 @@ export default function Navbar() {
     { href: '/leaderboard', label: 'Xếp hạng' },
     { href: '/groups', label: 'Nhóm' },
     { href: '/champion', label: '🏆 Vô địch' },
-    { href: '/stats', label: 'Thống kê' },
   ]
 
   return (
@@ -47,16 +49,30 @@ export default function Navbar() {
         </div>
 
         <div className="flex items-center gap-2 flex-shrink-0">
+          {/* Dark mode toggle */}
+          <button
+            onClick={toggle}
+            className="w-8 h-8 flex items-center justify-center rounded-lg text-slate-500 hover:bg-slate-100 transition-colors text-base"
+            title={dark ? 'Chế độ sáng' : 'Chế độ tối'}
+          >
+            {dark ? '☀️' : '🌙'}
+          </button>
+
           {loading ? (
             <div className="w-16 h-7 bg-slate-200 rounded animate-pulse" />
           ) : user ? (
             <div className="flex items-center gap-2">
-              <span className="hidden sm:block text-sm text-slate-600 max-w-24 truncate">{user.display_name}</span>
+              <Link href={`/profile/${user.id}`} className="hidden sm:flex items-center gap-1.5 hover:opacity-80 transition-opacity">
+                <div className="w-7 h-7 rounded-full bg-green-100 flex items-center justify-center text-xs font-bold text-green-700">
+                  {user.display_name[0]?.toUpperCase()}
+                </div>
+                <span className="text-sm text-slate-600 max-w-24 truncate">{user.display_name}</span>
+              </Link>
               <span className="bg-green-100 text-green-700 text-xs font-bold px-2 py-1 rounded-full whitespace-nowrap">
                 {user.total_points} pts
               </span>
               <button onClick={async () => { await signOut(); router.push('/login') }}
-                className="cursor-pointer text-slate-400 hover:text-slate-700 text-sm transition-colors px-2 py-1 rounded hover:bg-slate-100">
+                className="text-slate-400 hover:text-slate-700 text-sm transition-colors px-2 py-1 rounded hover:bg-slate-100">
                 Xuất
               </button>
             </div>

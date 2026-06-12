@@ -90,12 +90,12 @@ export default function LeaderboardPage() {
                 <tr key={e.id} className="hover:bg-slate-50 transition-colors">
                   <td className="px-4 py-3 text-sm w-10">{idx < 3 ? medals[idx] : <span className="text-slate-400">{idx + 1}</span>}</td>
                   <td className="px-4 py-3">
-                    <div className="flex items-center gap-2">
+                    <a href={`/profile/${e.id}`} className="flex items-center gap-2 hover:opacity-80 transition-opacity">
                       <div className="w-8 h-8 rounded-full bg-green-100 flex items-center justify-center text-sm font-bold text-green-700 flex-shrink-0">
                         {e.display_name.charAt(0).toUpperCase()}
                       </div>
-                      <span className="text-slate-800 text-sm font-medium">{e.display_name}</span>
-                    </div>
+                      <span className="text-slate-800 text-sm font-medium hover:text-green-600 transition-colors">{e.display_name}</span>
+                    </a>
                   </td>
                   <td className="px-4 py-3">
                     <span className={`font-bold text-lg ${e.total_points > 0 ? 'text-green-600' : e.total_points < 0 ? 'text-red-500' : 'text-slate-400'}`}>

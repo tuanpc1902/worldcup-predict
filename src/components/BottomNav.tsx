@@ -5,9 +5,9 @@ import { usePathname } from 'next/navigation'
 const NAV = [
   { href: '/', icon: '📅', label: 'Lịch' },
   { href: '/predict', icon: '🎯', label: 'Dự đoán' },
-  { href: '/bracket', icon: '🏟️', label: 'Bracket' },
   { href: '/leaderboard', icon: '🏆', label: 'Xếp hạng' },
-  { href: '/groups', icon: '👥', label: 'Nhóm' },
+  { href: '/h2h', icon: '⚔️', label: 'H2H' },
+  { href: '/champion', icon: '🌟', label: 'Vô địch' },
 ]
 
 export default function BottomNav() {

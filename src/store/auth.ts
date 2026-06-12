@@ -6,15 +6,20 @@ import type { Profile } from '@/types'
 interface AuthState {
   user: Profile | null
   loading: boolean
+  initialized: boolean
   init: () => Promise<void>
   signOut: () => Promise<void>
 }
 
-export const useAuthStore = create<AuthState>((set) => ({
+export const useAuthStore = create<AuthState>((set, get) => ({
   user: null,
   loading: true,
+  initialized: false,
 
   init: async () => {
+    if (get().initialized) return
+    set({ initialized: true })
+
     const supabase = createClient()
     const { data: { user } } = await supabase.auth.getUser()
     if (!user) { set({ user: null, loading: false }); return }
@@ -37,6 +42,6 @@ export const useAuthStore = create<AuthState>((set) => ({
 
   signOut: async () => {
     await createClient().auth.signOut()
-    set({ user: null })
+    set({ user: null, initialized: false })
   },
 }))

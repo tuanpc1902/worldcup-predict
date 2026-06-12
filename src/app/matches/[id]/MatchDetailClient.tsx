@@ -5,6 +5,7 @@ import Link from 'next/link'
 import { createClient } from '@/lib/supabase'
 import { useAuthStore } from '@/store/auth'
 import FlagImg from '@/components/FlagImg'
+import ShareCard from '@/components/ShareCard'
 import { fmtDate, fmtTime, fmtDateTime, isStarted } from '@/lib/time'
 
 const STAGE_LABELS: Record<string, string> = {
@@ -236,6 +237,23 @@ export default function MatchDetailClient({ match, stats, comments: initialComme
             <p className="text-sm text-slate-500">🔒 Trận đã bắt đầu, không thể dự đoán</p>
           )}
         </div>
+
+        {/* Share card */}
+        {isFinished && savedPrediction?.points_earned !== null && savedPrediction?.points_earned !== undefined && (
+          <div className="bg-white rounded-2xl border border-slate-200 p-5">
+            <p className="font-bold text-sm text-slate-700 mb-3">📤 Chia sẻ kết quả</p>
+            <ShareCard
+              homeTeam={match.home_team}
+              awayTeam={match.away_team}
+              homeScore={match.home_score}
+              awayScore={match.away_score}
+              predictedHome={savedPrediction.predicted_home}
+              predictedAway={savedPrediction.predicted_away}
+              pointsEarned={savedPrediction.points_earned}
+              userName={user?.display_name ?? 'Bạn'}
+            />
+          </div>
+        )}
       )}
 
       {!user && !isFinished && !locked && (

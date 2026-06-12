@@ -25,6 +25,8 @@ export default function PredictPage() {
   const [inputs, setInputs] = useState<Record<string, { home: string; away: string }>>({})
   const [saving, setSaving] = useState<string | null>(null)
   const [saved, setSaved] = useState<string | null>(null)
+  const [savingAll, setSavingAll] = useState(false)
+  const [savedAll, setSavedAll] = useState(false)
   const [fetching, setFetching] = useState(true)
   const [now, setNow] = useState(() => Date.now())
 
@@ -65,6 +67,31 @@ export default function PredictPage() {
     load()
   }, [user])
 
+  async function saveAll() {
+    if (savingAll) return
+    const toSave = unlocked.filter(m => {
+      const inp = inputs[m.id]
+      return inp?.home !== '' && inp?.away !== ''
+    })
+    if (toSave.length === 0) return
+    setSavingAll(true)
+    const rows = toSave.map(m => ({
+      user_id: user!.id,
+      match_id: m.id,
+      predicted_home: parseInt(inputs[m.id].home),
+      predicted_away: parseInt(inputs[m.id].away),
+    }))
+    const { error } = await supabase.from('predictions').upsert(rows, { onConflict: 'user_id,match_id' })
+    if (!error) {
+      const newPreds = { ...predictions }
+      rows.forEach(r => { newPreds[r.match_id] = { ...r, id: '', points_earned: null, scored_at: null, created_at: '' } })
+      setPredictions(newPreds)
+      setSavedAll(true)
+      setTimeout(() => setSavedAll(false), 3000)
+    }
+    setSavingAll(false)
+  }
+
   async function savePrediction(matchId: string) {
     const inp = inputs[matchId]
     if (inp.home === '' || inp.away === '') return
@@ -99,7 +126,7 @@ export default function PredictPage() {
   const locked = matches.filter(m => isLocked(m))
 
   return (
-    <div className="max-w-2xl mx-auto space-y-6">
+    <div className="max-w-2xl mx-auto space-y-6 fade-in">
       <div>
         <h1 className="text-2xl font-bold text-slate-800">🎯 Dự đoán</h1>
         <div className="flex flex-wrap gap-2 mt-2">
@@ -118,7 +145,22 @@ export default function PredictPage() {
 
       {unlocked.length > 0 && (
         <section className="space-y-3">
-          <h2 className="text-sm font-semibold text-slate-500 uppercase tracking-wide">Mở dự đoán</h2>
+          <div className="flex items-center justify-between">
+            <h2 className="text-sm font-semibold text-slate-500 uppercase tracking-wide">
+              Mở dự đoán · {unlocked.length} trận
+            </h2>
+            <button
+              onClick={saveAll}
+              disabled={savingAll}
+              className={`text-sm font-semibold px-4 py-1.5 rounded-lg transition-colors ${
+                savedAll
+                  ? 'bg-green-100 text-green-700'
+                  : 'bg-green-600 hover:bg-green-700 text-white disabled:opacity-50'
+              }`}
+            >
+              {savingAll ? 'Đang lưu...' : savedAll ? '✓ Đã lưu tất cả' : '💾 Lưu tất cả'}
+            </button>
+          </div>
           {unlocked.map(match => {
             const pred = predictions[match.id]
             return (

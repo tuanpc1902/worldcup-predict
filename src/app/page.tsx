@@ -1,5 +1,6 @@
 import { createServerSupabase } from '@/lib/supabase-server'
 import MatchCard from '@/components/MatchCard'
+import Countdown from '@/components/Countdown'
 import type { Match } from '@/types'
 import Link from 'next/link'
 
@@ -17,21 +18,27 @@ export default async function HomePage() {
   const upcoming = (matches ?? []).filter((m: Match) => m.status === 'scheduled').slice(0, 8)
   const live = (matches ?? []).filter((m: Match) => m.status === 'live')
   const finished = (matches ?? []).filter((m: Match) => m.status === 'finished').slice(0, 6)
+  const nextMatch = upcoming[0]
 
   return (
-    <div className="space-y-8">
-      {/* Hero */}
-      <div className="bg-gradient-to-br from-green-600 to-green-700 rounded-2xl p-8 text-white text-center shadow-lg">
-        <div className="text-5xl mb-3">⚽</div>
-        <h1 className="text-3xl font-bold mb-2">World Cup 2026</h1>
-        <p className="text-green-100 mb-5">Dự đoán kết quả · Ghi điểm · Thách đấu đồng nghiệp</p>
-        <Link
-          href="/predict"
-          className="inline-block bg-white text-green-700 font-bold px-6 py-2.5 rounded-xl hover:bg-green-50 transition-colors shadow"
-        >
-          Dự đoán ngay →
-        </Link>
-      </div>
+    <div className="space-y-6 fade-in">
+      {/* Countdown to next match — replaces static hero when data available */}
+      {nextMatch ? (
+        <Countdown
+          matchTime={nextMatch.match_time}
+          homeTeam={nextMatch.home_team}
+          awayTeam={nextMatch.away_team}
+        />
+      ) : (
+        <div className="bg-gradient-to-br from-green-600 to-green-700 rounded-2xl p-8 text-white text-center shadow-lg">
+          <div className="text-5xl mb-3">⚽</div>
+          <h1 className="text-3xl font-bold mb-2">World Cup 2026</h1>
+          <p className="text-green-100 mb-5">Dự đoán kết quả · Ghi điểm</p>
+          <Link href="/predict" className="inline-block bg-white text-green-700 font-bold px-6 py-2.5 rounded-xl hover:bg-green-50 transition-colors shadow">
+            Dự đoán ngay
+          </Link>
+        </div>
+      )}
 
       {/* Live matches */}
       {live.length > 0 && (
@@ -75,7 +82,7 @@ export default async function HomePage() {
         <div className="text-center py-20 bg-white rounded-2xl border border-slate-200">
           <p className="text-4xl mb-3">📅</p>
           <p className="text-slate-500">Chưa có trận đấu nào.</p>
-          <p className="text-slate-400 text-sm mt-1">Admin vào trang Admin → Sync API để tải lịch thi đấu.</p>
+          <p className="text-slate-400 text-sm mt-1">Admin → Sync API để tải lịch thi đấu.</p>
         </div>
       )}
     </div>

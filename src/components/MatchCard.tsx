@@ -56,8 +56,8 @@ export default function MatchCard({ match, prediction, showResult, showPredictLi
 
       {/* Teams & Score */}
       <div className="flex items-center justify-between gap-3">
-        <div className="flex-1 text-right flex flex-col items-end gap-1">
-          <FlagImg team={match.home_team} flag={match.home_flag} size="md" />
+        <div className="flex-1 text-center flex flex-col items-center gap-3">
+          <FlagImg team={match.home_team} flag={match.home_flag} size="xl" />
           <p className="font-semibold text-slate-800 text-sm leading-tight">{match.home_team}</p>
         </div>
 
@@ -76,8 +76,8 @@ export default function MatchCard({ match, prediction, showResult, showPredictLi
           )}
         </div>
 
-        <div className="flex-1 text-left flex flex-col items-start gap-1">
-          <FlagImg team={match.away_team} flag={match.away_flag} size="md" />
+        <div className="flex-1 text-center flex flex-col gap-3 items-center">
+          <FlagImg team={match.away_team} flag={match.away_flag} size="xl" />
           <p className="font-semibold text-slate-800 text-sm leading-tight">{match.away_team}</p>
         </div>
       </div>
@@ -105,9 +105,9 @@ export default function MatchCard({ match, prediction, showResult, showPredictLi
         <div className="mt-3 pt-3 border-t border-slate-100">
           <Link
             href={`/matches/${match.id}`}
-            className="block w-full text-center text-sm font-semibold text-green-600 hover:text-green-700 hover:bg-green-50 py-1.5 rounded-lg transition-colors"
+            className="block w-full text-center text-sm font-semibold text-green-600 hover:text-green-700 hover:bg-green-50 py-1.5 rounded-lg transition-colors uppercase"
           >
-            Dự đoán →
+            Dự đoán ngay
           </Link>
         </div>
       )}

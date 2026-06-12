@@ -133,7 +133,7 @@ export default function LoginPage() {
                   onClick={() => { setMode('login'); setSuccess('') }}
                   className="text-green-600 hover:underline text-sm mt-1"
                 >
-                  Đăng nhập ngay →
+                  Đăng nhập ngay
                 </button>
               </div>
             )}
