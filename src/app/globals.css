@@ -40,6 +40,7 @@ body {
   color: var(--fg);
   transition: background-color 0.2s, color 0.2s;
   font-size: 19px;
+  font-family: Tahoma, 'Segoe UI', Arial, sans-serif;
 }
 
 @layer base {

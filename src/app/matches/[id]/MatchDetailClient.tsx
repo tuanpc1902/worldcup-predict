@@ -116,7 +116,7 @@ export default function MatchDetailClient({ match, stats, comments: initialComme
     <div className="max-w-2xl mx-auto space-y-4 pb-20">
       {/* Back */}
       <button onClick={() => router.back()} className="flex items-center gap-1 text-sm text-slate-500 hover:text-slate-700 pt-2">
-        ← Quay lại
+        Quay lại
       </button>
 
       {/* Match Hero */}

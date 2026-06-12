@@ -3,12 +3,12 @@ import { useState } from 'react'
 
 type Size = 'xs' | 'sm' | 'md' | 'lg' | 'xl'
 
-const SIZE_CLASS: Record<Size, string> = {
-  xs: 'w-5 h-3.5',
-  sm: 'w-6 h-4',
-  md: 'w-8 h-6',
-  lg: 'w-14 h-10',
-  xl: 'w-20 h-14',
+const SIZE_PX: Record<Size, { w: number; h: number }> = {
+  xs: { w: 22, h: 15 },
+  sm: { w: 28, h: 19 },
+  md: { w: 36, h: 25 },
+  lg: { w: 56, h: 39 },
+  xl: { w: 80, h: 56 },
 }
 
 interface Props {
@@ -21,12 +21,13 @@ interface Props {
 export default function FlagImg({ team, flag, size = 'md', className = '' }: Props) {
   const [loaded, setLoaded] = useState(false)
   const [error, setError] = useState(false)
-  const sizeClass = SIZE_CLASS[size]
+  const { w, h } = SIZE_PX[size]
 
   if (!flag || error) {
     return (
       <div
-        className={`${sizeClass} bg-slate-200 rounded flex-shrink-0 flex items-center justify-center ${className}`}
+        style={{ width: w, height: h, minWidth: w, minHeight: h }}
+        className={`bg-slate-200 rounded flex-shrink-0 flex items-center justify-center ${className}`}
         title={team}
       >
         <span className="text-[8px] text-slate-400 font-bold leading-none select-none">
@@ -37,17 +38,19 @@ export default function FlagImg({ team, flag, size = 'md', className = '' }: Pro
   }
 
   return (
-    <div className={`${sizeClass} relative flex-shrink-0 rounded overflow-hidden ${className}`}>
+    <div
+      style={{ width: w, height: h, minWidth: w, minHeight: h }}
+      className={`relative flex-shrink-0 rounded overflow-hidden ${className}`}
+    >
       {!loaded && (
-        <div className={`absolute inset-0 bg-slate-200 animate-pulse rounded`} />
+        <div className="absolute inset-0 bg-slate-200 animate-pulse rounded" />
       )}
       {/* eslint-disable-next-line @next/next/no-img-element */}
       <img
         src={flag}
         alt={team}
-        className={`${sizeClass} object-cover rounded shadow-sm transition-opacity duration-200 ${
-          loaded ? 'opacity-100' : 'opacity-0'
-        }`}
+        style={{ width: w, height: h, objectFit: 'cover' }}
+        className={`rounded shadow-sm transition-opacity duration-200 ${loaded ? 'opacity-100' : 'opacity-0'}`}
         onLoad={() => setLoaded(true)}
         onError={() => setError(true)}
         draggable={false}

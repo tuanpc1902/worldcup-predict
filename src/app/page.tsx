@@ -25,9 +25,12 @@ export default async function HomePage() {
       {/* Countdown to next match — replaces static hero when data available */}
       {nextMatch ? (
         <Countdown
+          matchId={nextMatch.id}
           matchTime={nextMatch.match_time}
           homeTeam={nextMatch.home_team}
           awayTeam={nextMatch.away_team}
+          homeFlag={nextMatch.home_flag}
+          awayFlag={nextMatch.away_flag}
         />
       ) : (
         <div className="bg-gradient-to-br from-green-600 to-green-700 rounded-2xl p-8 text-white text-center shadow-lg">
@@ -59,7 +62,7 @@ export default async function HomePage() {
           <div className="flex items-center justify-between mb-3">
             <h2 className="text-base font-bold text-slate-700">📅 Sắp diễn ra</h2>
             <Link href="/predict" className="text-green-600 hover:underline text-sm font-medium">
-              Dự đoán tất cả →
+              Dự đoán tất cả
             </Link>
           </div>
           <div className="grid gap-3 sm:grid-cols-2">

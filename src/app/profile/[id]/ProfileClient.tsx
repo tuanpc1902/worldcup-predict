@@ -35,7 +35,7 @@ export default function ProfileClient({ profile, predictions, rank }: Props) {
   return (
     <div className="max-w-2xl mx-auto space-y-5 fade-in pb-20">
       <button onClick={() => router.back()} className="flex items-center gap-1 text-sm text-slate-500 hover:text-slate-700 pt-2">
-        ← Quay lại
+        Quay lại
       </button>
 
       {/* Profile card */}
@@ -93,7 +93,7 @@ export default function ProfileClient({ profile, predictions, rank }: Props) {
           <p className="text-xs text-slate-400 mt-0.5">Xem ai đoán chuẩn hơn theo từng trận</p>
         </div>
         <Link href={`/h2h?a=${profile.id}`} className="text-sm font-semibold text-green-600 hover:underline">
-          Head-to-head →
+          Head-to-head
         </Link>
       </div>
 
