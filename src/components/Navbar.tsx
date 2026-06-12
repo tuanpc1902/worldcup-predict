@@ -56,7 +56,7 @@ export default function Navbar() {
                 {user.total_points} pts
               </span>
               <button onClick={async () => { await signOut(); router.push('/login') }}
-                className="text-slate-400 hover:text-slate-700 text-sm transition-colors">
+                className="cursor-pointer text-slate-400 hover:text-slate-700 text-sm transition-colors px-2 py-1 rounded hover:bg-slate-100">
                 Xuất
               </button>
             </div>

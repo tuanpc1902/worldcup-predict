@@ -4,8 +4,7 @@ import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase'
 import { useAuthStore } from '@/store/auth'
 import type { Match } from '@/types'
-import { format } from 'date-fns'
-import { vi } from 'date-fns/locale'
+import { fmtDateTime } from '@/lib/time'
 
 const STAGES = ['group', 'round_of_32', 'round_of_16', 'quarter', 'semi', 'final']
 const STAGE_LABELS: Record<string, string> = {
@@ -133,7 +132,7 @@ export default function AdminPage() {
                   {m.home_team} <span className="text-slate-300 mx-1">vs</span> {m.away_team}
                 </td>
                 <td className="px-4 py-3 text-slate-500 text-xs whitespace-nowrap">
-                  {format(new Date(m.match_time), 'HH:mm · dd/MM', { locale: vi })}
+                  {fmtDateTime(m.match_time)}
                 </td>
                 <td className="px-4 py-3 text-slate-500 text-xs">{STAGE_LABELS[m.stage]}</td>
                 <td className="px-4 py-3">

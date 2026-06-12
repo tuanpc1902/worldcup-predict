@@ -9,6 +9,7 @@ export default function LoginPage() {
   const [name, setName] = useState('')
   const [mode, setMode] = useState<'login' | 'register'>('login')
   const [error, setError] = useState('')
+  const [success, setSuccess] = useState('')
   const [loading, setLoading] = useState(false)
   const router = useRouter()
   const supabase = createClient()
@@ -21,16 +22,24 @@ export default function LoginPage() {
       if (mode === 'login') {
         const { error } = await supabase.auth.signInWithPassword({ email, password })
         if (error) throw error
+        router.push('/')
+        router.refresh()
       } else {
-        const { error } = await supabase.auth.signUp({
+        const { data, error } = await supabase.auth.signUp({
           email,
           password,
           options: { data: { full_name: name } },
         })
         if (error) throw error
+        if (data.session) {
+          // Email confirmation disabled — logged in immediately
+          router.push('/')
+          router.refresh()
+        } else {
+          // Email confirmation required
+          setSuccess('Tài khoản đã tạo! Kiểm tra email để xác nhận trước khi đăng nhập.')
+        }
       }
-      router.push('/')
-      router.refresh()
     } catch (err: any) {
       setError(err.message ?? 'Đã xảy ra lỗi')
     } finally {
@@ -102,6 +111,11 @@ export default function LoginPage() {
                 {error}
               </p>
             )}
+            {success && (
+              <p className="text-green-700 text-sm bg-green-50 border border-green-200 rounded-lg px-3 py-2">
+                {success}
+              </p>
+            )}
 
             <button
               type="submit"
@@ -132,7 +146,7 @@ export default function LoginPage() {
           <p className="text-center text-sm text-slate-500 mt-5">
             {mode === 'login' ? 'Chưa có tài khoản? ' : 'Đã có tài khoản? '}
             <button
-              onClick={() => { setMode(mode === 'login' ? 'register' : 'login'); setError('') }}
+              onClick={() => { setMode(mode === 'login' ? 'register' : 'login'); setError(''); setSuccess('') }}
               className="text-green-600 hover:underline font-semibold"
             >
               {mode === 'login' ? 'Đăng ký' : 'Đăng nhập'}

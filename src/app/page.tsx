@@ -56,7 +56,7 @@ export default async function HomePage() {
             </Link>
           </div>
           <div className="grid gap-3 sm:grid-cols-2">
-            {upcoming.map((m: Match) => <MatchCard key={m.id} match={m} />)}
+            {upcoming.map((m: Match) => <MatchCard key={m.id} match={m} showPredictLink />)}
           </div>
         </section>
       )}
