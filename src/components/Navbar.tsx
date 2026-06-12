@@ -1,25 +1,31 @@
 'use client'
 import Link from 'next/link'
-import { useEffect } from 'react'
+import { useEffect, useState } from 'react'
 import { useAuthStore } from '@/store/auth'
 import { useThemeStore } from '@/store/theme'
 import { useRouter, usePathname } from 'next/navigation'
+
+const ALL_LINKS = [
+  { href: '/', label: 'Lịch thi đấu' },
+  { href: '/predict', label: 'Dự đoán' },
+  { href: '/standings', label: 'Bảng đấu' },
+  { href: '/leaderboard', label: 'Xếp hạng' },
+  { href: '/champion', label: 'Nhà vô địch' },
+  { href: '/bracket', label: 'Bracket' },
+  { href: '/h2h', label: 'H2H' },
+  { href: '/groups', label: 'Nhóm' },
+]
 
 export default function Navbar() {
   const { user, loading, init, signOut } = useAuthStore()
   const { dark, toggle, init: initTheme } = useThemeStore()
   const router = useRouter()
   const pathname = usePathname()
+  const [menuOpen, setMenuOpen] = useState(false)
 
   useEffect(() => { init() }, [init])
   useEffect(() => { initTheme() }, [initTheme])
-
-  const links = [
-    { href: '/', label: 'Lịch thi đấu' },
-    { href: '/predict', label: 'Dự đoán' },
-    { href: '/standings', label: 'Bảng đấu' },
-    { href: '/leaderboard', label: 'Xếp hạng' },
-  ]
+  useEffect(() => { setMenuOpen(false) }, [pathname])
 
   const bg       = dark ? '#001f3f' : '#ffffff'
   const border   = dark ? '#1a3a5c' : '#d1dbe8'
@@ -28,100 +34,171 @@ export default function Navbar() {
   const hoverBg  = dark ? '#002a52' : '#f1f5f9'
   const ptsBg    = dark ? '#002a52' : 'var(--brand-bg)'
   const ptsColor = dark ? '#7db3e0' : 'var(--brand)'
+  const menuBg   = dark ? '#001a35' : '#f8fafc'
+
+  // Desktop shows first 4 links
+  const desktopLinks = ALL_LINKS.slice(0, 4)
 
   return (
-    <nav className="sticky top-0 z-50 border-b shadow-sm" style={{ background: bg, borderColor: border }}>
-      <div className="max-w-5xl mx-auto px-4 h-14 flex items-center justify-between gap-4">
+    <>
+      <nav className="sticky top-0 z-50 border-b shadow-sm" style={{ background: bg, borderColor: border }}>
+        <div className="max-w-5xl mx-auto px-4 h-14 flex items-center justify-between gap-4">
 
-        {/* Logo */}
-        <Link href="/" className="flex items-center gap-2 shrink-0 select-none">
-          <span
-            className="flex items-center justify-center w-8 h-8 rounded-lg text-white text-base font-black leading-none"
-            style={{ background: 'var(--brand)' }}
-          >⚽</span>
-          <span className="font-black text-[22px] tracking-tight leading-none" style={{ color: 'var(--brand)' }}>
-            WC<span style={{ color: 'var(--accent)' }}>{` 88`}</span>
-          </span>
-        </Link>
-
-        {/* Desktop nav */}
-        <div className="hidden md:flex items-center gap-0.5 flex-1">
-          {links.map(l => {
-            const active = pathname === l.href
-            return (
-              <Link key={l.href} href={l.href}
-                className="px-3 py-1.5 rounded-md text-sm transition-colors whitespace-nowrap"
-                style={{
-                  background: active ? (dark ? '#003366' : 'var(--brand-bg)') : undefined,
-                  color: active ? (dark ? '#7db3e0' : 'var(--brand)') : textMid,
-                  fontWeight: active ? 600 : 500,
-                }}
-                onMouseEnter={e => { if (!active) (e.currentTarget as HTMLElement).style.background = hoverBg }}
-                onMouseLeave={e => { if (!active) (e.currentTarget as HTMLElement).style.background = '' }}
-              >
-                {l.label}
-              </Link>
-            )
-          })}
-          {user?.role === 'admin' && (
-            <Link href="/admin"
-              className="px-3 py-1.5 rounded-md text-sm font-medium transition-colors"
-              style={{ color: 'var(--accent)' }}
-            >Admin</Link>
-          )}
-        </div>
-
-        {/* Right side */}
-        <div className="flex items-center gap-2 shrink-0">
-          <button
-            onClick={toggle}
-            className="w-8 h-8 flex items-center justify-center rounded-lg transition-colors text-base"
-            style={{ color: textMute }}
-            title={dark ? 'Chế độ sáng' : 'Chế độ tối'}
-          >
-            {dark ? '☀️' : '🌙'}
-          </button>
-
-          {loading ? (
-            <div className="w-16 h-7 rounded animate-pulse" style={{ background: dark ? '#1a3a5c' : '#e2e8f0' }} />
-          ) : user ? (
-            <div className="flex items-center gap-2">
-              <Link href={`/profile/${user.id}`} className="flex items-center gap-1.5 hover:opacity-75 transition-opacity">
-                <div
-                  className="w-7 h-7 rounded-full flex items-center justify-center text-xs font-bold text-white shrink-0"
-                  style={{ background: 'var(--brand)' }}
-                >
-                  {user.display_name[0]?.toUpperCase()}
-                </div>
-                <span className="hidden sm:block text-sm max-w-24 truncate" style={{ color: textMid }}>
-                  {user.display_name}
-                </span>
-              </Link>
-              <span
-                className="text-xs font-bold px-2 py-1 rounded-full whitespace-nowrap"
-                style={{ background: ptsBg, color: ptsColor }}
-              >
-                {user.total_points} pts
-              </span>
-              <button
-                onClick={async () => { await signOut(); router.push('/login') }}
-                className="text-sm px-2 py-1 rounded transition-colors"
-                style={{ color: textMute }}
-              >
-                Xuất
-              </button>
-            </div>
-          ) : (
-            <Link
-              href="/login"
-              className="text-white font-semibold text-sm px-4 py-1.5 rounded-md hover:opacity-90 transition-opacity"
+          {/* Logo */}
+          <Link href="/" className="flex items-center gap-2 shrink-0 select-none">
+            <span
+              className="flex items-center justify-center w-8 h-8 rounded-lg text-white text-base font-black leading-none"
               style={{ background: 'var(--brand)' }}
+            >⚽</span>
+            <span className="font-black text-[22px] tracking-tight leading-none" style={{ color: 'var(--brand)' }}>
+              WC<span style={{ color: 'var(--accent)' }}>{` 88`}</span>
+            </span>
+          </Link>
+
+          {/* Desktop nav — always visible on md+ */}
+          <div className="hidden md:flex items-center gap-0.5 flex-1">
+            {desktopLinks.map(l => {
+              const active = pathname === l.href
+              return (
+                <Link key={l.href} href={l.href}
+                  className="px-3 py-1.5 rounded-md text-sm transition-colors whitespace-nowrap"
+                  style={{
+                    background: active ? (dark ? '#003366' : 'var(--brand-bg)') : undefined,
+                    color: active ? (dark ? '#7db3e0' : 'var(--brand)') : textMid,
+                    fontWeight: active ? 600 : 500,
+                  }}
+                  onMouseEnter={e => { if (!active) (e.currentTarget as HTMLElement).style.background = hoverBg }}
+                  onMouseLeave={e => { if (!active) (e.currentTarget as HTMLElement).style.background = '' }}
+                >
+                  {l.label}
+                </Link>
+              )
+            })}
+            {user?.role === 'admin' && (
+              <Link href="/admin"
+                className="px-3 py-1.5 rounded-md text-sm font-medium transition-colors"
+                style={{ color: 'var(--accent)' }}
+              >Admin</Link>
+            )}
+          </div>
+
+          {/* Right side */}
+          <div className="flex items-center gap-2 shrink-0">
+            {/* Hamburger — mobile only */}
+            <button
+              onClick={() => setMenuOpen(v => !v)}
+              className="md:hidden w-8 h-8 flex items-center justify-center rounded-lg transition-colors"
+              style={{ color: textMid }}
+              aria-label="Menu"
             >
-              Đăng nhập
-            </Link>
-          )}
+              {menuOpen ? (
+                <svg width="18" height="18" viewBox="0 0 18 18" fill="none">
+                  <path d="M2 2L16 16M16 2L2 16" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
+                </svg>
+              ) : (
+                <svg width="18" height="18" viewBox="0 0 18 18" fill="none">
+                  <path d="M2 4H16M2 9H16M2 14H16" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
+                </svg>
+              )}
+            </button>
+
+            <button
+              onClick={toggle}
+              className="w-8 h-8 flex items-center justify-center rounded-lg transition-colors text-base"
+              style={{ color: textMute }}
+              title={dark ? 'Chế độ sáng' : 'Chế độ tối'}
+            >
+              {dark ? '☀️' : '🌙'}
+            </button>
+
+            {loading ? (
+              <div className="w-16 h-7 rounded animate-pulse" style={{ background: dark ? '#1a3a5c' : '#e2e8f0' }} />
+            ) : user ? (
+              <div className="flex items-center gap-2">
+                <Link href={`/profile/${user.id}`} className="flex items-center gap-1.5 hover:opacity-75 transition-opacity">
+                  <div
+                    className="w-7 h-7 rounded-full flex items-center justify-center text-xs font-bold text-white shrink-0"
+                    style={{ background: 'var(--brand)' }}
+                  >
+                    {user.display_name[0]?.toUpperCase()}
+                  </div>
+                  <span className="hidden sm:block text-sm max-w-24 truncate" style={{ color: textMid }}>
+                    {user.display_name}
+                  </span>
+                </Link>
+                <span
+                  className="text-xs font-bold px-2 py-1 rounded-full whitespace-nowrap"
+                  style={{ background: ptsBg, color: ptsColor }}
+                >
+                  {user.total_points} pts
+                </span>
+                <button
+                  onClick={async () => { await signOut(); router.push('/login') }}
+                  className="text-sm px-2 py-1 rounded transition-colors"
+                  style={{ color: textMute }}
+                >
+                  Xuất
+                </button>
+              </div>
+            ) : (
+              <Link
+                href="/login"
+                className="text-white font-semibold text-sm px-4 py-1.5 rounded-md hover:opacity-90 transition-opacity"
+                style={{ background: 'var(--brand)' }}
+              >
+                Đăng nhập
+              </Link>
+            )}
+          </div>
         </div>
-      </div>
-    </nav>
+      </nav>
+
+      {/* Mobile dropdown menu */}
+      {menuOpen && (
+        <>
+          {/* Backdrop */}
+          <div
+            className="fixed inset-0 z-40 md:hidden"
+            onClick={() => setMenuOpen(false)}
+          />
+          {/* Menu panel */}
+          <div
+            className="fixed top-14 left-0 right-0 z-50 md:hidden border-b shadow-lg"
+            style={{ background: bg, borderColor: border }}
+          >
+            <div className="max-w-5xl mx-auto px-4 py-2" style={{ background: menuBg }}>
+              {ALL_LINKS.map(l => {
+                const active = pathname === l.href
+                return (
+                  <Link
+                    key={l.href}
+                    href={l.href}
+                    className="flex items-center px-3 py-3 rounded-lg text-sm font-medium transition-colors"
+                    style={{
+                      color: active ? 'var(--brand)' : textMid,
+                      background: active ? (dark ? '#003366' : 'var(--brand-bg)') : 'transparent',
+                      fontWeight: active ? 600 : 500,
+                    }}
+                  >
+                    {l.label}
+                    {active && (
+                      <span className="ml-auto w-1.5 h-1.5 rounded-full" style={{ background: 'var(--brand)' }} />
+                    )}
+                  </Link>
+                )
+              })}
+              {user?.role === 'admin' && (
+                <Link href="/admin"
+                  className="flex items-center px-3 py-3 rounded-lg text-sm font-medium"
+                  style={{ color: 'var(--accent)' }}
+                >
+                  Admin ⚙️
+                </Link>
+              )}
+            </div>
+          </div>
+        </>
+      )}
+    </>
   )
 }

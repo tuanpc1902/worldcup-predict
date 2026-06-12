@@ -1,5 +1,6 @@
 'use client'
 import { useEffect, useRef, useState } from 'react'
+import SpinFlag from '@/components/SpinFlag'
 
 interface Props<T> {
   items: T[]
@@ -35,7 +36,7 @@ export default function LazyList<T>({ items, pageSize = 10, renderItem, skeleton
         <div ref={sentinelRef} className="py-2 flex justify-center">
           {skeleton ?? (
             <div className="flex items-center gap-2 text-sm text-slate-400">
-              <div className="w-4 h-4 border-2 border-slate-300 border-t-green-500 rounded-full animate-spin" />
+              <SpinFlag size={20} />
               Đang tải thêm...
             </div>
           )}

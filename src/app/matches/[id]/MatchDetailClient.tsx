@@ -215,27 +215,16 @@ export default function MatchDetailClient({ match, stats, comments: initialComme
       {!isFinished && (
         <div className="bg-white rounded-2xl border border-slate-200 p-4">
           <p className="text-xs font-semibold text-slate-500 uppercase tracking-wide mb-3">📺 Xem trực tiếp tại Việt Nam</p>
-          <div className="grid grid-cols-2 gap-2">
-            {[
-              { name: 'VTV3', url: 'https://vtv.vn/truyen-hinh-truc-tuyen/vtv3.htm', color: '#005baa' },
-              { name: 'VTV5', url: 'https://vtv.vn/truyen-hinh-truc-tuyen/vtv5.htm', color: '#005baa' },
-              { name: 'VTC3 / VTCNow', url: 'https://vtcnow.vn', color: '#e8000d' },
-              { name: 'FPT Play', url: 'https://fptplay.vn', color: '#f97316' },
-            ].map(ch => (
-              <a
-                key={ch.name}
-                href={ch.url}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="flex items-center gap-2 px-3 py-2 rounded-xl border border-slate-200 hover:border-slate-300 hover:shadow-sm transition-all text-sm font-semibold"
-                style={{ color: ch.color }}
-              >
-                <span className="w-2 h-2 rounded-full flex-shrink-0" style={{ background: ch.color }} />
-                {ch.name}
-                <span className="ml-auto text-slate-300 text-xs">↗</span>
-              </a>
-            ))}
-          </div>
+          <a
+            href="https://vtvgo.vn/"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="flex items-center gap-3 px-4 py-3 rounded-xl border border-slate-200 hover:border-slate-300 hover:shadow-sm transition-all"
+          >
+            <span className="w-2.5 h-2.5 rounded-full bg-red-500 animate-pulse flex-shrink-0" />
+            <span className="font-semibold text-sm" style={{ color: '#005baa' }}>VTVGo — Xem trực tiếp</span>
+            <span className="ml-auto text-slate-400 text-xs">vtvgo.vn ↗</span>
+          </a>
         </div>
       )}
 

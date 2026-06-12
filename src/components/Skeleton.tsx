@@ -1,3 +1,5 @@
+import SpinFlag from '@/components/SpinFlag'
+
 interface Props { className?: string }
 
 export function SkeletonBox({ className = '' }: Props) {
@@ -54,7 +56,7 @@ export function PageSpinner() {
   return (
     <div className="flex items-center justify-center min-h-[40vh]">
       <div className="flex flex-col items-center gap-3">
-        <div className="w-10 h-10 border-3 border-slate-200 border-t-green-500 rounded-full animate-spin" />
+        <SpinFlag size={48} />
         <p className="text-sm text-slate-400">Đang tải...</p>
       </div>
     </div>

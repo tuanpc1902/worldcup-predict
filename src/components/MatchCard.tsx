@@ -58,7 +58,9 @@ export default function MatchCard({ match, prediction, showResult, showPredictLi
       <div className="flex items-center justify-between gap-2">
         <div className="flex-1 min-w-0 text-center flex flex-col items-center gap-2">
           <FlagImg team={match.home_team} flag={match.home_flag} size="xl" />
-          <p className="font-semibold text-slate-800 text-sm leading-tight line-clamp-2 w-full px-1 break-words">{match.home_team}</p>
+          <div className="h-9 w-full flex items-center justify-center px-1 overflow-hidden">
+            <p className="font-semibold text-slate-800 text-sm leading-tight line-clamp-2 text-center break-words w-full">{match.home_team}</p>
+          </div>
         </div>
 
         <div className="text-center flex-shrink-0 w-[76px]">
@@ -78,7 +80,9 @@ export default function MatchCard({ match, prediction, showResult, showPredictLi
 
         <div className="flex-1 min-w-0 text-center flex flex-col gap-2 items-center">
           <FlagImg team={match.away_team} flag={match.away_flag} size="xl" />
-          <p className="font-semibold text-slate-800 text-sm leading-tight line-clamp-2 w-full px-1 break-words">{match.away_team}</p>
+          <div className="h-9 w-full flex items-center justify-center px-1 overflow-hidden">
+            <p className="font-semibold text-slate-800 text-sm leading-tight line-clamp-2 text-center break-words w-full">{match.away_team}</p>
+          </div>
         </div>
       </div>
 
