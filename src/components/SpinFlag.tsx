@@ -14,7 +14,7 @@ interface Props {
   size?: number
 }
 
-export default function SpinFlag({ size = 52 }: Props) {
+export default function SpinFlag({ size = 80 }: Props) {
   const [code, setCode] = useState<string | null>(null)
 
   useEffect(() => {
