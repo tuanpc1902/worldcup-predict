@@ -27,7 +27,7 @@ export default function Navbar() {
     <nav className="sticky top-0 z-50 bg-white border-b border-slate-200 shadow-sm">
       <div className="max-w-5xl mx-auto px-4 h-14 flex items-center justify-between">
         <Link href="/" className="flex items-center gap-2 font-bold text-slate-900 text-lg flex-shrink-0">
-          ⚽ <span className="text-green-600">WorldCup</span><span className="text-slate-700 hidden sm:inline"> Predict</span>
+          ⚽ <span style={{color:'var(--accent)'}}>WC</span><span className="text-white">-88</span>
         </Link>
 
         <div className="hidden lg:flex items-center gap-0.5 overflow-x-auto">

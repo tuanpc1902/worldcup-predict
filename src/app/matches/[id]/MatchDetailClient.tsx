@@ -182,6 +182,7 @@ export default function MatchDetailClient({ match, stats, comments: initialComme
 
       {/* My Prediction */}
       {user && (
+        <>
         <div className={`bg-white rounded-2xl border p-5 ${pointsBg}`}>
           <h2 className="font-bold text-sm mb-3">
             {savedPrediction ? '⚽ Dự đoán của bạn' : '✏️ Nhập dự đoán'}
@@ -254,6 +255,7 @@ export default function MatchDetailClient({ match, stats, comments: initialComme
             />
           </div>
         )}
+        </>
       )}
 
       {!user && !isFinished && !locked && (

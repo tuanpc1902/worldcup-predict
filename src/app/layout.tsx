@@ -7,7 +7,7 @@ import BottomNav from '@/components/BottomNav'
 const geist = Geist({ subsets: ['latin'] })
 
 export const metadata: Metadata = {
-  title: 'WorldCup Predict 2026',
+  title: 'WC-88',
   description: 'Dự đoán kết quả World Cup 2026 cùng đồng nghiệp',
   manifest: '/manifest.json',
 }
