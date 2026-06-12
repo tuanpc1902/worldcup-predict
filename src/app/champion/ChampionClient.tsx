@@ -8,48 +8,36 @@ import FlagImg from '@/components/FlagImg'
 interface Team { name: string; flag: string | null }
 interface Props { teams: Team[]; pickCount: Record<string, number> }
 
-// Confederation mapping
+// Confederation mapping — no duplicate keys
 const CONF: Record<string, string> = {
-  // UEFA
+  // UEFA (16)
   Germany: 'UEFA', England: 'UEFA', Spain: 'UEFA', France: 'UEFA',
   Italy: 'UEFA', Portugal: 'UEFA', Netherlands: 'UEFA', Belgium: 'UEFA',
   Croatia: 'UEFA', Switzerland: 'UEFA', Denmark: 'UEFA', Austria: 'UEFA',
   Scotland: 'UEFA', Serbia: 'UEFA', Poland: 'UEFA', Slovakia: 'UEFA',
   Slovenia: 'UEFA', Ukraine: 'UEFA', Hungary: 'UEFA', Turkey: 'UEFA',
-  Romania: 'UEFA', Norway: 'UEFA', Greece: 'UEFA', 'Czech Republic': 'UEFA',
-  'Bosnia & Herzegovina': 'UEFA',
-  // CONMEBOL
+  Romania: 'UEFA', Norway: 'UEFA', Sweden: 'UEFA', Greece: 'UEFA',
+  'Czech Republic': 'UEFA', 'Bosnia & Herzegovina': 'UEFA',
+  // CONMEBOL (6)
   Brazil: 'CONMEBOL', Argentina: 'CONMEBOL', Uruguay: 'CONMEBOL',
   Colombia: 'CONMEBOL', Ecuador: 'CONMEBOL', Venezuela: 'CONMEBOL',
   Paraguay: 'CONMEBOL', Chile: 'CONMEBOL', Bolivia: 'CONMEBOL', Peru: 'CONMEBOL',
-  // CONCACAF
+  // CONCACAF (6)
   USA: 'CONCACAF', Mexico: 'CONCACAF', Canada: 'CONCACAF',
   Jamaica: 'CONCACAF', Honduras: 'CONCACAF', Panama: 'CONCACAF',
   'Costa Rica': 'CONCACAF', Guatemala: 'CONCACAF', Haiti: 'CONCACAF',
-  'Trinidad & Tobago': 'CONCACAF',
-  // AFC
+  'Trinidad & Tobago': 'CONCACAF', 'Curaçao': 'CONCACAF', Curacao: 'CONCACAF',
+  // AFC (8)
   Japan: 'AFC', 'South Korea': 'AFC', Iran: 'AFC', Australia: 'AFC',
   'Saudi Arabia': 'AFC', Qatar: 'AFC', Iraq: 'AFC', China: 'AFC',
   Indonesia: 'AFC', Jordan: 'AFC', Uzbekistan: 'AFC',
-  // CAF
+  // CAF (9)
   Morocco: 'CAF', Nigeria: 'CAF', Senegal: 'CAF', Egypt: 'CAF',
   Cameroon: 'CAF', 'DR Congo': 'CAF', Ghana: 'CAF', 'Ivory Coast': 'CAF',
   'South Africa': 'CAF', Kenya: 'CAF', Algeria: 'CAF', Mali: 'CAF',
-  Tunisia: 'CAF', Angola: 'CAF',
-  // OFC
+  Tunisia: 'CAF', Angola: 'CAF', 'Cape Verde': 'CAF',
+  // OFC (1)
   'New Zealand': 'OFC',
-  // Teams from actual DB (openfootball names)
-  'Cape Verde': 'CAF',
-  'Curaçao': 'CONCACAF',
-  'Curacao': 'CONCACAF',
-  'Algeria': 'CAF',
-  'Uzbekistan': 'AFC',
-  'Iraq': 'AFC',
-  'Jordan': 'AFC',
-  'Norway': 'UEFA',
-  'Sweden': 'UEFA',
-  'Panama': 'CONCACAF',
-  'Tunisia': 'CAF',
 }
 
 const CONF_LABELS: Record<string, string> = {
@@ -84,7 +72,7 @@ export default function ChampionClient({ teams, pickCount }: Props) {
       .select('team_name')
       .eq('user_id', user.id)
       .maybeSingle()
-      .then(({ data }) => {
+      .then(({ data }: { data: any }) => {
         if (data) setMyPick(data.team_name)
         setFetching(false)
       })
