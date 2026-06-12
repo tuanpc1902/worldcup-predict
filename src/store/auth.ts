@@ -1,7 +1,7 @@
 'use client'
 import { create } from 'zustand'
 import { createClient } from '@/lib/supabase'
-import type { AuthChangeEvent, Session } from '@supabase/supabase-js'
+import type { AuthChangeEvent, Session, RealtimeChannel, RealtimePostgresUpdatePayload } from '@supabase/supabase-js'
 import type { Profile } from '@/types'
 
 interface AuthState {
@@ -10,7 +10,10 @@ interface AuthState {
   initialized: boolean
   init: () => Promise<void>
   signOut: () => Promise<void>
+  refresh: () => Promise<void>
 }
+
+let _channel: RealtimeChannel | null = null
 
 export const useAuthStore = create<AuthState>((set, get) => ({
   user: null,
@@ -33,6 +36,20 @@ export const useAuthStore = create<AuthState>((set, get) => ({
 
     set({ user: data ?? null, loading: false })
 
+    // Realtime: update user profile when points/data changes in DB
+    if (_channel) { supabase.removeChannel(_channel); _channel = null }
+    _channel = supabase
+      .channel(`profile:${user.id}`)
+      .on('postgres_changes', {
+        event: 'UPDATE',
+        schema: 'public',
+        table: 'profiles',
+        filter: `id=eq.${user.id}`,
+      }, (payload: RealtimePostgresUpdatePayload<Profile>) => {
+        set({ user: payload.new })
+      })
+      .subscribe()
+
     supabase.auth.onAuthStateChange(async (_event: AuthChangeEvent, session: Session | null) => {
       if (!session?.user) { set({ user: null }); return }
       const { data: profile } = await supabase
@@ -41,8 +58,18 @@ export const useAuthStore = create<AuthState>((set, get) => ({
     })
   },
 
+  refresh: async () => {
+    const current = get().user
+    if (!current) return
+    const supabase = createClient()
+    const { data } = await supabase.from('profiles').select('*').eq('id', current.id).maybeSingle()
+    if (data) set({ user: data as Profile })
+  },
+
   signOut: async () => {
-    await createClient().auth.signOut()
+    const supabase = createClient()
+    if (_channel) { supabase.removeChannel(_channel); _channel = null }
+    await supabase.auth.signOut()
     set({ user: null, initialized: false })
   },
 }))

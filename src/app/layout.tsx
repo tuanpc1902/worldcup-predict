@@ -4,8 +4,8 @@ import Navbar from '@/components/Navbar'
 import BottomNav from '@/components/BottomNav'
 
 export const metadata: Metadata = {
-  title: 'WC-88',
-  description: 'Dự đoán kết quả World Cup 2026 cùng đồng nghiệp',
+  title: 'World Cup - Predict 2026 | WC-88',
+  description: 'Dự đoán kết quả World Cup 2026',
   manifest: '/manifest.json',
 }
 

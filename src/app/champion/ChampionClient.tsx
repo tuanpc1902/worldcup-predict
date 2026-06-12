@@ -56,6 +56,7 @@ export default function ChampionClient({ teams, pickCount }: Props) {
   const supabase = createClient()
 
   const [myPick, setMyPick] = useState<string | null>(null)
+  const [livePickCount, setLivePickCount] = useState<Record<string, number>>(pickCount)
   const [saving, setSaving] = useState(false)
   const [saved, setSaved] = useState(false)
   const [fetching, setFetching] = useState(true)
@@ -85,6 +86,13 @@ export default function ChampionClient({ teams, pickCount }: Props) {
       .from('champion_picks')
       .upsert({ user_id: user!.id, team_name: team }, { onConflict: 'user_id' })
     if (!error) {
+      // Optimistic update: decrement old pick, increment new
+      setLivePickCount(prev => {
+        const next = { ...prev }
+        if (myPick && next[myPick]) next[myPick] = Math.max(0, next[myPick] - 1)
+        next[team] = (next[team] ?? 0) + 1
+        return next
+      })
       setMyPick(team)
       setSaved(true)
       setTimeout(() => setSaved(false), 2500)
@@ -104,8 +112,8 @@ export default function ChampionClient({ teams, pickCount }: Props) {
   })
 
   // Top picks sorted
-  const topPicks = Object.entries(pickCount)
-    .sort(([, a], [, b]) => b - a)
+  const topPicks = Object.entries(livePickCount)
+    .sort(([, a], [, b]) => (b as number) - (a as number))
     .slice(0, 5)
 
   if (loading || fetching) {
@@ -150,8 +158,8 @@ export default function ChampionClient({ teams, pickCount }: Props) {
             <div className="flex-1 min-w-0">
               <div className="text-xs text-amber-600 font-semibold uppercase tracking-wide">Lựa chọn của bạn</div>
               <div className="text-lg font-bold text-amber-800 truncate">{myPick}</div>
-              {pickCount[myPick] && (
-                <div className="text-xs text-amber-600/70">{pickCount[myPick]} người cùng chọn</div>
+              {livePickCount[myPick] && (
+                <div className="text-xs text-amber-600/70">{livePickCount[myPick]} người cùng chọn</div>
               )}
             </div>
             {saved && (
@@ -224,7 +232,7 @@ export default function ChampionClient({ teams, pickCount }: Props) {
         <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
           {filtered.map(team => {
             const isSelected = myPick === team.name
-            const count = pickCount[team.name] ?? 0
+            const count = livePickCount[team.name] ?? 0
             const conf = CONF[team.name]
             return (
               <button
@@ -271,8 +279,8 @@ export default function ChampionClient({ teams, pickCount }: Props) {
           <div className="space-y-2">
             {topPicks.map(([team, count], i) => {
               const t = teams.find(t => t.name === team)
-              const total = Object.values(pickCount).reduce((a, b) => a + b, 0)
-              const pct = total > 0 ? Math.round((count / total) * 100) : 0
+              const total = Object.values(livePickCount).reduce((a: number, b: number) => a + b, 0)
+              const pct = total > 0 ? Math.round(((count as number) / total) * 100) : 0
               return (
                 <div key={team} className="flex items-center gap-3">
                   <span className="text-xs text-slate-400 w-4 text-right">{i + 1}</span>

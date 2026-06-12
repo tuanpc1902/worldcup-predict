@@ -20,6 +20,13 @@ interface SavedPrediction {
   points_earned: number | null
 }
 
+interface RawPred {
+  predicted_home: number
+  predicted_away: number
+  points_earned: number | null
+  user_id: string
+}
+
 interface Props {
   match: Match
   stats: PredictionStats
@@ -42,6 +49,7 @@ export default function MatchDetailClient({ match, stats, comments: initialComme
   const [saving, setSaving] = useState(false)
   const [predSaved, setPredSaved] = useState(false)
 
+  const [liveStats, setLiveStats] = useState<PredictionStats>(stats)
   const [comments, setComments] = useState<Comment[]>(initialComments)
   const [commentText, setCommentText] = useState('')
   const [posting, setPosting] = useState(false)
@@ -78,8 +86,41 @@ export default function MatchDetailClient({ match, stats, comments: initialComme
       setSavedPrediction({ predicted_home: h, predicted_away: a, points_earned: null })
       setPredSaved(true)
       setTimeout(() => setPredSaved(false), 2500)
+      // Re-fetch stats to reflect new prediction count
+      refreshStats()
     }
     setSaving(false)
+  }
+
+  async function refreshStats() {
+    const { data } = await supabase
+      .from('predictions')
+      .select('predicted_home, predicted_away, points_earned, user_id')
+      .eq('match_id', match.id)
+    if (!data) return
+    const preds = data as RawPred[]
+    const total = preds.length
+    if (total === 0) return
+    let homeWin = 0, draw = 0, awayWin = 0
+    const scoreCount: Record<string, number> = {}
+    for (const p of preds) {
+      const { predicted_home: ph, predicted_away: pa } = p
+      if (ph > pa) homeWin++
+      else if (ph === pa) draw++
+      else awayWin++
+      const key = `${ph}-${pa}`
+      scoreCount[key] = (scoreCount[key] ?? 0) + 1
+    }
+    const topScores = Object.entries(scoreCount)
+      .sort(([, a], [, b]) => b - a).slice(0, 5)
+      .map(([score, count]) => ({ score, count, pct: Math.round((count / total) * 100) }))
+    setLiveStats({
+      total,
+      homeWin: Math.round((homeWin / total) * 100),
+      draw: Math.round((draw / total) * 100),
+      awayWin: Math.round((awayWin / total) * 100),
+      topScores,
+    })
   }
 
   async function postComment() {
@@ -258,21 +299,21 @@ export default function MatchDetailClient({ match, stats, comments: initialComme
       )}
 
       {/* Community Stats */}
-      {stats.total > 0 && (isFinished || locked) && (
+      {liveStats.total > 0 && (isFinished || locked) && (
         <div className="bg-white rounded-2xl border border-slate-200 p-5">
-          <h2 className="font-bold text-sm text-slate-700 mb-4">📊 Dự đoán cộng đồng · {stats.total} người</h2>
+          <h2 className="font-bold text-sm text-slate-700 mb-4">📊 Dự đoán cộng đồng · {liveStats.total} người</h2>
 
           {/* Win/Draw/Loss bar */}
           <div className="mb-4">
             <div className="flex h-3 rounded-full overflow-hidden gap-0.5">
-              <div className="bg-blue-500 transition-all" style={{ width: `${stats.homeWin}%` }} />
-              <div className="bg-slate-300 transition-all" style={{ width: `${stats.draw}%` }} />
-              <div className="bg-orange-400 transition-all" style={{ width: `${stats.awayWin}%` }} />
+              <div className="bg-blue-500 transition-all" style={{ width: `${liveStats.homeWin}%` }} />
+              <div className="bg-slate-300 transition-all" style={{ width: `${liveStats.draw}%` }} />
+              <div className="bg-orange-400 transition-all" style={{ width: `${liveStats.awayWin}%` }} />
             </div>
             <div className="flex justify-between text-xs mt-1.5">
-              <span className="text-blue-600 font-semibold">{match.home_team} thắng {stats.homeWin}%</span>
-              <span className="text-slate-500">Hòa {stats.draw}%</span>
-              <span className="text-orange-500 font-semibold">{stats.awayWin}% {match.away_team} thắng</span>
+              <span className="text-blue-600 font-semibold">{match.home_team} thắng {liveStats.homeWin}%</span>
+              <span className="text-slate-500">Hòa {liveStats.draw}%</span>
+              <span className="text-orange-500 font-semibold">{liveStats.awayWin}% {match.away_team} thắng</span>
             </div>
           </div>
 
@@ -280,7 +321,7 @@ export default function MatchDetailClient({ match, stats, comments: initialComme
           <div>
             <p className="text-xs text-slate-500 mb-2">Tỉ số phổ biến nhất</p>
             <div className="space-y-1.5">
-              {stats.topScores.map(({ score, count, pct }) => (
+              {liveStats.topScores.map(({ score, count, pct }) => (
                 <div key={score} className="flex items-center gap-2">
                   <span className="font-bold text-sm text-slate-800 w-10 text-center">{score}</span>
                   <div className="flex-1 h-2 bg-slate-100 rounded-full overflow-hidden">

@@ -20,8 +20,16 @@ export default function Navbar() {
     { href: '/leaderboard', label: 'Xếp hạng' },
   ]
 
+  const bg       = dark ? '#001f3f' : '#ffffff'
+  const border   = dark ? '#1a3a5c' : '#d1dbe8'
+  const textMid  = dark ? '#94b8d4' : '#475569'
+  const textMute = dark ? '#5a8aaa' : '#94a3b8'
+  const hoverBg  = dark ? '#002a52' : '#f1f5f9'
+  const ptsBg    = dark ? '#002a52' : 'var(--brand-bg)'
+  const ptsColor = dark ? '#7db3e0' : 'var(--brand)'
+
   return (
-    <nav className="sticky top-0 z-50 border-b shadow-sm" style={{ background: '#fff', borderColor: '#d1dbe8' }}>
+    <nav className="sticky top-0 z-50 border-b shadow-sm" style={{ background: bg, borderColor: border }}>
       <div className="max-w-5xl mx-auto px-4 h-14 flex items-center justify-between gap-4">
 
         {/* Logo */}
@@ -31,7 +39,7 @@ export default function Navbar() {
             style={{ background: 'var(--brand)' }}
           >⚽</span>
           <span className="font-black text-[22px] tracking-tight leading-none" style={{ color: 'var(--brand)' }}>
-            WC<span style={{ color: 'var(--accent)' }}>88</span>
+            WC<span style={{ color: 'var(--accent)' }}>{` 88`}</span>
           </span>
         </Link>
 
@@ -41,12 +49,14 @@ export default function Navbar() {
             const active = pathname === l.href
             return (
               <Link key={l.href} href={l.href}
-                className="px-3 py-1.5 rounded-md text-sm font-medium transition-colors whitespace-nowrap"
+                className="px-3 py-1.5 rounded-md text-sm transition-colors whitespace-nowrap"
                 style={{
-                  background: active ? 'var(--brand-bg)' : undefined,
-                  color: active ? 'var(--brand)' : '#475569',
+                  background: active ? (dark ? '#003366' : 'var(--brand-bg)') : undefined,
+                  color: active ? (dark ? '#7db3e0' : 'var(--brand)') : textMid,
                   fontWeight: active ? 600 : 500,
                 }}
+                onMouseEnter={e => { if (!active) (e.currentTarget as HTMLElement).style.background = hoverBg }}
+                onMouseLeave={e => { if (!active) (e.currentTarget as HTMLElement).style.background = '' }}
               >
                 {l.label}
               </Link>
@@ -55,7 +65,7 @@ export default function Navbar() {
           {user?.role === 'admin' && (
             <Link href="/admin"
               className="px-3 py-1.5 rounded-md text-sm font-medium transition-colors"
-              style={{ color: 'var(--accent)', fontWeight: 500 }}
+              style={{ color: 'var(--accent)' }}
             >Admin</Link>
           )}
         </div>
@@ -65,14 +75,14 @@ export default function Navbar() {
           <button
             onClick={toggle}
             className="w-8 h-8 flex items-center justify-center rounded-lg transition-colors text-base"
-            style={{ color: '#64748b' }}
+            style={{ color: textMute }}
             title={dark ? 'Chế độ sáng' : 'Chế độ tối'}
           >
             {dark ? '☀️' : '🌙'}
           </button>
 
           {loading ? (
-            <div className="w-16 h-7 rounded animate-pulse" style={{ background: '#e2e8f0' }} />
+            <div className="w-16 h-7 rounded animate-pulse" style={{ background: dark ? '#1a3a5c' : '#e2e8f0' }} />
           ) : user ? (
             <div className="flex items-center gap-2">
               <Link href={`/profile/${user.id}`} className="flex items-center gap-1.5 hover:opacity-75 transition-opacity">
@@ -82,20 +92,20 @@ export default function Navbar() {
                 >
                   {user.display_name[0]?.toUpperCase()}
                 </div>
-                <span className="hidden sm:block text-sm max-w-24 truncate" style={{ color: '#475569' }}>
+                <span className="hidden sm:block text-sm max-w-24 truncate" style={{ color: textMid }}>
                   {user.display_name}
                 </span>
               </Link>
               <span
                 className="text-xs font-bold px-2 py-1 rounded-full whitespace-nowrap"
-                style={{ background: 'var(--brand-bg)', color: 'var(--brand)' }}
+                style={{ background: ptsBg, color: ptsColor }}
               >
                 {user.total_points} pts
               </span>
               <button
                 onClick={async () => { await signOut(); router.push('/login') }}
                 className="text-sm px-2 py-1 rounded transition-colors"
-                style={{ color: '#94a3b8' }}
+                style={{ color: textMute }}
               >
                 Xuất
               </button>
@@ -103,7 +113,7 @@ export default function Navbar() {
           ) : (
             <Link
               href="/login"
-              className="text-white font-semibold text-sm px-4 py-1.5 rounded-md transition-opacity hover:opacity-90"
+              className="text-white font-semibold text-sm px-4 py-1.5 rounded-md hover:opacity-90 transition-opacity"
               style={{ background: 'var(--brand)' }}
             >
               Đăng nhập
