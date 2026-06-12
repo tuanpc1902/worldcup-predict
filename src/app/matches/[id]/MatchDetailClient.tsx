@@ -32,7 +32,7 @@ interface Comment {
 interface Props {
   match: any
   stats: Stats
-  comments: Comment[]
+  comments: any[]
 }
 
 const REACTIONS = ['🔥', '😱', '👍', '😂']

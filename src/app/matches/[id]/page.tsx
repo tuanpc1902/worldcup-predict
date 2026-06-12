@@ -24,7 +24,13 @@ export default async function MatchDetailPage({ params }: { params: Promise<{ id
   // Thống kê dự đoán
   const stats = buildPredictionStats(predictions ?? [])
 
-  return <MatchDetailClient match={match} stats={stats} comments={comments ?? []} />
+  // Flatten profiles (Supabase returns array for joins)
+  const flatComments = (comments ?? []).map((c: any) => ({
+    ...c,
+    profiles: Array.isArray(c.profiles) ? c.profiles[0] : c.profiles,
+  }))
+
+  return <MatchDetailClient match={match} stats={stats} comments={flatComments} />
 }
 
 function buildPredictionStats(predictions: any[]) {
