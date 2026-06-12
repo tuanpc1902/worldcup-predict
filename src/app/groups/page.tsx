@@ -54,7 +54,7 @@ export default function GroupsPage() {
     setCreating(true)
     const { data: group, error } = await supabase.from('groups')
       .insert({ name: newName.trim(), owner_id: user!.id })
-      .select().single()
+      .select().maybeSingle()
     if (!error && group) {
       await supabase.from('group_members').insert({ group_id: group.id, user_id: user!.id })
       await loadGroups()
@@ -70,7 +70,7 @@ export default function GroupsPage() {
     const code = joinCode.trim().toUpperCase()
     if (!code) return
     setCreating(true)
-    const { data: group } = await supabase.from('groups').select('*').eq('invite_code', code).single()
+    const { data: group } = await supabase.from('groups').select('*').eq('invite_code', code).maybeSingle()
     if (!group) { setMsg('Không tìm thấy nhóm với mã này'); setCreating(false); return }
     const { error } = await supabase.from('group_members').insert({ group_id: group.id, user_id: user!.id })
     if (error?.code === '23505') { setMsg('Bạn đã trong nhóm này rồi') }

@@ -36,7 +36,7 @@ export default function ChampionPage() {
   useEffect(() => {
     if (!user) return
     Promise.all([
-      supabase.from('champion_picks').select('team_name').eq('user_id', user.id).single(),
+      supabase.from('champion_picks').select('team_name').eq('user_id', user.id).maybeSingle(),
       supabase.from('champion_picks').select('team_name, profiles(display_name)').order('created_at'),
     ]).then(([{ data: myPick }, { data: picks }]) => {
       if (myPick) setPick(myPick.team_name)

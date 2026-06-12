@@ -23,14 +23,14 @@ export const useAuthStore = create<AuthState>((set) => ({
       .from('profiles')
       .select('*')
       .eq('id', user.id)
-      .single()
+      .maybeSingle()
 
     set({ user: data ?? null, loading: false })
 
     supabase.auth.onAuthStateChange(async (_event: any, session: any) => {
       if (!session?.user) { set({ user: null }); return }
       const { data: profile } = await supabase
-        .from('profiles').select('*').eq('id', session.user.id).single()
+        .from('profiles').select('*').eq('id', session.user.id).maybeSingle()
       set({ user: profile ?? null })
     })
   },
