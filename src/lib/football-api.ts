@@ -1,3 +1,5 @@
+import { getFlagUrl } from './flag-map'
+
 const JSON_URL = 'https://raw.githubusercontent.com/openfootball/worldcup.json/master/2026/worldcup.json'
 
 export async function fetchFixtures() {
@@ -13,8 +15,8 @@ export function mapFixturesToMatches(data: any): any[] {
     return {
       home_team: m.team1 ?? '',
       away_team: m.team2 ?? '',
-      home_flag: null,
-      away_flag: null,
+      home_flag: getFlagUrl(m.team1 ?? '', 40),
+      away_flag: getFlagUrl(m.team2 ?? '', 40),
       match_time: parseMatchTime(m.date, m.time),
       stage: mapRound(m.round ?? ''),
       group_name: m.group ?? null,

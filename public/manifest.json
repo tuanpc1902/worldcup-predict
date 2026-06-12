@@ -1,0 +1,12 @@
+{
+  "name": "WorldCup Predict 2026",
+  "short_name": "WC Predict",
+  "description": "Dự đoán kết quả World Cup 2026",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#f8fafc",
+  "theme_color": "#16a34a",
+  "icons": [
+    { "src": "/globe.svg", "sizes": "any", "type": "image/svg+xml" }
+  ]
+}
