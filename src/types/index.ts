@@ -111,6 +111,26 @@ export interface H2HResult {
   }
 }
 
+export interface MatchGoal {
+  id: string
+  match_id: string
+  player_name: string
+  team_name: string
+  team_flag: string | null
+  minute: number | null
+  is_own_goal: boolean
+  is_penalty: boolean
+  created_at: string
+}
+
+export interface TopScorer {
+  player_name: string
+  team_name: string
+  team_flag: string | null
+  goals: number
+  penalties: number
+}
+
 export interface PredictionStats {
   total: number
   homeWin: number

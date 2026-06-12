@@ -1,7 +1,6 @@
 'use client'
 import { useEffect, useState } from 'react'
 
-// Curated list of recognisable WC 2026 nations
 const CODES = [
   'br','fr','de','es','ar','pt','gb-eng','nl','it','us',
   'jp','kr','ma','ng','sn','au','co','uy','hr','be',
@@ -11,56 +10,59 @@ const CODES = [
 ]
 
 interface Props {
-  /** px diameter of the circular crop */
+  /** diameter of the flag circle in px */
   size?: number
-  /** extra className on the outer wrapper */
-  className?: string
 }
 
-export default function SpinFlag({ size = 44, className = '' }: Props) {
+export default function SpinFlag({ size = 52 }: Props) {
   const [code, setCode] = useState<string | null>(null)
 
   useEffect(() => {
     setCode(CODES[Math.floor(Math.random() * CODES.length)])
   }, [])
 
-  const s = size
-  const imgW = Math.round(s * 1.6)   // wider than circle so crop looks good
-  const imgH = Math.round(s * 1.1)
-  const cdnW = imgW >= 60 ? 80 : 40
+  const ring = size + 12          // outer ring diameter
+  const gap  = 4                  // space between ring and flag
+  const cdnW = size >= 60 ? 80 : 40
 
   if (!code) {
     return (
       <div
-        className={`rounded-full bg-slate-200 animate-pulse ${className}`}
-        style={{ width: s, height: s }}
+        className="rounded-full bg-slate-200 animate-pulse"
+        style={{ width: ring, height: ring }}
       />
     )
   }
 
   return (
-    <div
-      className={`rounded-full overflow-hidden flex-shrink-0 ${className}`}
-      style={{
-        width: s,
-        height: s,
-        animation: 'spin 1.1s linear infinite',
-      }}
-    >
-      {/* eslint-disable-next-line @next/next/no-img-element */}
-      <img
-        src={`https://flagcdn.com/w${cdnW}/${code}.png`}
-        alt=""
-        width={imgW}
-        height={imgH}
-        style={{
-          width: s,
-          height: s,
-          objectFit: 'cover',
-          objectPosition: 'center',
-          display: 'block',
-        }}
-      />
+    <div style={{ position: 'relative', width: ring, height: ring, flexShrink: 0 }}>
+      {/* Spinning arc — only the border rotates, flag stays still */}
+      <div style={{
+        position: 'absolute',
+        inset: 0,
+        borderRadius: '50%',
+        border: `3px solid var(--brand-bg)`,
+        borderTopColor: 'var(--brand)',
+        borderRightColor: 'var(--brand)',
+        animation: 'spin 0.9s linear infinite',
+        boxSizing: 'border-box',
+      }} />
+
+      {/* Static circular flag */}
+      <div style={{
+        position: 'absolute',
+        inset: gap,
+        borderRadius: '50%',
+        overflow: 'hidden',
+        boxShadow: '0 1px 4px rgba(0,0,0,0.15)',
+      }}>
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img
+          src={`https://flagcdn.com/w${cdnW}/${code}.png`}
+          alt=""
+          style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }}
+        />
+      </div>
     </div>
   )
 }

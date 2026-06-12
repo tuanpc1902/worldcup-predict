@@ -3,6 +3,15 @@ import type { FixtureRow } from '@/types'
 
 const JSON_URL = 'https://raw.githubusercontent.com/openfootball/worldcup.json/master/2026/worldcup.json'
 
+interface RawGoal {
+  name?: string
+  minute?: number
+  score?: [number, number]
+  team?: number   // 1 = home, 2 = away
+  og?: boolean    // own goal
+  pen?: boolean   // penalty
+}
+
 interface RawFixture {
   team1?: string
   team2?: string
@@ -12,10 +21,25 @@ interface RawFixture {
   group?: string
   ground?: string
   score?: { ft?: [number, number] }
+  goals?: RawGoal[]
 }
 
 interface WorldCupJson {
   matches?: RawFixture[]
+}
+
+export interface GoalRow {
+  player_name: string
+  team_name: string
+  team_flag: string | null
+  minute: number | null
+  is_own_goal: boolean
+  is_penalty: boolean
+}
+
+export interface FixtureWithGoals {
+  fixture: FixtureRow
+  goals: GoalRow[]
 }
 
 export async function fetchFixtures(): Promise<WorldCupJson> {
@@ -27,7 +51,6 @@ export async function fetchFixtures(): Promise<WorldCupJson> {
 export function mapFixturesToMatches(data: WorldCupJson): FixtureRow[] {
   return (data.matches ?? []).map((m: RawFixture) => {
     const hasScore = m.score?.ft != null
-
     return {
       home_team: m.team1 ?? '',
       away_team: m.team2 ?? '',
@@ -45,23 +68,58 @@ export function mapFixturesToMatches(data: WorldCupJson): FixtureRow[] {
   })
 }
 
-// Parse "2026-06-12" + "15:00 UTC-4" → UTC ISO string
+export function mapFixturesWithGoals(data: WorldCupJson): FixtureWithGoals[] {
+  return (data.matches ?? [])
+    .filter((m: RawFixture) => m.score?.ft != null && (m.goals?.length ?? 0) > 0)
+    .map((m: RawFixture) => {
+      const fixture: FixtureRow = {
+        home_team: m.team1 ?? '',
+        away_team: m.team2 ?? '',
+        home_flag: getFlagUrl(m.team1 ?? '', 40),
+        away_flag: getFlagUrl(m.team2 ?? '', 40),
+        match_time: parseMatchTime(m.date ?? '', m.time),
+        stage: mapRound(m.round ?? ''),
+        group_name: m.group ?? null,
+        venue: m.ground ?? null,
+        status: 'finished',
+        home_score: m.score!.ft![0],
+        away_score: m.score!.ft![1],
+        api_fixture_id: null,
+      }
+
+      const goals: GoalRow[] = (m.goals ?? [])
+        .filter((g: RawGoal) => g.name)
+        .map((g: RawGoal) => {
+          const teamName = g.team === 2 ? (m.team2 ?? '') : (m.team1 ?? '')
+          const flagTeam = g.og
+            ? (g.team === 2 ? (m.team1 ?? '') : (m.team2 ?? ''))  // own goal: credited to other team
+            : teamName
+          return {
+            player_name: g.name!,
+            team_name: g.og
+              ? (g.team === 2 ? (m.team1 ?? '') : (m.team2 ?? ''))
+              : teamName,
+            team_flag: getFlagUrl(flagTeam, 40),
+            minute: g.minute ?? null,
+            is_own_goal: g.og ?? false,
+            is_penalty: g.pen ?? false,
+          }
+        })
+
+      return { fixture, goals }
+    })
+}
+
 function parseMatchTime(date: string, time?: string): string {
   if (!time) return `${date}T00:00:00Z`
-
-  // Match "15:00 UTC-4" or "15:00 UTC+2"
   const match = time.match(/^(\d{1,2}):(\d{2})\s*UTC([+-]\d+)$/)
   if (!match) return `${date}T00:00:00Z`
-
   const hours = parseInt(match[1])
   const minutes = parseInt(match[2])
-  const offset = parseInt(match[3]) // e.g. -4, -7
-
-  // Convert local time to UTC: UTC = local - offset
+  const offset = parseInt(match[3])
   const totalMinutes = hours * 60 + minutes - offset * 60
   const utcDate = new Date(`${date}T00:00:00Z`)
   utcDate.setUTCMinutes(utcDate.getUTCMinutes() + totalMinutes)
-
   return utcDate.toISOString()
 }
 

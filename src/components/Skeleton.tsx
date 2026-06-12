@@ -54,11 +54,9 @@ export function CommentSkeleton() {
 
 export function PageSpinner() {
   return (
-    <div className="flex items-center justify-center min-h-[40vh]">
-      <div className="flex flex-col items-center gap-3">
-        <SpinFlag size={48} />
-        <p className="text-sm text-slate-400">Đang tải...</p>
-      </div>
+    <div className="fixed inset-0 z-50 flex flex-col items-center justify-center gap-4 bg-white/80 backdrop-blur-sm">
+      <SpinFlag size={56} />
+      <p className="text-sm text-slate-400 font-medium">Đang tải...</p>
     </div>
   )
 }
