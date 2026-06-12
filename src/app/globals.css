@@ -74,38 +74,6 @@ body {
     user-select: none;
   }
 
-  /* ── Brand overrides: replace green → navy/orange ── */
-
-  /* Backgrounds */
-  .bg-green-600, .bg-green-700 { background-color: var(--brand) !important; }
-  .hover\:bg-green-700:hover   { background-color: var(--brand-light) !important; }
-  .hover\:bg-green-50:hover    { background-color: var(--brand-bg) !important; }
-  .bg-green-50  { background-color: var(--brand-bg) !important; }
-  .bg-green-100 { background-color: #d0dff0 !important; }
-
-  /* Text */
-  .text-green-600, .text-green-700 { color: var(--brand) !important; }
-  .text-green-500 { color: var(--brand-light) !important; }
-  .text-green-400 { color: var(--brand-light) !important; }
-
-  /* Borders / rings */
-  .border-green-500, .border-green-300 { border-color: var(--brand-light) !important; }
-  .ring-green-500  { --tw-ring-color: var(--brand) !important; }
-  .focus\:ring-green-500:focus { --tw-ring-color: var(--brand) !important; }
-
-  /* Accent (orange) for CTAs and points */
-  .bg-amber-50    { background-color: var(--accent-bg) !important; }
-  .bg-amber-100   { background-color: #ffe4c4 !important; }
-  .bg-amber-200   { background-color: #ffd0a0 !important; }
-  .text-amber-600, .text-amber-700, .text-amber-800 { color: var(--accent-dark) !important; }
-  .text-amber-500 { color: var(--accent) !important; }
-  .border-amber-200, .border-amber-300, .border-amber-400 { border-color: var(--accent-light) !important; }
-  .ring-amber-300 { --tw-ring-color: var(--accent-light) !important; }
-
-  /* Gradient hero */
-  .from-green-600 { --tw-gradient-from: var(--brand) !important; }
-  .to-green-700, .to-emerald-700 { --tw-gradient-to: var(--brand-dark) !important; }
-  .from-green-600.to-emerald-700 { background: linear-gradient(135deg, var(--brand), var(--brand-dark)) !important; }
 
   /* Dark mode overrides */
   .dark .bg-white { background-color: var(--bg-card) !important; }
@@ -133,26 +101,7 @@ body {
   .dark .bg-blue-50  { background-color: #001a40 !important; }
 }
 
-/* Navbar brand override */
-nav.sticky { background-color: var(--brand) !important; border-bottom-color: var(--brand-dark) !important; }
-nav.sticky a, nav.sticky span, nav.sticky button { color: #ffffff !important; }
-nav.sticky a:hover { background-color: rgba(255,255,255,0.15) !important; color: #ffffff !important; }
-nav.sticky .bg-green-50, nav.sticky [class*="bg-green"] {
-  background-color: rgba(255,255,255,0.2) !important;
-}
-nav.sticky .text-slate-600, nav.sticky .text-slate-700, nav.sticky .text-slate-900 {
-  color: #ffffff !important;
-}
-nav.sticky .text-green-600 { color: var(--accent) !important; }
-nav.sticky .bg-green-100 { background-color: var(--accent) !important; color: #ffffff !important; }
-nav.sticky .border-slate-200 { border-color: rgba(255,255,255,0.2) !important; }
-nav.sticky .hover\:bg-slate-100:hover { background-color: rgba(255,255,255,0.15) !important; }
-nav.sticky .text-slate-400, nav.sticky .text-slate-500 { color: rgba(255,255,255,0.7) !important; }
-nav.sticky a.bg-green-600 {
-  background-color: var(--accent) !important;
-  color: #ffffff !important;
-}
-nav.sticky a.bg-green-600:hover { background-color: var(--accent-dark) !important; }
+/* Navbar: white background, no global color overrides needed */
 
 .safe-area-pb {
   padding-bottom: env(safe-area-inset-bottom, 0px);

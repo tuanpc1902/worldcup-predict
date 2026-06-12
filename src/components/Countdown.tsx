@@ -73,8 +73,6 @@ export default function Countdown({ matchId, matchTime, homeTeam, awayTeam, home
   const mins = Math.floor((totalSec % 3600) / 60)
   const secs = totalSec % 60
 
-  const isLocked = diff < 2 * 60 * 60 * 1000 // lock within 2h
-
   return (
     <div className="rounded-2xl overflow-hidden" style={{ background: 'linear-gradient(135deg, var(--brand) 0%, var(--brand-dark) 100%)' }}>
       {/* Header */}
@@ -118,8 +116,6 @@ export default function Countdown({ matchId, matchTime, homeTeam, awayTeam, home
               Đăng nhập
             </Link>
           </div>
-        ) : isLocked ? (
-          <p className="text-center text-white/60 text-xs">Đã khóa dự đoán (dưới 2 giờ)</p>
         ) : (
           <div className="flex items-center gap-3">
             <span className="text-white/70 text-xs flex-shrink-0">Dự đoán</span>
