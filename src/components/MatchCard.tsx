@@ -3,6 +3,7 @@ import { fmtTime, fmtDate } from '@/lib/time'
 import FlagImg from '@/components/FlagImg'
 import type { Match, Prediction } from '@/types'
 
+
 interface Props {
   match: Match
   prediction?: Prediction | null
@@ -30,7 +31,7 @@ export default function MatchCard({ match, prediction, showResult, showPredictLi
     'bg-slate-100 text-slate-500'
 
   return (
-    <div className="bg-white rounded-xl p-4 border border-slate-200 hover:border-slate-300 hover:shadow-sm transition-all">
+    <div className="bg-white rounded-xl p-4 border border-slate-200 hover:border-slate-300 hover:shadow-sm transition-all relative">
       {/* Header */}
       <div className="flex items-center justify-between mb-3">
         <span className="text-xs text-slate-500 bg-slate-100 px-2 py-0.5 rounded-full font-medium">
@@ -103,12 +104,17 @@ export default function MatchCard({ match, prediction, showResult, showPredictLi
       {showPredictLink && !isFinished && !isLive && (
         <div className="mt-3 pt-3 border-t border-slate-100">
           <Link
-            href="/predict"
+            href={`/matches/${match.id}`}
             className="block w-full text-center text-sm font-semibold text-green-600 hover:text-green-700 hover:bg-green-50 py-1.5 rounded-lg transition-colors"
           >
             Dự đoán →
           </Link>
         </div>
+      )}
+
+      {/* Click anywhere on finished/live card to view detail */}
+      {(isFinished || isLive) && (
+        <Link href={`/matches/${match.id}`} className="absolute inset-0 rounded-xl" aria-label="Xem chi tiết" />
       )}
     </div>
   )

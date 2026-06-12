@@ -17,6 +17,7 @@ export default function LoginPage() {
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
     setError('')
+    setSuccess('')
     setLoading(true)
     try {
       if (mode === 'login') {
@@ -25,18 +26,33 @@ export default function LoginPage() {
         router.push('/')
         router.refresh()
       } else {
-        const res = await fetch('/api/auth/register', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ email, password, name }),
+        // Check IP limit trước khi tạo tài khoản
+        const check = await fetch('/api/auth/check-ip')
+        const checkJson = await check.json()
+        if (!check.ok) throw new Error(checkJson.message)
+
+        // Dùng signUp để Supabase gửi email xác nhận
+        const { data, error: signUpErr } = await supabase.auth.signUp({
+          email,
+          password,
+          options: {
+            data: { full_name: name },
+            emailRedirectTo: `${location.origin}/auth/callback`,
+          },
         })
-        const json = await res.json()
-        if (!res.ok) throw new Error(json.message)
-        // Auto login after register
-        const { error: loginErr } = await supabase.auth.signInWithPassword({ email, password })
-        if (loginErr) throw loginErr
-        router.push('/')
-        router.refresh()
+        if (signUpErr) throw signUpErr
+
+        if (data.session) {
+          // Email confirm disabled — đăng nhập luôn
+          router.push('/')
+          router.refresh()
+        } else {
+          // Email confirm enabled — báo user kiểm tra email
+          setSuccess('Tài khoản đã tạo! Kiểm tra email để xác nhận trước khi đăng nhập.')
+          setEmail('')
+          setPassword('')
+          setName('')
+        }
       }
     } catch (err: any) {
       setError(err.message ?? 'Đã xảy ra lỗi')
@@ -48,7 +64,7 @@ export default function LoginPage() {
   async function handleGoogle() {
     await supabase.auth.signInWithOAuth({
       provider: 'google',
-      options: { redirectTo: `${location.origin}/` },
+      options: { redirectTo: `${location.origin}/auth/callback` },
     })
   }
 
@@ -110,18 +126,27 @@ export default function LoginPage() {
               </p>
             )}
             {success && (
-              <p className="text-green-700 text-sm bg-green-50 border border-green-200 rounded-lg px-3 py-2">
-                {success}
-              </p>
+              <div className="bg-green-50 border border-green-200 rounded-lg px-4 py-3">
+                <p className="text-green-700 text-sm font-medium">✓ {success}</p>
+                <button
+                  type="button"
+                  onClick={() => { setMode('login'); setSuccess('') }}
+                  className="text-green-600 hover:underline text-sm mt-1"
+                >
+                  Đăng nhập ngay →
+                </button>
+              </div>
             )}
 
-            <button
-              type="submit"
-              disabled={loading}
-              className="w-full bg-green-600 hover:bg-green-700 disabled:opacity-50 text-white font-bold py-2.5 rounded-lg transition-colors"
-            >
-              {loading ? 'Đang xử lý...' : mode === 'login' ? 'Đăng nhập' : 'Tạo tài khoản'}
-            </button>
+            {!success && (
+              <button
+                type="submit"
+                disabled={loading}
+                className="w-full bg-green-600 hover:bg-green-700 disabled:opacity-50 text-white font-bold py-2.5 rounded-lg transition-colors"
+              >
+                {loading ? 'Đang xử lý...' : mode === 'login' ? 'Đăng nhập' : 'Tạo tài khoản'}
+              </button>
+            )}
           </form>
 
           <div className="relative my-5">

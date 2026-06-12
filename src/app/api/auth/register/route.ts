@@ -14,6 +14,7 @@ export async function POST(req: NextRequest) {
     req.headers.get('x-real-ip') ||
     '0.0.0.0'
 
+  console.log('[register] SERVICE_KEY prefix:', process.env.SUPABASE_SERVICE_ROLE_KEY?.slice(0, 20))
   const supabase = createServiceSupabase()
 
   // Check if this IP already has an account

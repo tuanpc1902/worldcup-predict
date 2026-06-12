@@ -1,13 +1,14 @@
 'use client'
 import { useState } from 'react'
 
-type Size = 'xs' | 'sm' | 'md' | 'lg'
+type Size = 'xs' | 'sm' | 'md' | 'lg' | 'xl'
 
 const SIZE_CLASS: Record<Size, string> = {
   xs: 'w-5 h-3.5',
   sm: 'w-6 h-4',
   md: 'w-8 h-6',
   lg: 'w-14 h-10',
+  xl: 'w-20 h-14',
 }
 
 interface Props {
