@@ -106,7 +106,7 @@ export default function AdminPage() {
         {[['all', 'Tất cả'], ['scheduled', 'Sắp diễn ra'], ['finished', 'Đã xong']].map(([v, l]) => (
           <button
             key={v}
-            onClick={() => setFilter(v as any)}
+            onClick={() => setFilter(v as 'all' | 'scheduled' | 'finished')}
             className={`text-sm px-3 py-1.5 rounded-lg font-medium transition-colors ${
               filter === v ? 'bg-slate-800 text-white' : 'bg-white text-slate-600 border border-slate-200 hover:bg-slate-50'
             }`}
@@ -196,8 +196,14 @@ export default function AdminPage() {
   )
 }
 
+type MatchFormData = {
+  home_team: string; away_team: string; match_time: string
+  stage: string; group_name: string; venue: string
+  status: string; home_score: number | null; away_score: number | null; is_locked: boolean
+}
+
 function MatchModal({ match, onClose, onSave, saving }: {
-  match: Match | null; onClose: () => void; onSave: (data: any) => void; saving: boolean
+  match: Match | null; onClose: () => void; onSave: (data: MatchFormData) => void; saving: boolean
 }) {
   const [form, setForm] = useState({
     home_team: match?.home_team ?? '',
@@ -211,18 +217,18 @@ function MatchModal({ match, onClose, onSave, saving }: {
     away_score: match?.away_score ?? '',
     is_locked: match?.is_locked ?? false,
   })
-  const set = (k: string, v: any) => setForm(p => ({ ...p, [k]: v }))
+  const set = (k: string, v: string | number | boolean) => setForm(p => ({ ...p, [k]: v }))
 
   return (
     <div className="fixed inset-0 z-50 bg-black/30 backdrop-blur-sm flex items-center justify-center p-4" onClick={onClose}>
       <div className="bg-white rounded-2xl border border-slate-200 shadow-xl p-6 w-full max-w-md" onClick={e => e.stopPropagation()}>
         <h2 className="text-lg font-bold text-slate-800 mb-4">{match ? 'Sửa trận đấu' : 'Thêm trận mới'}</h2>
-        <form onSubmit={e => { e.preventDefault(); onSave({ ...form, home_score: form.home_score !== '' ? Number(form.home_score) : null, away_score: form.away_score !== '' ? Number(form.away_score) : null }) }} className="space-y-3">
+        <form onSubmit={e => { e.preventDefault(); onSave({ ...form, home_score: form.home_score !== '' ? Number(form.home_score) : null, away_score: form.away_score !== '' ? Number(form.away_score) : null } as MatchFormData) }} className="space-y-3">
           <div className="grid grid-cols-2 gap-3">
-            {[['home_team', 'Đội nhà'], ['away_team', 'Đội khách']].map(([k, l]) => (
+            {([['home_team', 'Đội nhà'], ['away_team', 'Đội khách']] as [keyof typeof form, string][]).map(([k, l]) => (
               <div key={k}>
                 <label className="text-xs font-medium text-slate-600 block mb-1">{l}</label>
-                <input value={(form as any)[k]} onChange={e => set(k, e.target.value)} required
+                <input value={form[k] as string} onChange={e => set(k, e.target.value)} required
                   className="w-full border border-slate-300 rounded-lg px-3 py-2 text-slate-800 text-sm focus:outline-none focus:ring-2 focus:ring-green-500" />
               </div>
             ))}
@@ -250,10 +256,10 @@ function MatchModal({ match, onClose, onSave, saving }: {
           </div>
           {form.status === 'finished' && (
             <div className="grid grid-cols-2 gap-3">
-              {[['home_score', 'Bàn đội nhà'], ['away_score', 'Bàn đội khách']].map(([k, l]) => (
+              {([['home_score', 'Bàn đội nhà'], ['away_score', 'Bàn đội khách']] as [keyof typeof form, string][]).map(([k, l]) => (
                 <div key={k}>
                   <label className="text-xs font-medium text-slate-600 block mb-1">{l}</label>
-                  <input type="number" min="0" value={(form as any)[k]} onChange={e => set(k, e.target.value)}
+                  <input type="number" min="0" value={(form[k] as string | number) ?? ''} onChange={e => set(k, e.target.value)}
                     className="w-full border border-slate-300 rounded-lg px-3 py-2 text-slate-800 text-sm focus:outline-none focus:ring-2 focus:ring-green-500" />
                 </div>
               ))}

@@ -5,7 +5,7 @@ let _client: ReturnType<typeof createBrowserClient> | null = null
 export function createClient() {
   if (typeof window === 'undefined') {
     // During SSR prerender of client components, return a no-op proxy
-    return new Proxy({} as any, { get: () => () => ({ data: null, error: null }) })
+    return new Proxy({} as ReturnType<typeof createBrowserClient>, { get: () => () => ({ data: null, error: null }) })
   }
   if (!_client) {
     _client = createBrowserClient(

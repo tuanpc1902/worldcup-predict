@@ -1,8 +1,25 @@
 import { createServiceSupabase } from '@/lib/supabase-server'
 import { notFound } from 'next/navigation'
 import MatchDetailClient from './MatchDetailClient'
+import type { Match, Comment, PredictionStats } from '@/types'
 
 export const dynamic = 'force-dynamic'
+
+interface RawPrediction {
+  predicted_home: number
+  predicted_away: number
+  points_earned: number | null
+  user_id: string
+}
+
+interface RawComment {
+  id: string
+  content: string
+  created_at: string
+  reactions: Record<string, number>
+  user_id: string
+  profiles: { display_name: string; avatar_url: string | null } | { display_name: string; avatar_url: string | null }[]
+}
 
 export default async function MatchDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params
@@ -21,19 +38,18 @@ export default async function MatchDetailPage({ params }: { params: Promise<{ id
 
   if (!match) notFound()
 
-  // Thống kê dự đoán
-  const stats = buildPredictionStats(predictions ?? [])
+  const stats = buildPredictionStats((predictions ?? []) as RawPrediction[])
 
-  // Flatten profiles (Supabase returns array for joins)
-  const flatComments = (comments ?? []).map((c: any) => ({
+  const flatComments: Comment[] = ((comments ?? []) as RawComment[]).map(c => ({
     ...c,
+    match_id: id,
     profiles: Array.isArray(c.profiles) ? c.profiles[0] : c.profiles,
   }))
 
-  return <MatchDetailClient match={match} stats={stats} comments={flatComments} />
+  return <MatchDetailClient match={match as Match} stats={stats} comments={flatComments} />
 }
 
-function buildPredictionStats(predictions: any[]) {
+function buildPredictionStats(predictions: RawPrediction[]): PredictionStats {
   const total = predictions.length
   if (total === 0) return { total: 0, homeWin: 0, draw: 0, awayWin: 0, topScores: [] }
 

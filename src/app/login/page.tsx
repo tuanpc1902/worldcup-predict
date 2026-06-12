@@ -54,8 +54,8 @@ export default function LoginPage() {
           setName('')
         }
       }
-    } catch (err: any) {
-      setError(err.message ?? 'Đã xảy ra lỗi')
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Đã xảy ra lỗi')
     } finally {
       setLoading(false)
     }

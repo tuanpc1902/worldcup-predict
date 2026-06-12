@@ -3,6 +3,10 @@ import { getFlagUrl } from '@/lib/flag-map'
 import ChampionClient from './ChampionClient'
 import { isPlaceholder } from '@/lib/team-utils'
 
+interface TeamRow { home_team: string; home_flag: string | null }
+interface AwayRow { away_team: string; away_flag: string | null }
+interface PickRow { team_name: string }
+
 export const dynamic = 'force-dynamic'
 
 export default async function ChampionPage() {
@@ -17,14 +21,14 @@ export default async function ChampionPage() {
   // Build deduped team map — also fill missing flags from local flag-map
   const teamMap = new Map<string, string | null>()
 
-  for (const r of (homeRows ?? []) as any[]) {
+  for (const r of (homeRows ?? []) as TeamRow[]) {
     if (!r.home_team || isPlaceholder(r.home_team)) continue
     const flag = r.home_flag ?? getFlagUrl(r.home_team)
     if (!teamMap.has(r.home_team) || (!teamMap.get(r.home_team) && flag)) {
       teamMap.set(r.home_team, flag)
     }
   }
-  for (const r of (awayRows ?? []) as any[]) {
+  for (const r of (awayRows ?? []) as AwayRow[]) {
     if (!r.away_team || isPlaceholder(r.away_team)) continue
     const flag = r.away_flag ?? getFlagUrl(r.away_team)
     if (!teamMap.has(r.away_team) || (!teamMap.get(r.away_team) && flag)) {
@@ -37,7 +41,7 @@ export default async function ChampionPage() {
     .sort((a, b) => a.name.localeCompare(b.name))
 
   const pickCount: Record<string, number> = {}
-  for (const p of (picks ?? []) as any[]) {
+  for (const p of (picks ?? []) as PickRow[]) {
     pickCount[p.team_name] = (pickCount[p.team_name] ?? 0) + 1
   }
 

@@ -72,7 +72,7 @@ export default function ChampionClient({ teams, pickCount }: Props) {
       .select('team_name')
       .eq('user_id', user.id)
       .maybeSingle()
-      .then(({ data }: { data: any }) => {
+      .then(({ data }: { data: { team_name: string } | null }) => {
         if (data) setMyPick(data.team_name)
         setFetching(false)
       })

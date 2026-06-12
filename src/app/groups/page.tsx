@@ -32,7 +32,7 @@ export default function GroupsPage() {
       .from('group_members')
       .select('group_id, groups(id, name, invite_code, owner_id)')
       .eq('user_id', user.id)
-    const list = (data ?? []).map((r: any) => r.groups).filter(Boolean)
+    const list = (data ?? []).map((r: { groups: Group }) => r.groups).filter(Boolean)
     setGroups(list)
     if (list.length > 0 && !activeGroup) { setActiveGroup(list[0]); loadMembers(list[0].id) }
     setFetching(false)

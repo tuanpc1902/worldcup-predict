@@ -1,15 +1,31 @@
 import { getFlagUrl } from './flag-map'
+import type { FixtureRow } from '@/types'
 
 const JSON_URL = 'https://raw.githubusercontent.com/openfootball/worldcup.json/master/2026/worldcup.json'
 
-export async function fetchFixtures() {
-  const res = await fetch(JSON_URL, { cache: 'no-store' })
-  if (!res.ok) throw new Error(`GitHub fetch failed: ${res.status}`)
-  return res.json()
+interface RawFixture {
+  team1?: string
+  team2?: string
+  date?: string
+  time?: string
+  round?: string
+  group?: string
+  ground?: string
+  score?: { ft?: [number, number] }
 }
 
-export function mapFixturesToMatches(data: any): any[] {
-  return (data.matches ?? []).map((m: any) => {
+interface WorldCupJson {
+  matches?: RawFixture[]
+}
+
+export async function fetchFixtures(): Promise<WorldCupJson> {
+  const res = await fetch(JSON_URL, { cache: 'no-store' })
+  if (!res.ok) throw new Error(`GitHub fetch failed: ${res.status}`)
+  return res.json() as Promise<WorldCupJson>
+}
+
+export function mapFixturesToMatches(data: WorldCupJson): FixtureRow[] {
+  return (data.matches ?? []).map((m: RawFixture) => {
     const hasScore = m.score?.ft != null
 
     return {
@@ -17,13 +33,13 @@ export function mapFixturesToMatches(data: any): any[] {
       away_team: m.team2 ?? '',
       home_flag: getFlagUrl(m.team1 ?? '', 40),
       away_flag: getFlagUrl(m.team2 ?? '', 40),
-      match_time: parseMatchTime(m.date, m.time),
+      match_time: parseMatchTime(m.date ?? '', m.time),
       stage: mapRound(m.round ?? ''),
       group_name: m.group ?? null,
       venue: m.ground ?? null,
       status: hasScore ? 'finished' : 'scheduled',
-      home_score: hasScore ? m.score.ft[0] : null,
-      away_score: hasScore ? m.score.ft[1] : null,
+      home_score: hasScore ? (m.score!.ft![0]) : null,
+      away_score: hasScore ? (m.score!.ft![1]) : null,
       api_fixture_id: null,
     }
   })

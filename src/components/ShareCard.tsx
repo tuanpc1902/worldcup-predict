@@ -4,8 +4,8 @@ import { useRef, useState } from 'react'
 interface Props {
   homeTeam: string
   awayTeam: string
-  homeScore: number
-  awayScore: number
+  homeScore: number | null
+  awayScore: number | null
   predictedHome: number
   predictedAway: number
   pointsEarned: number

@@ -3,27 +3,41 @@ import { useEffect, useState, Suspense } from 'react'
 import { useSearchParams } from 'next/navigation'
 import { createClient } from '@/lib/supabase'
 import FlagImg from '@/components/FlagImg'
-import { fmtDate } from '@/lib/time'
 import Link from 'next/link'
+import type { H2HResult } from '@/types'
+
+interface ProfileSummary {
+  id: string
+  display_name: string
+  total_points: number
+}
+
+interface PredB {
+  match_id: string
+  predicted_home: number
+  predicted_away: number
+  points_earned: number | null
+}
 
 function H2HContent() {
   const params = useSearchParams()
   const supabase = createClient()
 
-  const [profiles, setProfiles] = useState<any[]>([])
+  const [profiles, setProfiles] = useState<ProfileSummary[]>([])
   const [userA, setUserA] = useState(params.get('a') ?? '')
   const [userB, setUserB] = useState(params.get('b') ?? '')
-  const [results, setResults] = useState<any[]>([])
+  const [results, setResults] = useState<H2HResult[]>([])
   const [loading, setLoading] = useState(false)
   const [searched, setSearched] = useState(false)
 
   useEffect(() => {
     supabase.from('profiles').select('id, display_name, total_points').order('total_points', { ascending: false })
-      .then(({ data }) => setProfiles(data ?? []))
+      .then(({ data }: { data: ProfileSummary[] | null }) => setProfiles(data ?? []))
   }, [])
 
   useEffect(() => {
     if (userA && userB) compare()
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
   async function compare() {
@@ -40,11 +54,14 @@ function H2HContent() {
         .eq('user_id', userB),
     ])
 
-    const bMap = new Map((predsB ?? []).map((p: any) => [p.match_id, p]))
-    const combined = (predsA ?? [])
-      .map((a: any) => ({ ...a, b: bMap.get(a.match_id) }))
-      .filter((r: any) => r.b && r.matches?.status === 'finished')
-      .sort((x: any, y: any) => new Date(y.matches.match_time).getTime() - new Date(x.matches.match_time).getTime())
+    const bMap = new Map<string, PredB>(
+      ((predsB ?? []) as PredB[]).map(p => [p.match_id, p])
+    )
+
+    const combined: H2HResult[] = ((predsA ?? []) as H2HResult[])
+      .map(a => ({ ...a, b: bMap.get(a.match_id) }))
+      .filter(r => r.b && r.matches?.status === 'finished')
+      .sort((x, y) => new Date(y.matches.match_time).getTime() - new Date(x.matches.match_time).getTime())
 
     setResults(combined)
     setLoading(false)
@@ -69,10 +86,10 @@ function H2HContent() {
       {/* Selector */}
       <div className="bg-white rounded-2xl border border-slate-200 p-5 space-y-4">
         <div className="grid grid-cols-2 gap-3">
-          {[
+          {([
             { label: 'Người chơi A', value: userA, set: setUserA },
             { label: 'Người chơi B', value: userB, set: setUserB },
-          ].map(({ label, value, set }) => (
+          ] as const).map(({ label, value, set }) => (
             <div key={label}>
               <label className="text-xs font-semibold text-slate-500 mb-1 block">{label}</label>
               <select
@@ -116,7 +133,6 @@ function H2HContent() {
               <div className="text-xs text-slate-400">{winsB} trận thắng</div>
             </div>
           </div>
-          {/* Progress bar */}
           <div className="mt-4 flex h-2 rounded-full overflow-hidden">
             <div className="bg-green-500 transition-all" style={{ width: `${(winsA / Math.max(results.length, 1)) * 100}%` }} />
             <div className="bg-slate-200 transition-all" style={{ width: `${(draws / Math.max(results.length, 1)) * 100}%` }} />
@@ -132,31 +148,24 @@ function H2HContent() {
             <h2 className="font-bold text-sm text-slate-700">Từng trận · {results.length} trận đã kết thúc</h2>
           </div>
           <div className="divide-y divide-slate-50">
-            {results.map((r: any) => {
+            {results.map(r => {
               const m = r.matches
               const ptA = r.points_earned ?? 0
               const ptB = r.b?.points_earned ?? 0
               const winner = ptA > ptB ? 'a' : ptB > ptA ? 'b' : 'draw'
               return (
                 <Link key={r.match_id} href={`/matches/${r.match_id}`} className="flex items-center gap-2 px-4 py-3 hover:bg-slate-50 transition-colors">
-                  {/* A score */}
-                  <div className={`w-10 text-center text-sm font-black tabular-nums rounded-lg py-0.5 flex-shrink-0 ${
-                    winner === 'a' ? 'bg-green-100 text-green-700' : 'text-slate-400'
-                  }`}>{r.predicted_home}–{r.predicted_away}</div>
-
-                  {/* Match */}
+                  <div className={`w-10 text-center text-sm font-black tabular-nums rounded-lg py-0.5 flex-shrink-0 ${winner === 'a' ? 'bg-green-100 text-green-700' : 'text-slate-400'}`}>
+                    {r.predicted_home}–{r.predicted_away}
+                  </div>
                   <div className="flex-1 flex items-center gap-1.5 min-w-0 justify-center">
                     <FlagImg team={m.home_team} flag={m.home_flag} size="xs" />
                     <span className="text-xs text-slate-600 font-semibold tabular-nums">{m.home_score}–{m.away_score}</span>
                     <FlagImg team={m.away_team} flag={m.away_flag} size="xs" />
                   </div>
-
-                  {/* B score */}
-                  <div className={`w-10 text-center text-sm font-black tabular-nums rounded-lg py-0.5 flex-shrink-0 ${
-                    winner === 'b' ? 'bg-blue-100 text-blue-700' : 'text-slate-400'
-                  }`}>{r.b?.predicted_home}–{r.b?.predicted_away}</div>
-
-                  {/* Points */}
+                  <div className={`w-10 text-center text-sm font-black tabular-nums rounded-lg py-0.5 flex-shrink-0 ${winner === 'b' ? 'bg-blue-100 text-blue-700' : 'text-slate-400'}`}>
+                    {r.b?.predicted_home}–{r.b?.predicted_away}
+                  </div>
                   <div className="flex gap-1 flex-shrink-0">
                     <span className={`text-xs font-bold w-8 text-center px-1 py-0.5 rounded ${winner === 'a' ? 'bg-green-100 text-green-700' : 'bg-slate-50 text-slate-400'}`}>
                       {ptA > 0 ? '+' : ''}{ptA}

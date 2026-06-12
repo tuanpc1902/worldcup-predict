@@ -7,33 +7,23 @@ import { useAuthStore } from '@/store/auth'
 import FlagImg from '@/components/FlagImg'
 import ShareCard from '@/components/ShareCard'
 import { fmtDate, fmtTime, fmtDateTime, isStarted } from '@/lib/time'
+import type { Match, Comment, PredictionStats } from '@/types'
 
 const STAGE_LABELS: Record<string, string> = {
   group: 'Vòng bảng', round_of_32: 'Vòng 1/16', round_of_16: 'Vòng 1/8',
   quarter: 'Tứ kết', semi: 'Bán kết', final: 'Chung kết',
 }
 
-interface Stats {
-  total: number
-  homeWin: number
-  draw: number
-  awayWin: number
-  topScores: { score: string; count: number; pct: number }[]
-}
-
-interface Comment {
-  id: string
-  content: string
-  created_at: string
-  reactions: Record<string, number>
-  user_id: string
-  profiles: { display_name: string; avatar_url: string | null }
+interface SavedPrediction {
+  predicted_home: number
+  predicted_away: number
+  points_earned: number | null
 }
 
 interface Props {
-  match: any
-  stats: Stats
-  comments: any[]
+  match: Match
+  stats: PredictionStats
+  comments: Comment[]
 }
 
 const REACTIONS = ['🔥', '😱', '👍', '😂']
@@ -48,7 +38,7 @@ export default function MatchDetailClient({ match, stats, comments: initialComme
   const locked = match.is_locked || isStarted(match.match_time)
 
   const [myPrediction, setMyPrediction] = useState<{ home: string; away: string }>({ home: '', away: '' })
-  const [savedPrediction, setSavedPrediction] = useState<any>(null)
+  const [savedPrediction, setSavedPrediction] = useState<SavedPrediction | null>(null)
   const [saving, setSaving] = useState(false)
   const [predSaved, setPredSaved] = useState(false)
 
@@ -66,7 +56,7 @@ export default function MatchDetailClient({ match, stats, comments: initialComme
       .eq('match_id', match.id)
       .eq('user_id', user.id)
       .maybeSingle()
-      .then(({ data }: { data: any }) => {
+      .then(({ data }: { data: SavedPrediction | null }) => {
         if (data) {
           setSavedPrediction(data)
           setMyPrediction({ home: String(data.predicted_home), away: String(data.predicted_away) })
@@ -100,7 +90,7 @@ export default function MatchDetailClient({ match, stats, comments: initialComme
       .select('id, content, created_at, reactions, user_id, profiles(display_name, avatar_url)')
       .single()
     if (!error && data) {
-      setComments(prev => [...prev, data as any])
+      setComments(prev => [...prev, { ...data, profiles: Array.isArray(data.profiles) ? data.profiles[0] : data.profiles } as Comment])
       setCommentText('')
       setTimeout(() => commentsEndRef.current?.scrollIntoView({ behavior: 'smooth' }), 100)
     }

@@ -4,6 +4,7 @@ import Link from 'next/link'
 import FlagImg from '@/components/FlagImg'
 import { fmtDate, fmtTime } from '@/lib/time'
 import LazyList from '@/components/LazyList'
+import type { Profile, PredictionWithMatch } from '@/types'
 
 const STAGE_LABELS: Record<string, string> = {
   group: 'Vòng bảng', round_of_32: 'Vòng 1/16', round_of_16: 'Vòng 1/8',
@@ -17,8 +18,8 @@ const PTS_COLOR: Record<number, string> = {
 }
 
 interface Props {
-  profile: any
-  predictions: any[]
+  profile: Profile
+  predictions: PredictionWithMatch[]
   rank: number | null
 }
 

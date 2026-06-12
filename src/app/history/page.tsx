@@ -23,8 +23,8 @@ export default function HistoryPage() {
       .select('*, match:matches(*)')
       .eq('user_id', user.id)
       .order('created_at', { ascending: false })
-      .then(({ data }: { data: any }) => {
-        setItems((data ?? []) as PredictionWithMatch[])
+      .then(({ data }: { data: PredictionWithMatch[] | null }) => {
+        setItems(data ?? [])
         setFetching(false)
       })
   }, [user])
@@ -69,7 +69,7 @@ export default function HistoryPage() {
       ) : (
         <div className="space-y-3">
           {items.map(item => (
-            <MatchCard key={item.id} match={item.match} prediction={item} showResult />
+            <MatchCard key={item.id} match={item.matches} prediction={item} showResult />
           ))}
         </div>
       )}

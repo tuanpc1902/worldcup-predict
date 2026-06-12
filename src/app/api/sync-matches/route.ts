@@ -65,7 +65,7 @@ export async function POST(req: NextRequest) {
         }
 
         // Match just got a result OR status changed → update
-        const updatePayload: Record<string, any> = {
+        const updatePayload: Record<string, string | number | null | boolean> = {
           home_score: fixture.home_score,
           away_score: fixture.away_score,
           status: fixture.status,
@@ -109,8 +109,9 @@ export async function POST(req: NextRequest) {
       message: `Inserted ${inserted}, updated ${updated}, skipped ${skipped}, scored ${scored}`,
       errors: errors.length > 0 ? errors : undefined,
     })
-  } catch (err: any) {
-    return NextResponse.json({ message: err.message }, { status: 500 })
+  } catch (err) {
+    const msg = err instanceof Error ? err.message : 'Unknown error'
+    return NextResponse.json({ message: msg }, { status: 500 })
   }
 }
 

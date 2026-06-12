@@ -4,12 +4,13 @@ import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase'
 import { useAuthStore } from '@/store/auth'
 import { getFlagUrl } from '@/lib/flag-map'
+import type { PredictionWithMatch } from '@/types'
 
 export default function StatsPage() {
   const { user, init, loading } = useAuthStore()
   const router = useRouter()
   const supabase = createClient()
-  const [data, setData] = useState<any[]>([])
+  const [data, setData] = useState<PredictionWithMatch[]>([])
   const [fetching, setFetching] = useState(true)
 
   useEffect(() => { init() }, [init])
@@ -20,7 +21,7 @@ export default function StatsPage() {
     supabase.from('predictions').select('*, match:matches(*)')
       .eq('user_id', user.id)
       .not('points_earned', 'is', null)
-      .then(({ data: d }: { data: any }) => { setData(d ?? []); setFetching(false) })
+      .then(({ data: d }: { data: PredictionWithMatch[] | null }) => { setData(d ?? []); setFetching(false) })
   }, [user])
 
   if (loading || fetching) return (
@@ -37,10 +38,10 @@ export default function StatsPage() {
   const pct = total > 0 ? Math.round(((exact.length + correct.length) / total) * 100) : 0
 
   // Streak
-  const sorted = [...data].sort((a, b) => new Date(a.match.match_time).getTime() - new Date(b.match.match_time).getTime())
+  const sorted = [...data].sort((a, b) => new Date(a.matches.match_time).getTime() - new Date(b.matches.match_time).getTime())
   let streak = 0, maxStreak = 0, cur = 0
   sorted.forEach(d => {
-    if (d.points_earned > 0) { cur++; maxStreak = Math.max(maxStreak, cur) }
+    if ((d.points_earned ?? 0) > 0) { cur++; maxStreak = Math.max(maxStreak, cur) }
     else cur = 0
   })
   streak = cur
@@ -48,10 +49,10 @@ export default function StatsPage() {
   // Team stats
   const teamStats: Record<string, { correct: number; total: number }> = {}
   data.forEach(d => {
-    const team = d.match.home_team
+    const team = d.matches.home_team
     if (!teamStats[team]) teamStats[team] = { correct: 0, total: 0 }
     teamStats[team].total++
-    if (d.points_earned > 0) teamStats[team].correct++
+    if ((d.points_earned ?? 0) > 0) teamStats[team].correct++
   })
   const bestTeams = Object.entries(teamStats)
     .filter(([, s]) => s.total >= 2)

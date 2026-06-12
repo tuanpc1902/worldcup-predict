@@ -27,8 +27,8 @@ export async function GET() {
     const { data: awayTeams } = await supabase.from('matches').select('away_team')
 
     const allNames = new Set<string>()
-    ;(homeTeams ?? []).forEach((r: any) => { if (r.home_team) allNames.add(r.home_team) })
-    ;(awayTeams ?? []).forEach((r: any) => { if (r.away_team) allNames.add(r.away_team) })
+    ;(homeTeams ?? []).forEach((r: { home_team: string }) => { if (r.home_team) allNames.add(r.home_team) })
+    ;(awayTeams ?? []).forEach((r: { away_team: string }) => { if (r.away_team) allNames.add(r.away_team) })
 
     const realTeams = [...allNames].filter(n => !isPlaceholder(n)).sort()
     const placeholders = [...allNames].filter(n => isPlaceholder(n)).sort()
@@ -51,7 +51,8 @@ export async function GET() {
         error: e3?.message ?? null,
       },
     })
-  } catch (err: any) {
-    return NextResponse.json({ error: err.message }, { status: 500 })
+  } catch (err) {
+    const msg = err instanceof Error ? err.message : 'Unknown error'
+    return NextResponse.json({ error: msg }, { status: 500 })
   }
 }

@@ -1,6 +1,7 @@
 import { createServiceSupabase } from '@/lib/supabase-server'
 import { notFound } from 'next/navigation'
 import ProfileClient from './ProfileClient'
+import type { Profile, PredictionWithMatch } from '@/types'
 
 export const dynamic = 'force-dynamic'
 
@@ -19,5 +20,5 @@ export default async function ProfilePage({ params }: { params: Promise<{ id: st
 
   if (!profile) notFound()
 
-  return <ProfileClient profile={profile} predictions={(predictions ?? []) as any[]} rank={rank?.rank ?? null} />
+  return <ProfileClient profile={profile as Profile} predictions={(predictions ?? []) as PredictionWithMatch[]} rank={rank?.rank ?? null} />
 }
