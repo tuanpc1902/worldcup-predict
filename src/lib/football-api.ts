@@ -1,56 +1,56 @@
-const BASE = 'https://v3.football.api-sports.io'
-const LEAGUE_ID = 1
-const SEASON = 2026
-
-async function apiFetch(path: string) {
-  const res = await fetch(`${BASE}${path}`, {
-    headers: { 'x-apisports-key': process.env.FOOTBALL_API_KEY! },
-    next: { revalidate: 300 },
-  })
-  if (!res.ok) throw new Error(`API Football error: ${res.status}`)
-  return res.json()
-}
+const RAW_BASE = 'https://raw.githubusercontent.com/openfootball/worldcup.json/master/2026'
 
 export async function fetchFixtures() {
-  const data = await apiFetch(`/fixtures?league=${LEAGUE_ID}&season=${SEASON}`)
-  return data.response as any[]
-}
+  const urls = [
+    `${RAW_BASE}/worldcup.json`,
+  ]
 
-export async function fetchLiveFixtures() {
-  const data = await apiFetch(`/fixtures?league=${LEAGUE_ID}&live=all`)
-  return data.response as any[]
-}
-
-export function mapFixtureToMatch(f: any) {
-  return {
-    api_fixture_id: f.fixture.id,
-    home_team: f.teams.home.name,
-    away_team: f.teams.away.name,
-    home_flag: f.teams.home.logo,
-    away_flag: f.teams.away.logo,
-    match_time: f.fixture.date,
-    venue: f.fixture.venue?.name ?? null,
-    stage: mapRound(f.league.round),
-    group_name: f.league.round.startsWith('Group') ? f.league.round : null,
-    status: mapStatus(f.fixture.status.short),
-    home_score: f.goals.home,
-    away_score: f.goals.away,
+  for (const url of urls) {
+    try {
+      const res = await fetch(url, { next: { revalidate: 3600 } })
+      if (res.ok) {
+        const data = await res.json()
+        return data
+      }
+    } catch {}
   }
+  throw new Error('Không thể lấy dữ liệu từ openfootball/worldcup.json')
 }
 
-function mapStatus(s: string): string {
-  if (['1H', '2H', 'ET', 'P', 'HT', 'LIVE'].includes(s)) return 'live'
-  if (['FT', 'AET', 'PEN'].includes(s)) return 'finished'
-  if (['CANC', 'ABD', 'AWD', 'WO'].includes(s)) return 'cancelled'
-  return 'scheduled'
+export function mapFixturesToMatches(data: any): any[] {
+  const matches: any[] = []
+
+  for (const round of data.rounds ?? []) {
+    const stage = mapRound(round.name)
+    for (const match of round.matches ?? []) {
+      matches.push({
+        home_team: match.team1?.name ?? match.team1,
+        away_team: match.team2?.name ?? match.team2,
+        home_flag: null,
+        away_flag: null,
+        match_time: `${match.date}T${match.time ?? '00:00:00'}`,
+        stage,
+        group_name: stage === 'group' ? (round.name ?? null) : null,
+        venue: match.stadium?.name ?? null,
+        status: 'scheduled',
+        home_score: match.score1 ?? null,
+        away_score: match.score2 ?? null,
+        api_fixture_id: null,
+      })
+    }
+  }
+
+  return matches
 }
 
-function mapRound(round: string): string {
-  if (round.includes('Group')) return 'group'
-  if (round.includes('Round of 32')) return 'round_of_32'
-  if (round.includes('Round of 16')) return 'round_of_16'
-  if (round.includes('Quarter')) return 'quarter'
-  if (round.includes('Semi')) return 'semi'
-  if (round.includes('Final')) return 'final'
+function mapRound(name: string): string {
+  if (!name) return 'group'
+  const n = name.toLowerCase()
+  if (n.includes('matchday') || n.includes('group') || n.includes('round 1') || n.includes('round 2') || n.includes('round 3')) return 'group'
+  if (n.includes('round of 32')) return 'round_of_32'
+  if (n.includes('round of 16')) return 'round_of_16'
+  if (n.includes('quarter')) return 'quarter'
+  if (n.includes('semi')) return 'semi'
+  if (n.includes('final')) return 'final'
   return 'group'
 }
