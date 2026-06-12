@@ -55,13 +55,13 @@ export default function MatchCard({ match, prediction, showResult, showPredictLi
       </div>
 
       {/* Teams & Score */}
-      <div className="flex items-center justify-between gap-3">
-        <div className="flex-1 text-center flex flex-col items-center gap-3">
+      <div className="flex items-center justify-between gap-2">
+        <div className="flex-1 min-w-0 text-center flex flex-col items-center gap-2">
           <FlagImg team={match.home_team} flag={match.home_flag} size="xl" />
-          <p className="font-semibold text-slate-800 text-sm leading-tight">{match.home_team}</p>
+          <p className="font-semibold text-slate-800 text-sm leading-tight line-clamp-2 w-full px-1 break-words">{match.home_team}</p>
         </div>
 
-        <div className="text-center flex-shrink-0 w-[80px]">
+        <div className="text-center flex-shrink-0 w-[76px]">
           {isFinished || isLive ? (
             <div className={`text-xl font-bold tabular-nums px-2 py-1 rounded-lg ${
               isFinished ? 'bg-slate-100 text-slate-800' : 'bg-red-50 text-red-600'
@@ -76,9 +76,9 @@ export default function MatchCard({ match, prediction, showResult, showPredictLi
           )}
         </div>
 
-        <div className="flex-1 text-center flex flex-col gap-3 items-center">
+        <div className="flex-1 min-w-0 text-center flex flex-col gap-2 items-center">
           <FlagImg team={match.away_team} flag={match.away_flag} size="xl" />
-          <p className="font-semibold text-slate-800 text-sm leading-tight">{match.away_team}</p>
+          <p className="font-semibold text-slate-800 text-sm leading-tight line-clamp-2 w-full px-1 break-words">{match.away_team}</p>
         </div>
       </div>
 

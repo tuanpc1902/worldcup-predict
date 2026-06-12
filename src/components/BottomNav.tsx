@@ -5,8 +5,8 @@ import { usePathname } from 'next/navigation'
 const NAV = [
   { href: '/', icon: '📅', label: 'Lịch' },
   { href: '/predict', icon: '🎯', label: 'Dự đoán' },
+  { href: '/standings', icon: '📊', label: 'Bảng đấu' },
   { href: '/leaderboard', icon: '🏆', label: 'Xếp hạng' },
-  { href: '/h2h', icon: '⚔️', label: 'H2H' },
   { href: '/champion', icon: '🌟', label: 'Vô địch' },
 ]
 

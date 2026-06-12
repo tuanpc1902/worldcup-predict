@@ -17,6 +17,7 @@ export default function Navbar() {
   const links = [
     { href: '/', label: 'Lịch thi đấu' },
     { href: '/predict', label: 'Dự đoán' },
+    { href: '/standings', label: 'Bảng đấu' },
     { href: '/leaderboard', label: 'Xếp hạng' },
   ]
 

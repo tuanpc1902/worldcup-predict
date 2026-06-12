@@ -190,9 +190,19 @@ export default function PredictPage() {
                   </div>
                 </div>
 
-                {/* Input row */}
-                <div className="px-4 pb-4 flex items-center gap-3 border-t border-slate-100 pt-3 bg-slate-50/50">
-                  <div className="flex items-center gap-2 flex-1 justify-center">
+                {/* Input row — 3-col grid so score inputs are always centered */}
+                <div className="px-4 pb-4 grid grid-cols-[1fr_auto_1fr] items-center gap-2 border-t border-slate-100 pt-3 bg-slate-50/50">
+                  {/* Left: saved label */}
+                  <div className="flex justify-start">
+                    {pred && (
+                      <span className="text-xs text-slate-400 whitespace-nowrap">
+                        Đã lưu: <span className="text-slate-600 font-semibold">{pred.predicted_home}–{pred.predicted_away}</span>
+                      </span>
+                    )}
+                  </div>
+
+                  {/* Center: score inputs — always centered */}
+                  <div className="flex items-center gap-2">
                     <input
                       type="number" min="0" max="20"
                       value={inputs[match.id]?.home ?? ''}
@@ -209,22 +219,21 @@ export default function PredictPage() {
                       className="w-12 text-center border border-slate-300 rounded-lg py-1.5 text-slate-800 text-lg font-bold focus:outline-none focus:ring-2 focus:ring-green-500 bg-white"
                     />
                   </div>
-                  {pred && (
-                    <div className="text-xs text-slate-400 whitespace-nowrap">
-                      Đã lưu: <span className="text-slate-600 font-semibold">{pred.predicted_home}–{pred.predicted_away}</span>
-                    </div>
-                  )}
-                  <button
-                    onClick={() => savePrediction(match.id)}
-                    disabled={saving === match.id || !inputs[match.id]?.home || !inputs[match.id]?.away}
-                    className={`px-4 py-1.5 rounded-lg font-semibold text-sm transition-colors flex-shrink-0 ${
-                      saved === match.id
-                        ? 'bg-green-100 text-green-700'
-                        : 'bg-green-600 hover:bg-green-700 text-white disabled:opacity-40'
-                    }`}
-                  >
-                    {saved === match.id ? '✓' : saving === match.id ? '...' : pred ? 'Cập nhật' : 'Lưu'}
-                  </button>
+
+                  {/* Right: save button */}
+                  <div className="flex justify-end">
+                    <button
+                      onClick={() => savePrediction(match.id)}
+                      disabled={saving === match.id || !inputs[match.id]?.home || !inputs[match.id]?.away}
+                      className={`px-4 py-1.5 rounded-lg font-semibold text-sm transition-colors ${
+                        saved === match.id
+                          ? 'bg-green-100 text-green-700'
+                          : 'bg-green-600 hover:bg-green-700 text-white disabled:opacity-40'
+                      }`}
+                    >
+                      {saved === match.id ? '✓' : saving === match.id ? '...' : pred ? 'Cập nhật' : 'Lưu'}
+                    </button>
+                  </div>
                 </div>
               </div>
             )
