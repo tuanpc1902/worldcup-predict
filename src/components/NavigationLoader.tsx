@@ -11,8 +11,8 @@ export default function NavigationLoader() {
   const prevPath  = useRef(pathname)
   const [visible, setVisible] = useState(false)
   const [fading,  setFading]  = useState(false)
-  const hideTimer = useRef<ReturnType<typeof setTimeout>>()
-  const fadeTimer = useRef<ReturnType<typeof setTimeout>>()
+  const hideTimer = useRef<ReturnType<typeof setTimeout> | undefined>(undefined)
+  const fadeTimer = useRef<ReturnType<typeof setTimeout> | undefined>(undefined)
 
   useEffect(() => {
     // Don't fire on initial mount — only real navigations
