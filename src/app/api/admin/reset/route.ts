@@ -1,6 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { createServiceSupabase } from '@/lib/supabase-server'
-import { createClient } from '@supabase/supabase-js'
+import { createServiceSupabase, createServerSupabase } from '@/lib/supabase-server'
 
 // POST /api/admin/reset
 // body: { mode: 'game' | 'full', confirm: 'RESET' }
@@ -14,21 +13,12 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: 'mode phải là "game" hoặc "full"' }, { status: 400 })
   }
 
-  // Verify caller is admin via cookie session
+  // Verify caller is admin via cookie session (same pattern as other admin routes)
+  const serverClient = await createServerSupabase()
+  const { data: { user } } = await serverClient.auth.getUser()
+  if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+
   const supabase = createServiceSupabase()
-
-  const authHeader = req.headers.get('authorization') ?? ''
-  const token = authHeader.replace('Bearer ', '')
-  if (!token) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
-
-  const adminClient = createClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.SUPABASE_SERVICE_ROLE_KEY!,
-    { auth: { autoRefreshToken: false, persistSession: false } }
-  )
-  const { data: { user }, error: authErr } = await adminClient.auth.getUser(token)
-  if (authErr || !user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
-
   const { data: profile } = await supabase.from('profiles').select('role').eq('id', user.id).maybeSingle()
   if (profile?.role !== 'admin') return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
 

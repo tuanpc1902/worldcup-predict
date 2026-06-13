@@ -64,10 +64,9 @@ export default function ResetPage() {
     setLog([])
     setError('')
     try {
-      const token = localStorage.getItem('token') ?? ''
       const res = await fetch('/api/admin/reset', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ mode: selected, confirm: 'RESET' }),
       })
       const data = await res.json()
