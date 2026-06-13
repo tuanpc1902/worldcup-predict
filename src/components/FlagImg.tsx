@@ -1,5 +1,6 @@
 'use client'
 import { useState } from 'react'
+import Link from 'next/link'
 
 type Size = 'xs' | 'sm' | 'md' | 'lg' | 'xl'
 
@@ -16,28 +17,25 @@ interface Props {
   flag: string | null | undefined
   size?: Size
   className?: string
+  href?: string
 }
 
-export default function FlagImg({ team, flag, size = 'md', className = '' }: Props) {
+export default function FlagImg({ team, flag, size = 'md', className = '', href }: Props) {
   const [loaded, setLoaded] = useState(false)
   const [error, setError] = useState(false)
   const { w, h } = SIZE_PX[size]
 
-  if (!flag || error) {
-    return (
-      <div
-        style={{ width: w, height: h, minWidth: w, minHeight: h }}
-        className={`bg-slate-200 rounded flex-shrink-0 flex items-center justify-center ${className}`}
-        title={team}
-      >
-        <span className="text-[8px] text-slate-400 font-bold leading-none select-none">
-          {team.slice(0, 2).toUpperCase()}
-        </span>
-      </div>
-    )
-  }
-
-  return (
+  const inner = (!flag || error) ? (
+    <div
+      style={{ width: w, height: h, minWidth: w, minHeight: h }}
+      className={`bg-slate-200 rounded flex-shrink-0 flex items-center justify-center ${className}`}
+      title={team}
+    >
+      <span className="text-[8px] text-slate-400 font-bold leading-none select-none">
+        {team.slice(0, 2).toUpperCase()}
+      </span>
+    </div>
+  ) : (
     <div
       style={{ width: w, height: h, minWidth: w, minHeight: h }}
       className={`relative flex-shrink-0 rounded overflow-hidden ${className}`}
@@ -57,4 +55,13 @@ export default function FlagImg({ team, flag, size = 'md', className = '' }: Pro
       />
     </div>
   )
+
+  if (href) {
+    return (
+      <Link href={href} title={team} className="shrink-0 hover:opacity-80 hover:scale-105 transition-all duration-150" onClick={e => e.stopPropagation()}>
+        {inner}
+      </Link>
+    )
+  }
+  return inner
 }

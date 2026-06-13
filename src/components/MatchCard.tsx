@@ -59,9 +59,9 @@ export default function MatchCard({ match, prediction, showResult, showPredictLi
       {/* Teams & Score */}
       <div className="flex items-center justify-between gap-2">
         <div className="flex-1 min-w-0 text-center flex flex-col items-center gap-2">
-          <FlagImg team={match.home_team} flag={match.home_flag} size="xl" />
+          <FlagImg team={match.home_team} flag={match.home_flag} size="xl" href={`/teams/${encodeURIComponent(match.home_team)}`} />
           <div className="h-9 w-full flex items-center justify-center px-1 overflow-hidden">
-            <p className="font-semibold text-slate-800 text-sm leading-tight line-clamp-2 text-center break-words w-full">{match.home_team}</p>
+            <Link href={`/teams/${encodeURIComponent(match.home_team)}`} onClick={e => e.stopPropagation()} className="font-semibold text-slate-800 text-sm leading-tight line-clamp-2 text-center break-words w-full hover:text-green-600 transition-colors">{match.home_team}</Link>
           </div>
         </div>
 
@@ -85,9 +85,9 @@ export default function MatchCard({ match, prediction, showResult, showPredictLi
         </div>
 
         <div className="flex-1 min-w-0 text-center flex flex-col gap-2 items-center">
-          <FlagImg team={match.away_team} flag={match.away_flag} size="xl" />
+          <FlagImg team={match.away_team} flag={match.away_flag} size="xl" href={`/teams/${encodeURIComponent(match.away_team)}`} />
           <div className="h-9 w-full flex items-center justify-center px-1 overflow-hidden">
-            <p className="font-semibold text-slate-800 text-sm leading-tight line-clamp-2 text-center break-words w-full">{match.away_team}</p>
+            <Link href={`/teams/${encodeURIComponent(match.away_team)}`} onClick={e => e.stopPropagation()} className="font-semibold text-slate-800 text-sm leading-tight line-clamp-2 text-center break-words w-full hover:text-green-600 transition-colors">{match.away_team}</Link>
           </div>
         </div>
       </div>
