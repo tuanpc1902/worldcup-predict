@@ -8,6 +8,7 @@ import FlagImg from '@/components/FlagImg'
 import { isPlaceholder } from '@/lib/team-utils'
 import LazyList from '@/components/LazyList'
 import { MatchCardSkeleton } from '@/components/Skeleton'
+import type { RealtimePostgresUpdatePayload } from '@supabase/supabase-js'
 import type { Match, Prediction } from '@/types'
 
 const STAGE_LABELS: Record<string, string> = {
@@ -65,6 +66,21 @@ export default function PredictPage() {
       setFetching(false)
     }
     load()
+
+    // Realtime: update scores + status for live/finished matches
+    const channel = supabase
+      .channel('predict-matches-live')
+      .on(
+        'postgres_changes',
+        { event: 'UPDATE', schema: 'public', table: 'matches' },
+        (payload: RealtimePostgresUpdatePayload<Match>) => {
+          const updated = payload.new
+          setMatches(prev => prev.map(m => m.id === updated.id ? { ...m, ...updated } : m))
+        }
+      )
+      .subscribe()
+
+    return () => { supabase.removeChannel(channel) }
   }, [user])
 
   async function saveAll() {

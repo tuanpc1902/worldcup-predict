@@ -2,6 +2,8 @@
 import { useEffect, useState } from 'react'
 import Link from 'next/link'
 import FlagImg from '@/components/FlagImg'
+import { createClient } from '@/lib/supabase'
+import type { RealtimePostgresUpdatePayload } from '@supabase/supabase-js'
 import type { Match } from '@/types'
 
 interface Props { matches: Match[] }
@@ -60,7 +62,46 @@ function LiveMatchCard({ match }: { match: Match }) {
   )
 }
 
-export default function LiveHero({ matches }: Props) {
+export default function LiveHero({ matches: initialMatches }: Props) {
+  const [matches, setMatches] = useState<Match[]>(initialMatches)
+  const supabase = createClient()
+
+  useEffect(() => {
+    setMatches(initialMatches)
+  }, [initialMatches])
+
+  useEffect(() => {
+    const channel = supabase
+      .channel('live-scores')
+      .on(
+        'postgres_changes',
+        { event: 'UPDATE', schema: 'public', table: 'matches' },
+        (payload: RealtimePostgresUpdatePayload<Match>) => {
+          const updated = payload.new
+          setMatches(prev => {
+            // If the match is still live, update scores; if finished, remove from live list
+            if (updated.status === 'finished' || updated.status === 'cancelled') {
+              return prev.filter(m => m.id !== updated.id)
+            }
+            const exists = prev.find(m => m.id === updated.id)
+            if (exists) {
+              return prev.map(m => m.id === updated.id ? { ...m, ...updated } : m)
+            }
+            // Newly marked live
+            if (updated.status === 'live') {
+              return [...prev, updated]
+            }
+            return prev
+          })
+        }
+      )
+      .subscribe()
+
+    return () => { supabase.removeChannel(channel) }
+  }, [])
+
+  if (matches.length === 0) return null
+
   return (
     <div className="rounded-2xl p-5 space-y-4 shadow-lg" style={{ background: 'linear-gradient(135deg, #8b0000 0%, #cc0000 50%, #8b0000 100%)' }}>
       {/* Header */}
