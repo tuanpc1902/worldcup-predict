@@ -9,6 +9,7 @@ import { logActivity } from '@/lib/activity'
 const ALL_LINKS = [
   { href: '/', label: 'Lịch thi đấu' },
   { href: '/predict', label: 'Dự đoán' },
+  { href: '/history', label: 'Lịch sử' },
   { href: '/standings', label: 'Bảng đấu' },
   { href: '/leaderboard', label: 'Xếp hạng' },
   { href: '/champion', label: 'Nhà vô địch' },
