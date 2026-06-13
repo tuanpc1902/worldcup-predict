@@ -3,24 +3,26 @@ import Link from 'next/link'
 import { useEffect, useState } from 'react'
 import { useAuthStore } from '@/store/auth'
 import { useThemeStore } from '@/store/theme'
+import { useConfigStore } from '@/store/config'
 import { useRouter, usePathname } from 'next/navigation'
 import { logActivity } from '@/lib/activity'
 
 const ALL_LINKS = [
-  { href: '/', label: 'Lịch thi đấu' },
-  { href: '/predict', label: 'Dự đoán' },
-  { href: '/history', label: 'Lịch sử' },
-  { href: '/standings', label: 'Bảng đấu' },
-  { href: '/leaderboard', label: 'Xếp hạng' },
-  { href: '/champion', label: 'Nhà vô địch' },
-  { href: '/bracket', label: 'Bracket' },
-  { href: '/h2h', label: 'H2H' },
-  { href: '/groups', label: 'Nhóm' },
+  { href: '/',            label: 'Lịch thi đấu', configKey: null },
+  { href: '/predict',     label: 'Dự đoán',       configKey: 'nav_predict' },
+  { href: '/history',     label: 'Lịch sử',       configKey: 'nav_history' },
+  { href: '/standings',   label: 'Bảng đấu',      configKey: 'nav_standings' },
+  { href: '/leaderboard', label: 'Xếp hạng',      configKey: 'nav_leaderboard' },
+  { href: '/champion',    label: 'Nhà vô địch',   configKey: 'nav_champion' },
+  { href: '/bracket',     label: 'Bracket',        configKey: 'nav_bracket' },
+  { href: '/h2h',         label: 'H2H',            configKey: 'nav_h2h' },
+  { href: '/groups',      label: 'Nhóm',           configKey: 'nav_groups' },
 ]
 
 export default function Navbar() {
   const { user, loading, init, signOut } = useAuthStore()
   const { dark, toggle, init: initTheme } = useThemeStore()
+  const { config, load: loadConfig } = useConfigStore()
   const router = useRouter()
   const pathname = usePathname()
   const [menuOpen, setMenuOpen] = useState(false)
@@ -40,7 +42,13 @@ export default function Navbar() {
 
   useEffect(() => { init() }, [init])
   useEffect(() => { initTheme() }, [initTheme])
+  useEffect(() => { loadConfig() }, [loadConfig])
   useEffect(() => { setMenuOpen(false) }, [pathname])
+
+  // Filter links based on config
+  const visibleLinks = ALL_LINKS.filter(l =>
+    !l.configKey || (config as unknown as Record<string, boolean>)[l.configKey] !== false
+  )
 
   const bg       = dark ? '#001f3f' : '#ffffff'
   const border   = dark ? '#1a3a5c' : '#d1dbe8'
@@ -75,7 +83,7 @@ export default function Navbar() {
 
           {/* Desktop nav — all links on md+ */}
           <div className="hidden md:flex items-center gap-0.5 flex-1 overflow-x-auto">
-            {ALL_LINKS.map(l => {
+            {visibleLinks.map(l => {
               const active = pathname === l.href
               return (
                 <Link key={l.href} href={l.href}
@@ -196,7 +204,7 @@ export default function Navbar() {
                   <span className="ml-auto font-mono text-sm font-bold tabular-nums" style={{ color: textMid }}>{clock}</span>
                 </div>
               )}
-              {ALL_LINKS.map(l => {
+              {visibleLinks.map(l => {
                 const active = pathname === l.href
                 return (
                   <Link

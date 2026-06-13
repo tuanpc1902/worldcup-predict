@@ -7,6 +7,7 @@ const NAV = [
   { label: 'Tạo tài khoản', href: '/admin/create-users', icon: '➕' },
   { label: 'Tài khoản', href: '/admin/users', icon: '👥' },
   { label: 'Logs', href: '/admin/logs', icon: '📋' },
+  { label: 'Config', href: '/admin/config', icon: '⚙️' },
   { label: 'Reset', href: '/admin/reset', icon: '🗑️' },
 ]
 

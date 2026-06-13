@@ -37,19 +37,23 @@ export const useAuthStore = create<AuthState>((set, get) => ({
 
     set({ user: data ?? null, loading: false })
 
-    // Realtime: update user profile when points/data changes in DB
+    // Realtime: update user profile — respects system_config.realtime_profile
     if (_channel) { supabase.removeChannel(_channel); _channel = null }
-    _channel = supabase
-      .channel(`profile:${user.id}`)
-      .on('postgres_changes', {
-        event: 'UPDATE',
-        schema: 'public',
-        table: 'profiles',
-        filter: `id=eq.${user.id}`,
-      }, (payload: RealtimePostgresUpdatePayload<Profile>) => {
-        set({ user: payload.new })
-      })
-      .subscribe()
+    const { data: cfg } = await supabase
+      .from('system_config').select('value').eq('key', 'realtime_profile').maybeSingle()
+    if (cfg?.value !== 'false') {
+      _channel = supabase
+        .channel(`profile:${user.id}`)
+        .on('postgres_changes', {
+          event: 'UPDATE',
+          schema: 'public',
+          table: 'profiles',
+          filter: `id=eq.${user.id}`,
+        }, (payload: RealtimePostgresUpdatePayload<Profile>) => {
+          set({ user: payload.new })
+        })
+        .subscribe()
+    }
 
     if (_authSub) _authSub.data.subscription.unsubscribe()
     _authSub = supabase.auth.onAuthStateChange(async (_event: AuthChangeEvent, session: Session | null) => {
