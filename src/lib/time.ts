@@ -37,16 +37,7 @@ export function fmtMatchTimes(utc: string) {
   const utcTime = `${utcH}:${utcM}`
   const utcDate = `${utcD}/${utcMo}`
 
-  // User's local timezone
-  const localTime = d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: false })
-  const localDate = d.toLocaleDateString([], { day: '2-digit', month: '2-digit' })
-  const offsetMin = -d.getTimezoneOffset()
-  const sign = offsetMin >= 0 ? '+' : '-'
-  const absH = pad(Math.floor(Math.abs(offsetMin) / 60))
-  const absM = pad(Math.abs(offsetMin) % 60)
-  const localTzLabel = `UTC${sign}${absH}:${absM}`
-
-  return { vnTime, vnDate, utcTime, utcDate, localTime, localDate, localTzLabel }
+  return { vnTime, vnDate, utcTime, utcDate }
 }
 
 /** True if the match kick-off time has already passed (Vietnam time) */
