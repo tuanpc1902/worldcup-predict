@@ -1,5 +1,5 @@
 import Link from 'next/link'
-import { fmtTime, fmtDate } from '@/lib/time'
+import { fmtTime, fmtDate, fmtMatchTimes } from '@/lib/time'
 import FlagImg from '@/components/FlagImg'
 import type { Match, Prediction } from '@/types'
 
@@ -23,6 +23,7 @@ const STAGE_LABELS: Record<string, string> = {
 export default function MatchCard({ match, prediction, showResult, showPredictLink }: Props) {
   const isFinished = match.status === 'finished'
   const isLive = match.status === 'live'
+  const times = (!isFinished && !isLive) ? fmtMatchTimes(match.match_time) : null
 
   const pts = prediction?.points_earned ?? null
   const pointsBg =
@@ -71,12 +72,23 @@ export default function MatchCard({ match, prediction, showResult, showPredictLi
             }`}>
               {match.home_score ?? 0}–{match.away_score ?? 0}
             </div>
-          ) : (
-            <div className="bg-slate-50 rounded-lg px-2 py-2">
-              <div className="font-bold text-slate-800 text-sm">{fmtTime(match.match_time)}</div>
-              <div className="text-xs text-slate-400">{fmtDate(match.match_time)}</div>
+          ) : times ? (
+            <div className="bg-slate-50 rounded-lg px-2 py-1.5 space-y-0.5 min-w-[88px]">
+              <div className="flex items-center justify-between gap-1">
+                <span className="text-[10px] text-slate-400 font-medium">🇻🇳 GMT+7</span>
+                <span className="font-bold text-slate-800 text-sm tabular-nums">{times.vnTime}</span>
+              </div>
+              <div className="text-[10px] text-slate-400 text-right">{times.vnDate}</div>
+              <div className="border-t border-slate-200 pt-0.5 flex items-center justify-between gap-1">
+                <span className="text-[10px] text-slate-400">UTC+0</span>
+                <span className="text-xs text-slate-500 tabular-nums">{times.utcTime}</span>
+              </div>
+              <div className="flex items-center justify-between gap-1">
+                <span className="text-[10px] text-slate-400 truncate">{times.localTzLabel}</span>
+                <span className="text-xs text-slate-500 tabular-nums">{times.localTime}</span>
+              </div>
             </div>
-          )}
+          ) : null}
         </div>
 
         <div className="flex-1 min-w-0 text-center flex flex-col gap-2 items-center">

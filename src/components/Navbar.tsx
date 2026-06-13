@@ -24,6 +24,19 @@ export default function Navbar() {
   const router = useRouter()
   const pathname = usePathname()
   const [menuOpen, setMenuOpen] = useState(false)
+  const [clock, setClock] = useState('')
+
+  useEffect(() => {
+    function tick() {
+      setClock(new Date().toLocaleTimeString('vi-VN', {
+        timeZone: 'Asia/Ho_Chi_Minh',
+        hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: false,
+      }))
+    }
+    tick()
+    const id = setInterval(tick, 1000)
+    return () => clearInterval(id)
+  }, [])
 
   useEffect(() => { init() }, [init])
   useEffect(() => { initTheme() }, [initTheme])
@@ -50,6 +63,15 @@ export default function Navbar() {
               WC<span style={{ color: 'var(--accent)' }}>{`.88`}</span>
             </span>
           </Link>
+
+          {/* VN clock — desktop only */}
+          {clock && (
+            <div className="hidden md:flex items-center gap-1.5 shrink-0 px-3 py-1 rounded-lg"
+              style={{ background: dark ? '#001a35' : '#f1f5f9' }}>
+              <span className="text-xs" style={{ color: textMute }}>🇻🇳</span>
+              <span className="font-mono text-sm font-semibold tabular-nums" style={{ color: textMid }}>{clock}</span>
+            </div>
+          )}
 
           {/* Desktop nav — all links on md+ */}
           <div className="hidden md:flex items-center gap-0.5 flex-1 overflow-x-auto">
@@ -167,6 +189,13 @@ export default function Navbar() {
             style={{ background: bg, borderColor: border }}
           >
             <div className="max-w-5xl mx-auto px-4 py-2" style={{ background: menuBg }}>
+              {clock && (
+                <div className="flex items-center gap-2 px-3 py-2 mb-1 rounded-lg" style={{ background: dark ? '#001a35' : '#f1f5f9' }}>
+                  <span className="text-sm">🇻🇳</span>
+                  <span className="text-xs font-medium" style={{ color: textMute }}>Giờ Việt Nam</span>
+                  <span className="ml-auto font-mono text-sm font-bold tabular-nums" style={{ color: textMid }}>{clock}</span>
+                </div>
+              )}
               {ALL_LINKS.map(l => {
                 const active = pathname === l.href
                 return (
