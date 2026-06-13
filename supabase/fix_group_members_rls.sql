@@ -1,5 +1,15 @@
 -- Fix: infinite recursion in group_members RLS policies
+-- AND enable Realtime on match_comments
 -- Run this in Supabase Dashboard → SQL Editor
+
+-- Enable Realtime replication for match_comments (required for postgres_changes subscriptions)
+ALTER PUBLICATION supabase_realtime ADD TABLE match_comments;
+-- Also ensure match_goals is enabled (for live goal updates)
+ALTER PUBLICATION supabase_realtime ADD TABLE match_goals;
+-- And matches (for live score updates)
+ALTER PUBLICATION supabase_realtime ADD TABLE matches;
+
+
 
 -- Step 1: Drop all existing policies on group_members
 DROP POLICY IF EXISTS "members can view group members" ON group_members;
