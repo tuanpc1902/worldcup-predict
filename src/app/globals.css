@@ -43,6 +43,17 @@ body {
   font-family: Tahoma, 'Segoe UI', Arial, sans-serif;
 }
 
+/* Hide browser number input spinners globally */
+input[type=number]::-webkit-inner-spin-button,
+input[type=number]::-webkit-outer-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+input[type=number] {
+  -moz-appearance: textfield;
+  appearance: textfield;
+}
+
 @layer base {
   button,
   [role="button"],
