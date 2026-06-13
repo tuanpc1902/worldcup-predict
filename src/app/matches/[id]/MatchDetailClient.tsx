@@ -134,8 +134,8 @@ export default function MatchDetailClient({ match, stats, comments: initialComme
       })
       .on('postgres_changes', {
         event: 'UPDATE', schema: 'public', table: 'match_comments', filter: `match_id=eq.${match.id}`,
-      }, (payload) => {
-        const updated = payload.new as { id: string; reactions: Record<string, number> }
+      }, (payload: RealtimePostgresUpdatePayload<{ id: string; reactions: Record<string, number> }>) => {
+        const updated = payload.new
         setComments(prev => prev.map(c => c.id === updated.id ? { ...c, reactions: updated.reactions } : c))
       })
       .subscribe()
