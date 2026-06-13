@@ -70,7 +70,9 @@ export default function LeaderboardPage() {
                     </div>
                     <span className="text-xl">{medals[actualRank - 1]}</span>
                     <span className="text-slate-700 text-xs font-semibold text-center line-clamp-1">{e.display_name}</span>
-                    <span className="text-green-600 font-bold text-sm">{e.total_points} pts</span>
+                    <span className={`font-bold text-sm ${e.total_points < 0 ? 'text-red-500' : e.total_points > 0 ? 'text-green-600' : 'text-slate-400'}`}>
+                      {e.total_points} pts
+                    </span>
                   </div>
                 )
               })}

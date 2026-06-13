@@ -11,10 +11,11 @@ const STAGE_LABELS: Record<string, string> = {
   quarter: 'Tứ kết', semi: 'Bán kết', final: 'Chung kết',
 }
 
-const PTS_COLOR: Record<number, string> = {
-  5: 'bg-green-100 text-green-700',
-  3: 'bg-blue-100 text-blue-700',
-  [-1]: 'bg-red-100 text-red-700',
+function ptsColor(pts: number | null): string {
+  if (pts === null) return 'bg-slate-100 text-slate-500'
+  if (pts > 0) return 'bg-green-100 text-green-700'
+  if (pts < 0) return 'bg-red-100 text-red-600'
+  return 'bg-slate-100 text-slate-500'
 }
 
 interface Props {
@@ -27,9 +28,9 @@ export default function ProfileClient({ profile, predictions, rank }: Props) {
   const router = useRouter()
 
   const finished = predictions.filter(p => p.points_earned !== null)
-  const exact = finished.filter(p => p.points_earned === 5).length
-  const correct = finished.filter(p => p.points_earned === 3).length
-  const wrong = finished.filter(p => p.points_earned === -1).length
+  const exact = finished.filter(p => (p.points_earned ?? 0) >= 5).length
+  const correct = finished.filter(p => { const e = p.points_earned ?? 0; return e > 0 && e < 5 }).length
+  const wrong = finished.filter(p => (p.points_earned ?? 0) < 0).length
   const accuracy = finished.length > 0 ? Math.round(((exact + correct) / finished.length) * 100) : 0
 
   return (
@@ -49,7 +50,9 @@ export default function ProfileClient({ profile, predictions, rank }: Props) {
             {rank && <p className="text-slate-500 text-sm">Hạng #{rank} · Tham gia {fmtDate(profile.created_at)}</p>}
           </div>
           <div className="text-right flex-shrink-0">
-            <div className="text-3xl font-black text-green-600">{profile.total_points}</div>
+            <div className={`text-3xl font-black ${profile.total_points < 0 ? 'text-red-500' : profile.total_points > 0 ? 'text-green-600' : 'text-slate-400'}`}>
+              {profile.total_points}
+            </div>
             <div className="text-xs text-slate-400">điểm</div>
           </div>
         </div>
@@ -141,7 +144,7 @@ export default function ProfileClient({ profile, predictions, rank }: Props) {
 
                     <div className="flex-shrink-0 w-16 text-right">
                       {p.points_earned !== null ? (
-                        <span className={`text-xs font-bold px-2 py-0.5 rounded-full ${PTS_COLOR[p.points_earned] ?? 'bg-slate-100 text-slate-500'}`}>
+                        <span className={`text-xs font-bold px-2 py-0.5 rounded-full ${ptsColor(p.points_earned)}`}>
                           {p.points_earned > 0 ? '+' : ''}{p.points_earned}
                         </span>
                       ) : (

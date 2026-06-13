@@ -24,7 +24,7 @@ export default function AdminPage() {
   const [saving, setSaving] = useState(false)
   const [scoring, setScoring] = useState<string | null>(null)
   const [msg, setMsg] = useState<{ text: string; ok: boolean } | null>(null)
-  const [filter, setFilter] = useState<'all' | 'scheduled' | 'finished'>('all')
+  const [filter, setFilter] = useState<'all' | 'scheduled' | 'live' | 'finished'>('all')
 
   useEffect(() => { init() }, [init])
   useEffect(() => { if (!loading && (!user || user.role !== 'admin')) router.replace('/') }, [user, loading, router])
@@ -103,7 +103,7 @@ export default function AdminPage() {
 
       {/* Filter tabs */}
       <div className="flex gap-2">
-        {[['all', 'Tất cả'], ['scheduled', 'Sắp diễn ra'], ['finished', 'Đã xong']].map(([v, l]) => (
+        {[['all', 'Tất cả'], ['scheduled', 'Sắp diễn ra'], ['live', 'Đang live'], ['finished', 'Đã xong']].map(([v, l]) => (
           <button
             key={v}
             onClick={() => setFilter(v as 'all' | 'scheduled' | 'finished')}
@@ -148,17 +148,37 @@ export default function AdminPage() {
                 </td>
                 <td className="px-4 py-3">
                   <div className="flex gap-1">
-                    <button onClick={() => setEditMatch(m)}
-                      className="text-xs bg-slate-100 hover:bg-slate-200 text-slate-700 px-2.5 py-1 rounded-md transition-colors">
+                    {/* Sửa — chỉ cho scheduled */}
+                    <button
+                      onClick={() => setEditMatch(m)}
+                      disabled={m.status === 'live' || m.status === 'finished'}
+                      title={m.status !== 'scheduled' ? 'Không thể sửa trận đã bắt đầu' : undefined}
+                      className="text-xs bg-slate-100 hover:bg-slate-200 disabled:opacity-30 disabled:cursor-not-allowed text-slate-700 px-2.5 py-1 rounded-md transition-colors"
+                    >
                       Sửa
                     </button>
-                    <button onClick={() => toggleLock(m)}
-                      className="text-xs bg-slate-100 hover:bg-slate-200 text-slate-700 px-2.5 py-1 rounded-md transition-colors">
-                      {m.is_locked ? 'Mở' : 'Khóa'}
-                    </button>
+
+                    {/* Khóa — chỉ có nghĩa khi scheduled (trận live/finished tự khóa theo giờ) */}
+                    {m.status === 'scheduled' && (
+                      <button
+                        onClick={() => toggleLock(m)}
+                        className={`text-xs px-2.5 py-1 rounded-md transition-colors ${
+                          m.is_locked
+                            ? 'bg-amber-100 hover:bg-amber-200 text-amber-700'
+                            : 'bg-slate-100 hover:bg-slate-200 text-slate-700'
+                        }`}
+                      >
+                        {m.is_locked ? 'Mở khoá' : 'Khoá'}
+                      </button>
+                    )}
+
+                    {/* Chấm điểm — chỉ khi finished */}
                     {m.status === 'finished' && (
-                      <button onClick={() => scoreMatch(m.id)} disabled={scoring === m.id}
-                        className="text-xs bg-green-100 hover:bg-green-200 disabled:opacity-50 text-green-700 px-2.5 py-1 rounded-md transition-colors">
+                      <button
+                        onClick={() => scoreMatch(m.id)}
+                        disabled={scoring === m.id}
+                        className="text-xs bg-green-100 hover:bg-green-200 disabled:opacity-50 text-green-700 px-2.5 py-1 rounded-md transition-colors"
+                      >
                         {scoring === m.id ? '...' : 'Chấm điểm'}
                       </button>
                     )}

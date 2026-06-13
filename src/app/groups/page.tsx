@@ -174,7 +174,9 @@ export default function GroupsPage() {
                           {m.user_id === user?.id && <span className="text-xs text-green-600 bg-green-100 px-1.5 py-0.5 rounded">bạn</span>}
                         </div>
                       </td>
-                      <td className="px-4 py-3 text-right font-bold text-green-600">{m.profiles?.total_points ?? 0}</td>
+                      <td className={`px-4 py-3 text-right font-bold ${(m.profiles?.total_points ?? 0) < 0 ? 'text-red-500' : (m.profiles?.total_points ?? 0) > 0 ? 'text-green-600' : 'text-slate-400'}`}>
+                        {m.profiles?.total_points ?? 0}
+                      </td>
                     </tr>
                   ))}
                 </tbody>

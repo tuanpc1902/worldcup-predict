@@ -24,10 +24,11 @@ export default function MatchCard({ match, prediction, showResult, showPredictLi
   const isFinished = match.status === 'finished'
   const isLive = match.status === 'live'
 
+  const pts = prediction?.points_earned ?? null
   const pointsBg =
-    prediction?.points_earned === 5 ? 'bg-green-100 text-green-700' :
-    prediction?.points_earned === 3 ? 'bg-blue-100 text-blue-700' :
-    prediction?.points_earned === -1 ? 'bg-red-100 text-red-700' :
+    pts !== null && pts > 0  ? 'bg-green-100 text-green-700' :
+    pts !== null && pts < 0  ? 'bg-red-100 text-red-600' :
+    pts === 0                ? 'bg-slate-100 text-slate-500' :
     'bg-slate-100 text-slate-500'
 
   return (

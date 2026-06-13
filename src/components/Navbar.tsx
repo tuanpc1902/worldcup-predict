@@ -32,8 +32,9 @@ export default function Navbar() {
   const textMid  = dark ? '#94b8d4' : '#475569'
   const textMute = dark ? '#5a8aaa' : '#94a3b8'
   const hoverBg  = dark ? '#002a52' : '#f1f5f9'
-  const ptsBg    = dark ? '#002a52' : 'var(--brand-bg)'
-  const ptsColor = dark ? '#7db3e0' : 'var(--brand)'
+  const pts = user?.total_points ?? 0
+  const ptsBg    = pts < 0 ? (dark ? '#3b0a0a' : '#fee2e2') : pts > 0 ? (dark ? '#002a52' : 'var(--brand-bg)') : (dark ? '#1e293b' : '#f1f5f9')
+  const ptsColor = pts < 0 ? (dark ? '#fca5a5' : '#dc2626')  : pts > 0 ? (dark ? '#7db3e0' : 'var(--brand)')   : (dark ? '#64748b' : '#94a3b8')
   const menuBg   = dark ? '#001a35' : '#f8fafc'
 
   // Desktop shows first 4 links
