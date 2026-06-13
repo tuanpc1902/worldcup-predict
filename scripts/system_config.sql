@@ -11,6 +11,12 @@ CREATE TABLE IF NOT EXISTS public.system_config (
   updated_at  TIMESTAMPTZ NOT NULL DEFAULT now()
 );
 
+-- Realtime: cần FULL để UPDATE payload chứa toàn bộ row (key + value)
+ALTER TABLE public.system_config REPLICA IDENTITY FULL;
+
+-- Thêm vào realtime publication
+ALTER PUBLICATION supabase_realtime ADD TABLE public.system_config;
+
 -- RLS: public read, only service role can write (via API)
 ALTER TABLE public.system_config ENABLE ROW LEVEL SECURITY;
 

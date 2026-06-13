@@ -1,6 +1,7 @@
 'use client'
 import { create } from 'zustand'
 import { createClient } from '@/lib/supabase'
+import type { RealtimeChannel } from '@supabase/supabase-js'
 
 export interface SystemConfig {
   realtime_leaderboard: boolean
@@ -43,6 +44,8 @@ interface ConfigState {
   set: (key: keyof SystemConfig, value: boolean) => void
 }
 
+let _configChannel: RealtimeChannel | null = null
+
 export const useConfigStore = create<ConfigState>((set, get) => ({
   config: DEFAULTS,
   loaded: false,
@@ -50,15 +53,39 @@ export const useConfigStore = create<ConfigState>((set, get) => ({
   load: async () => {
     if (get().loaded) return
     const supabase = createClient()
+
+    // Initial fetch
     const { data } = await supabase.from('system_config').select('key, value')
-    if (!data) return
-    const parsed = { ...DEFAULTS }
-    for (const row of data) {
-      if (row.key in parsed) {
-        (parsed as Record<string, boolean>)[row.key] = row.value === 'true'
+    if (data) {
+      const parsed = { ...DEFAULTS }
+      for (const row of data) {
+        if (row.key in parsed) {
+          (parsed as Record<string, boolean>)[row.key] = row.value === 'true'
+        }
       }
+      set({ config: parsed, loaded: true })
     }
-    set({ config: parsed, loaded: true })
+
+    // Realtime: react to any UPDATE on system_config immediately
+    if (_configChannel) {
+      supabase.removeChannel(_configChannel)
+      _configChannel = null
+    }
+    _configChannel = supabase
+      .channel('system-config-changes')
+      .on(
+        'postgres_changes',
+        { event: 'UPDATE', schema: 'public', table: 'system_config' },
+        (payload: { new: { key: string; value: string } }) => {
+          const { key, value } = payload.new
+          if (key in DEFAULTS) {
+            set(s => ({
+              config: { ...s.config, [key]: value === 'true' },
+            }))
+          }
+        }
+      )
+      .subscribe()
   },
 
   set: (key, value) => {

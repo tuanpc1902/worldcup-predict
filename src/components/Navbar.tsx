@@ -50,6 +50,14 @@ export default function Navbar() {
     !l.configKey || (config as unknown as Record<string, boolean>)[l.configKey] !== false
   )
 
+  // Redirect user to home if the current page's feature was just disabled
+  useEffect(() => {
+    const currentLink = ALL_LINKS.find(l => l.configKey && pathname.startsWith(l.href) && l.href !== '/')
+    if (!currentLink?.configKey) return
+    const isEnabled = (config as unknown as Record<string, boolean>)[currentLink.configKey]
+    if (isEnabled === false) router.replace('/')
+  }, [config, pathname, router])
+
   const bg       = dark ? '#001f3f' : '#ffffff'
   const border   = dark ? '#1a3a5c' : '#d1dbe8'
   const textMid  = dark ? '#94b8d4' : '#475569'
