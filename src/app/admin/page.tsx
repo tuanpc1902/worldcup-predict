@@ -25,7 +25,6 @@ export default function AdminPage() {
   const [addOpen, setAddOpen] = useState(false)
   const [editMatch, setEditMatch] = useState<Match | null>(null)
   const [saving, setSaving] = useState(false)
-  const [scoring, setScoring] = useState<string | null>(null)
   const [msg, setMsg] = useState<{ text: string; ok: boolean } | null>(null)
   const [filter, setFilter] = useState<'all' | 'scheduled' | 'live' | 'finished'>('all')
 
@@ -76,19 +75,6 @@ export default function AdminPage() {
       await loadMatches()
     } catch { flash('Lỗi cập nhật trạng thái', false) }
     setUpdatingStatus(false)
-  }
-
-  async function scoreMatch(matchId: string) {
-    setScoring(matchId)
-    const res = await fetch('/api/score-match', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ match_id: matchId }),
-    })
-    const json = await res.json()
-    flash(res.ok ? '✓ Đã chấm điểm!' : `Lỗi: ${json.error}`, res.ok)
-    setScoring(null)
-    await loadMatches()
   }
 
   async function toggleLock(match: Match) {
@@ -149,10 +135,16 @@ export default function AdminPage() {
             + Thêm trận
           </button>
           <Link
-            href="/admin/create-users"
-            className="bg-slate-700 hover:bg-slate-800 text-white text-sm font-semibold px-3 py-2 rounded-lg transition-colors"
+            href="/admin/users"
+            className="bg-slate-600 hover:bg-slate-700 text-white text-sm font-semibold px-3 py-2 rounded-lg transition-colors"
           >
-            Tạo tài khoản
+            Quản lý TK
+          </Link>
+          <Link
+            href="/admin/create-users"
+            className="bg-slate-800 hover:bg-slate-900 text-white text-sm font-semibold px-3 py-2 rounded-lg transition-colors"
+          >
+            + Tạo tài khoản
           </Link>
         </div>
       </div>
@@ -215,13 +207,17 @@ export default function AdminPage() {
                 </td>
                 <td className="px-4 py-3">
                   <div className="flex gap-1 flex-wrap">
-                    {/* Sửa — available for scheduled + live (to update score) */}
-                    {m.status !== 'finished' && m.status !== 'cancelled' && (
+                    {/* Sửa — tất cả trừ cancelled */}
+                    {m.status !== 'cancelled' && (
                       <button
                         onClick={() => setEditMatch(m)}
-                        className="text-xs bg-slate-100 hover:bg-slate-200 text-slate-700 px-2.5 py-1 rounded-md transition-colors"
+                        className={`text-xs px-2.5 py-1 rounded-md transition-colors ${
+                          m.status === 'live'
+                            ? 'bg-red-100 hover:bg-red-200 text-red-700 font-semibold'
+                            : 'bg-slate-100 hover:bg-slate-200 text-slate-700'
+                        }`}
                       >
-                        Sửa
+                        {m.status === 'live' ? '📊 Tỉ số' : 'Sửa'}
                       </button>
                     )}
 
@@ -236,27 +232,6 @@ export default function AdminPage() {
                         }`}
                       >
                         {m.is_locked ? 'Mở khoá' : 'Khoá'}
-                      </button>
-                    )}
-
-                    {/* Cập nhật tỉ số nhanh — chỉ live */}
-                    {m.status === 'live' && (
-                      <button
-                        onClick={() => setEditMatch(m)}
-                        className="text-xs bg-red-100 hover:bg-red-200 text-red-700 font-semibold px-2.5 py-1 rounded-md transition-colors"
-                      >
-                        📊 Tỉ số
-                      </button>
-                    )}
-
-                    {/* Chấm điểm — chỉ finished */}
-                    {m.status === 'finished' && (
-                      <button
-                        onClick={() => scoreMatch(m.id)}
-                        disabled={scoring === m.id}
-                        className="text-xs bg-green-100 hover:bg-green-200 disabled:opacity-50 text-green-700 px-2.5 py-1 rounded-md transition-colors"
-                      >
-                        {scoring === m.id ? '...' : 'Chấm điểm'}
                       </button>
                     )}
                   </div>
@@ -303,6 +278,7 @@ function MatchModal({ match, onClose, onSave, saving }: {
   match: Match | null; onClose: () => void; onSave: (data: MatchFormData) => void; saving: boolean
 }) {
   const isLive = match?.status === 'live'
+  const isFinished = match?.status === 'finished'
 
   const [form, setForm] = useState({
     home_team: match?.home_team ?? '',
@@ -324,7 +300,7 @@ function MatchModal({ match, onClose, onSave, saving }: {
     <div className="fixed inset-0 z-50 bg-black/30 backdrop-blur-sm flex items-center justify-center p-4" onClick={onClose}>
       <div className="bg-white rounded-2xl border border-slate-200 shadow-xl p-6 w-full max-w-md" onClick={e => e.stopPropagation()}>
         <h2 className="text-lg font-bold text-slate-800 mb-4">
-          {match ? (isLive ? '📊 Cập nhật tỉ số' : 'Sửa trận đấu') : 'Thêm trận mới'}
+          {match ? (isLive ? '📊 Cập nhật tỉ số' : isFinished ? '✓ Sửa kết quả' : 'Sửa trận đấu') : 'Thêm trận mới'}
         </h2>
 
         <form
@@ -338,6 +314,13 @@ function MatchModal({ match, onClose, onSave, saving }: {
           }}
           className="space-y-3"
         >
+          {/* Warning for finished: re-scoring not supported */}
+          {isFinished && (
+            <div className="bg-amber-50 border border-amber-200 rounded-lg px-3 py-2 text-xs text-amber-700">
+              Trận đã kết thúc — điểm đã được tính tự động. Chỉ sửa nếu tỉ số bị sai.
+            </div>
+          )}
+
           {/* Score fields — shown first for live matches for quick access */}
           {showScore && (
             <div className="bg-slate-50 rounded-xl p-4 space-y-3 border border-slate-200">
@@ -358,8 +341,8 @@ function MatchModal({ match, onClose, onSave, saving }: {
             </div>
           )}
 
-          {/* Metadata — hidden for live (only score matters) */}
-          {!isLive && (
+          {/* Metadata — hidden for live/finished (score is the focus) */}
+          {!isLive && !isFinished && (
             <>
               <div className="grid grid-cols-2 gap-3">
                 {([['home_team', 'Đội nhà'], ['away_team', 'Đội khách']] as [keyof typeof form, string][]).map(([k, l]) => (

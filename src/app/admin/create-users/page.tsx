@@ -17,7 +17,7 @@ export default function CreateUsersPage() {
   const router = useRouter()
 
   const [names, setNames] = useState('')
-  const [domain, setDomain] = useState('wc2026.local')
+  const [domain, setDomain] = useState('wc.88')
   const [creating, setCreating] = useState(false)
   const [results, setResults] = useState<UserResult[]>([])
   const [summary, setSummary] = useState<{ created: number; failed: number } | null>(null)

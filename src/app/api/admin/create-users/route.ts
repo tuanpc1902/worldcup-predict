@@ -35,7 +35,7 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ message: 'Chỉ admin mới có quyền tạo tài khoản hàng loạt' }, { status: 403 })
   }
 
-  const { names, email_domain = 'wc2026.local' } = await req.json() as {
+  const { names, email_domain = 'wc.88' } = await req.json() as {
     names: string[]
     email_domain?: string
   }
