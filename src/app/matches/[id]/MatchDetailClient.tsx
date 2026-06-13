@@ -117,8 +117,8 @@ export default function MatchDetailClient({ match, stats, comments: initialComme
       .channel(`comments:${match.id}`)
       .on('postgres_changes', {
         event: 'INSERT', schema: 'public', table: 'match_comments', filter: `match_id=eq.${match.id}`,
-      }, async (payload) => {
-        const newId = (payload.new as { id: string }).id
+      }, async (payload: RealtimePostgresInsertPayload<{ id: string }>) => {
+        const newId = payload.new.id
         // Skip comments we added locally (already in state)
         if (localCommentIds.current.has(newId)) return
         const { data } = await supabase
