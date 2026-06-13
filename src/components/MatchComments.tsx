@@ -39,6 +39,8 @@ export default function MatchComments({ matchId }: { matchId: string }) {
   const bottomRef = useRef<HTMLDivElement>(null)
   const openRef = useRef(open)
   openRef.current = open
+  const commentsRef = useRef<Comment[]>([])
+  commentsRef.current = comments
 
   // ---------- loaders ----------
 
@@ -190,19 +192,60 @@ export default function MatchComments({ matchId }: { matchId: string }) {
 
     const alreadyReacted = reactions[commentId]?.[emoji]?.includes(user.id)
 
+    // Optimistic update immediately
+    setReactions(prev => {
+      const next = { ...prev }
+      const current = next[commentId]?.[emoji] ?? []
+      next[commentId] = {
+        ...next[commentId],
+        [emoji]: alreadyReacted
+          ? current.filter(u => u !== user.id)
+          : [...current, user.id],
+      }
+      return next
+    })
+
+    let error
     if (alreadyReacted) {
-      await supabase.from('comment_reactions')
+      const res = await supabase.from('comment_reactions')
         .delete()
         .eq('comment_id', commentId)
         .eq('user_id', user.id)
         .eq('emoji', emoji)
+      error = res.error
     } else {
-      await supabase.from('comment_reactions')
+      const res = await supabase.from('comment_reactions')
         .insert({ comment_id: commentId, user_id: user.id, emoji })
+      error = res.error
+    }
+
+    if (error) {
+      console.error('[reaction error]', error.message, error.code, error.details)
+      // Rollback optimistic update
+      setReactions(prev => {
+        const next = { ...prev }
+        const current = next[commentId]?.[emoji] ?? []
+        next[commentId] = {
+          ...next[commentId],
+          [emoji]: alreadyReacted
+            ? [...current, user.id]
+            : current.filter(u => u !== user.id),
+        }
+        return next
+      })
+    } else {
+      // Verify DB state — overwrite optimistic with real data
+      const ids = commentsRef.current.map(c => c.id)
+      if (ids.length > 0) {
+        const { data } = await supabase
+          .from('comment_reactions')
+          .select('id, comment_id, user_id, emoji')
+          .in('comment_id', ids)
+        buildReactionMap(data ?? [])
+      }
     }
 
     setToggling(null)
-    // realtime will update reactions state
   }
 
   // ---------- helpers ----------

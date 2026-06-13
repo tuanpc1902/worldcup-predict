@@ -433,7 +433,7 @@ export default function MatchDetailClient({ match, stats, comments: initialComme
       {/* Live stream reminder (not-finished, not-yet-started) */}
       {!isFinished && !isLive && (
         <div className="bg-white rounded-2xl border border-slate-200 p-4">
-          <p className="text-xs font-semibold text-slate-500 uppercase tracking-wide mb-3">Xem trực tiếp tại Việt Nam</p>
+          <p className="text-xs font-semibold text-slate-500 uppercase tracking-wide mb-3">Xem trực tiếp</p>
           <a
             href="https://vtvgo.vn/"
             target="_blank"
