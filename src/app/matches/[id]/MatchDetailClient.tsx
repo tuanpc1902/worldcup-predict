@@ -121,7 +121,7 @@ export default function MatchDetailClient({ match, stats, comments: initialComme
         if (localCommentIds.current.has(newId)) return
         const { data } = await supabase
           .from('match_comments')
-          .select('id, content, created_at, reactions, user_id, profiles(display_name, avatar_url)')
+          .select('id, content, created_at, user_id, profiles(display_name, avatar_url)')
           .eq('id', newId)
           .single()
         if (data) {
@@ -150,8 +150,10 @@ export default function MatchDetailClient({ match, stats, comments: initialComme
       })
   }, [user])
 
+  const isAdmin = user?.role === 'admin'
+
   async function savePrediction() {
-    if (!user || saving) return
+    if (!user || saving || isAdmin) return
     const h = parseInt(myPrediction.home)
     const a = parseInt(myPrediction.away)
     if (isNaN(h) || isNaN(a) || h < 0 || a < 0) return
@@ -205,7 +207,7 @@ export default function MatchDetailClient({ match, stats, comments: initialComme
     setPosting(true)
     const { data, error } = await supabase.from('match_comments')
       .insert({ match_id: match.id, user_id: user.id, content: commentText.trim() })
-      .select('id, content, created_at, reactions, user_id, profiles(display_name, avatar_url)')
+      .select('id, content, created_at, user_id, profiles(display_name, avatar_url)')
       .single()
     if (!error && data) {
       const comment = { ...data, profiles: Array.isArray(data.profiles) ? data.profiles[0] : data.profiles } as Comment
@@ -413,7 +415,13 @@ export default function MatchDetailClient({ match, stats, comments: initialComme
               </div>
             )}
 
-            {!locked && (
+            {isAdmin && (
+              <p className="text-xs text-amber-600 bg-amber-50 border border-amber-200 rounded-lg px-3 py-2">
+                🔒 Tài khoản admin chỉ xem
+              </p>
+            )}
+
+            {!locked && !isAdmin && (
               <div className="flex items-center gap-3">
                 <div className="flex items-center gap-2 flex-1">
                   <span className="text-xs text-slate-500 truncate flex-1 text-right">{liveMatch.home_team}</span>
@@ -436,7 +444,7 @@ export default function MatchDetailClient({ match, stats, comments: initialComme
                 </div>
                 <button
                   onClick={savePrediction}
-                  disabled={saving || !myPrediction.home || !myPrediction.away}
+                  disabled={saving || myPrediction.home === '' || myPrediction.away === ''}
                   className="px-4 py-2 bg-green-600 hover:bg-green-700 disabled:opacity-50 text-white text-sm font-bold rounded-lg transition-colors"
                 >
                   {saving ? '...' : predSaved ? '✓' : 'Lưu'}
@@ -444,7 +452,7 @@ export default function MatchDetailClient({ match, stats, comments: initialComme
               </div>
             )}
 
-            {locked && !savedPrediction && (
+            {locked && !savedPrediction && !isAdmin && (
               <p className="text-sm text-slate-500">🔒 Trận đã bắt đầu, không thể dự đoán</p>
             )}
           </div>

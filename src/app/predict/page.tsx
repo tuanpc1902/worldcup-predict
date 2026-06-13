@@ -261,7 +261,7 @@ export default function PredictPage() {
                     <div className="flex justify-end">
                       <button
                         onClick={() => savePrediction(match.id)}
-                        disabled={saving === match.id || !inputs[match.id]?.home || !inputs[match.id]?.away}
+                        disabled={saving === match.id || inputs[match.id]?.home === '' || inputs[match.id]?.home === undefined || inputs[match.id]?.away === '' || inputs[match.id]?.away === undefined}
                         className={`px-4 py-1.5 rounded-lg font-semibold text-sm transition-colors ${
                           saved === match.id
                             ? 'bg-green-100 text-green-700'
@@ -293,10 +293,10 @@ export default function PredictPage() {
                 const isFinishedMatch = match.status === 'finished'
                 const pts = pred?.points_earned
                 const ptsColor =
-                  pts === 5 ? 'bg-green-100 text-green-700' :
-                  pts === 3 ? 'bg-blue-100 text-blue-700' :
-                  pts === -1 ? 'bg-red-100 text-red-600' :
-                  'bg-slate-100 text-slate-500'
+                  pts != null && pts > 0 ? 'bg-green-100 text-green-700' :
+                  pts != null && pts < 0 ? 'bg-red-100 text-red-600' :
+                  pts === 0 ? 'bg-slate-100 text-slate-500' :
+                  'bg-slate-100 text-slate-400'
                 return (
                   <div key={match.id} className={`bg-white rounded-xl border px-4 py-3 flex items-center gap-3 ${isFinishedMatch ? 'border-slate-200' : 'border-slate-100 opacity-60'}`}>
                     <div className="flex items-center gap-1.5 flex-1 min-w-0">

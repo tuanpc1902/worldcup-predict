@@ -14,6 +14,7 @@ interface AuthState {
 }
 
 let _channel: RealtimeChannel | null = null
+let _authSub: { data: { subscription: { unsubscribe: () => void } } } | null = null
 
 export const useAuthStore = create<AuthState>((set, get) => ({
   user: null,
@@ -50,7 +51,8 @@ export const useAuthStore = create<AuthState>((set, get) => ({
       })
       .subscribe()
 
-    supabase.auth.onAuthStateChange(async (_event: AuthChangeEvent, session: Session | null) => {
+    if (_authSub) _authSub.data.subscription.unsubscribe()
+    _authSub = supabase.auth.onAuthStateChange(async (_event: AuthChangeEvent, session: Session | null) => {
       if (!session?.user) { set({ user: null }); return }
       const { data: profile } = await supabase
         .from('profiles').select('*').eq('id', session.user.id).maybeSingle()
@@ -69,6 +71,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
   signOut: async () => {
     const supabase = createClient()
     if (_channel) { supabase.removeChannel(_channel); _channel = null }
+    if (_authSub) { _authSub.data.subscription.unsubscribe(); _authSub = null }
     await supabase.auth.signOut()
     set({ user: null, initialized: false })
   },

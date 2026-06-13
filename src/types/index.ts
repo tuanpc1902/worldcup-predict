@@ -56,7 +56,6 @@ export interface Comment {
   id: string
   content: string
   created_at: string
-  reactions: Record<string, number>
   user_id: string
   match_id: string
   profiles: {
@@ -71,6 +70,7 @@ export interface Group {
   invite_code: string
   owner_id: string
   created_at: string
+  total_points: number
 }
 
 export interface FixtureRow {

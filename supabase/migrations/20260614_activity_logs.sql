@@ -27,6 +27,7 @@ CREATE INDEX IF NOT EXISTS idx_activity_session  ON public.user_activity_logs(se
 ALTER TABLE public.user_activity_logs ENABLE ROW LEVEL SECURITY;
 
 -- No direct client reads (use admin API instead)
+DROP POLICY IF EXISTS "service_only" ON public.user_activity_logs;
 CREATE POLICY "service_only" ON public.user_activity_logs
   FOR ALL TO authenticated
   USING (false)

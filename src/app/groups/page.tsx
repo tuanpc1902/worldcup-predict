@@ -5,7 +5,7 @@ import { createClient } from '@/lib/supabase'
 import { useAuthStore } from '@/store/auth'
 import { logActivity } from '@/lib/activity'
 
-interface Group { id: string; name: string; invite_code: string; owner_id: string }
+interface Group { id: string; name: string; invite_code: string; owner_id: string; total_points: number }
 interface Member {
   user_id: string
   status: 'pending' | 'approved'
@@ -38,7 +38,7 @@ export default function GroupsPage() {
     if (!user) return
     const { data } = await supabase
       .from('group_members')
-      .select('group_id, status, groups(id, name, invite_code, owner_id)')
+      .select('group_id, status, groups(id, name, invite_code, owner_id, total_points)')
       .eq('user_id', user.id)
       .eq('status', 'approved')
     const list = (data ?? []).map((r: { groups: Group }) => r.groups).filter(Boolean)
@@ -208,7 +208,13 @@ export default function GroupsPage() {
                     ? 'border-green-400 bg-green-50'
                     : 'border-slate-200 bg-white hover:border-slate-300'
                 }`}>
-                <div className="font-medium text-slate-800 text-sm">{g.name}</div>
+                <div className="flex items-center justify-between gap-2">
+                  <div className="font-medium text-slate-800 text-sm truncate">{g.name}</div>
+                  <span className={`text-xs font-bold tabular-nums flex-shrink-0 ${
+                    (g.total_points ?? 0) > 0 ? 'text-green-600' :
+                    (g.total_points ?? 0) < 0 ? 'text-red-500' : 'text-slate-400'
+                  }`}>{(g.total_points ?? 0) > 0 ? '+' : ''}{g.total_points ?? 0} pts</span>
+                </div>
                 <div className="flex items-center gap-1.5 mt-0.5">
                   <span className="text-xs text-slate-400 font-mono">#{g.invite_code}</span>
                   {g.owner_id === user?.id && (
@@ -224,9 +230,17 @@ export default function GroupsPage() {
             <div className="sm:col-span-2 bg-white rounded-xl border border-slate-200 overflow-hidden">
               {/* Panel header */}
               <div className="px-4 py-3 border-b border-slate-100 flex items-center justify-between bg-slate-50">
-                <div>
-                  <span className="font-semibold text-slate-800">{activeGroup.name}</span>
-                  <span className="ml-2 text-xs text-slate-400 font-mono">#{activeGroup.invite_code}</span>
+                <div className="flex items-center gap-3">
+                  <div>
+                    <span className="font-semibold text-slate-800">{activeGroup.name}</span>
+                    <span className="ml-2 text-xs text-slate-400 font-mono">#{activeGroup.invite_code}</span>
+                  </div>
+                  <span className={`text-sm font-bold tabular-nums px-2.5 py-0.5 rounded-full ${
+                    (activeGroup.total_points ?? 0) > 0 ? 'bg-green-100 text-green-700' :
+                    (activeGroup.total_points ?? 0) < 0 ? 'bg-red-100 text-red-600' : 'bg-slate-100 text-slate-500'
+                  }`}>
+                    {(activeGroup.total_points ?? 0) > 0 ? '+' : ''}{activeGroup.total_points ?? 0} pts
+                  </span>
                 </div>
                 <button onClick={() => copyInviteLink(activeGroup.invite_code)}
                   className="text-xs bg-green-100 hover:bg-green-200 text-green-700 px-3 py-1.5 rounded-lg font-medium transition-colors">
