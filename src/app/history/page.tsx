@@ -23,7 +23,7 @@ export default function HistoryPage() {
     if (!user) return
     supabase
       .from('predictions')
-      .select('*, match:matches(*)')
+      .select('*, matches(*)')
       .eq('user_id', user.id)
       .order('created_at', { ascending: false })
       .then(({ data }: { data: PredictionWithMatch[] | null }) => {
