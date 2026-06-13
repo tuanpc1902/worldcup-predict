@@ -44,7 +44,7 @@ export default function PredictPage() {
     async function load() {
       setFetching(true)
       const [{ data: ms }, { data: ps }] = await Promise.all([
-        supabase.from('matches').select('*').in('status', ['scheduled', 'live']).order('match_time', { ascending: true }),
+        supabase.from('matches').select('*').neq('status', 'cancelled').order('match_time', { ascending: true }),
         supabase.from('predictions').select('*').eq('user_id', user!.id),
       ])
       // Filter out knockout matches whose teams are still TBD placeholders
@@ -119,8 +119,9 @@ export default function PredictPage() {
     )
   }
 
-  // A match is locked if DB flag OR kick-off time has passed
-  const isLocked = (m: Match) => m.is_locked || now >= new Date(m.match_time).getTime()
+  // A match is locked if finished, live, DB flag set, or kick-off time has passed
+  const isLocked = (m: Match) =>
+    m.status === 'finished' || m.status === 'live' || m.is_locked || now >= new Date(m.match_time).getTime()
 
   const unlocked = matches.filter(m => !isLocked(m))
   const locked = matches.filter(m => isLocked(m))
@@ -244,33 +245,58 @@ export default function PredictPage() {
       {locked.length > 0 && (
         <section>
           <h2 className="text-sm font-semibold text-slate-400 uppercase tracking-wide mb-3">
-            🔒 Đã khoá dự đoán · {locked.length} trận
+            Đã khoá · {locked.length} trận
           </h2>
-          <div className="space-y-2 opacity-70">
+          <div className="space-y-2">
             <LazyList
               items={locked}
-              pageSize={15}
+              pageSize={20}
               renderItem={(match) => {
                 const pred = predictions[match.id]
+                const isFinishedMatch = match.status === 'finished'
+                const pts = pred?.points_earned
+                const ptsColor =
+                  pts === 5 ? 'bg-green-100 text-green-700' :
+                  pts === 3 ? 'bg-blue-100 text-blue-700' :
+                  pts === -1 ? 'bg-red-100 text-red-600' :
+                  'bg-slate-100 text-slate-500'
                 return (
-                  <div key={match.id} className="bg-white rounded-xl border border-slate-200 px-4 py-3 flex items-center gap-3">
+                  <div key={match.id} className={`bg-white rounded-xl border px-4 py-3 flex items-center gap-3 ${isFinishedMatch ? 'border-slate-200' : 'border-slate-100 opacity-60'}`}>
                     <div className="flex items-center gap-1.5 flex-1 min-w-0">
                       <FlagImg team={match.home_team} flag={match.home_flag} size="xs" />
                       <span className="text-sm font-medium text-slate-700 truncate">{match.home_team}</span>
                     </div>
-                    <div className="text-center flex-shrink-0">
-                      <div className="text-xs font-bold text-slate-500">{fmtTime(match.match_time)}</div>
-                      <div className="text-xs text-slate-400">{fmtDate(match.match_time)}</div>
+
+                    <div className="text-center flex-shrink-0 min-w-[60px]">
+                      {isFinishedMatch && match.home_score !== null ? (
+                        <div className="text-sm font-black text-slate-800 tabular-nums">
+                          {match.home_score}–{match.away_score}
+                        </div>
+                      ) : (
+                        <>
+                          <div className="text-xs font-bold text-slate-500">{fmtTime(match.match_time)}</div>
+                          <div className="text-xs text-slate-400">{fmtDate(match.match_time)}</div>
+                        </>
+                      )}
                     </div>
+
                     <div className="flex items-center gap-1.5 flex-1 min-w-0 justify-end">
                       <span className="text-sm font-medium text-slate-700 truncate text-right">{match.away_team}</span>
                       <FlagImg team={match.away_team} flag={match.away_flag} size="xs" />
                     </div>
-                    {pred && (
-                      <div className="ml-2 text-xs bg-slate-100 text-slate-600 px-2 py-1 rounded-lg font-semibold flex-shrink-0">
-                        {pred.predicted_home}–{pred.predicted_away}
-                      </div>
-                    )}
+
+                    <div className="flex items-center gap-1.5 flex-shrink-0 ml-1">
+                      {pred ? (
+                        <span className={`text-xs px-2 py-0.5 rounded-lg font-semibold ${ptsColor}`}>
+                          {pred.predicted_home}–{pred.predicted_away}
+                          {pts !== null && pts !== undefined && (
+                            <span className="ml-1">{pts > 0 ? `+${pts}` : pts}pt</span>
+                          )}
+                        </span>
+                      ) : (
+                        <span className="text-xs text-slate-300 italic">Chưa đoán</span>
+                      )}
+                    </div>
                   </div>
                 )
               }}

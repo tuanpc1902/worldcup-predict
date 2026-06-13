@@ -175,14 +175,14 @@ export default function Navbar() {
                     href={l.href}
                     className="flex items-center px-3 py-3 rounded-lg text-sm font-medium transition-colors"
                     style={{
-                      color: active ? 'var(--brand)' : textMid,
+                      color: active ? (dark ? '#93c5fd' : 'var(--brand)') : textMid,
                       background: active ? (dark ? '#003366' : 'var(--brand-bg)') : 'transparent',
                       fontWeight: active ? 600 : 500,
                     }}
                   >
                     {l.label}
                     {active && (
-                      <span className="ml-auto w-1.5 h-1.5 rounded-full" style={{ background: 'var(--brand)' }} />
+                      <span className="ml-auto w-1.5 h-1.5 rounded-full" style={{ background: dark ? '#93c5fd' : 'var(--brand)' }} />
                     )}
                   </Link>
                 )

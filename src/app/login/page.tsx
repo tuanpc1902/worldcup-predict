@@ -26,32 +26,29 @@ export default function LoginPage() {
         router.push('/')
         router.refresh()
       } else {
-        // Check IP limit trước khi tạo tài khoản
-        const check = await fetch('/api/auth/check-ip')
-        const checkJson = await check.json()
-        if (!check.ok) throw new Error(checkJson.message)
+        // Get or create device fingerprint
+        let deviceId = localStorage.getItem('wc_device_id')
+        if (!deviceId) {
+          deviceId = crypto.randomUUID()
+          localStorage.setItem('wc_device_id', deviceId)
+        }
 
-        // Dùng signUp để Supabase gửi email xác nhận
-        const { data, error: signUpErr } = await supabase.auth.signUp({
-          email,
-          password,
-          options: {
-            data: { full_name: name },
-            emailRedirectTo: `${location.origin}/auth/callback`,
-          },
+        const res = await fetch('/api/auth/register', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ email, password, name, device_id: deviceId }),
         })
-        if (signUpErr) throw signUpErr
+        const json = await res.json()
+        if (!res.ok) throw new Error(json.message)
 
-        if (data.session) {
-          // Email confirm disabled — đăng nhập luôn
+        // Auto sign-in after server-side creation
+        const { error: signInErr } = await supabase.auth.signInWithPassword({ email, password })
+        if (signInErr) {
+          setSuccess('Tài khoản đã tạo! Vui lòng đăng nhập.')
+          setMode('login')
+        } else {
           router.push('/')
           router.refresh()
-        } else {
-          // Email confirm enabled — báo user kiểm tra email
-          setSuccess('Tài khoản đã tạo! Kiểm tra email để xác nhận trước khi đăng nhập.')
-          setEmail('')
-          setPassword('')
-          setName('')
         }
       }
     } catch (err) {

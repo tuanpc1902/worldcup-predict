@@ -80,6 +80,8 @@ export default function MatchDetailClient({ match, stats, comments: initialComme
   const [commentText, setCommentText] = useState('')
   const [posting, setPosting] = useState(false)
   const commentsEndRef = useRef<HTMLDivElement>(null)
+  // IDs of comments we added locally — skip when realtime fires to avoid duplicates
+  const localCommentIds = useRef<Set<string>>(new Set())
 
   useEffect(() => { init() }, [init])
 
@@ -104,6 +106,37 @@ export default function MatchDetailClient({ match, stats, comments: initialComme
         event: 'INSERT', schema: 'public', table: 'match_goals', filter: `match_id=eq.${match.id}`,
       }, (payload: RealtimePostgresInsertPayload<MatchGoal>) => {
         setLiveGoals(prev => [...prev, payload.new].sort((a, b) => (a.minute ?? 0) - (b.minute ?? 0)))
+      })
+      .subscribe()
+    return () => { supabase.removeChannel(ch) }
+  }, [match.id])
+
+  // Realtime: comments INSERT + reaction UPDATE
+  useEffect(() => {
+    const ch = supabase
+      .channel(`comments:${match.id}`)
+      .on('postgres_changes', {
+        event: 'INSERT', schema: 'public', table: 'match_comments', filter: `match_id=eq.${match.id}`,
+      }, async (payload) => {
+        const newId = (payload.new as { id: string }).id
+        // Skip comments we added locally (already in state)
+        if (localCommentIds.current.has(newId)) return
+        const { data } = await supabase
+          .from('match_comments')
+          .select('id, content, created_at, reactions, user_id, profiles(display_name, avatar_url)')
+          .eq('id', newId)
+          .single()
+        if (data) {
+          const comment = { ...data, profiles: Array.isArray(data.profiles) ? data.profiles[0] : data.profiles } as Comment
+          setComments(prev => prev.some(c => c.id === newId) ? prev : [...prev, comment])
+          setTimeout(() => commentsEndRef.current?.scrollIntoView({ behavior: 'smooth' }), 100)
+        }
+      })
+      .on('postgres_changes', {
+        event: 'UPDATE', schema: 'public', table: 'match_comments', filter: `match_id=eq.${match.id}`,
+      }, (payload) => {
+        const updated = payload.new as { id: string; reactions: Record<string, number> }
+        setComments(prev => prev.map(c => c.id === updated.id ? { ...c, reactions: updated.reactions } : c))
       })
       .subscribe()
     return () => { supabase.removeChannel(ch) }
@@ -183,7 +216,9 @@ export default function MatchDetailClient({ match, stats, comments: initialComme
       .select('id, content, created_at, reactions, user_id, profiles(display_name, avatar_url)')
       .single()
     if (!error && data) {
-      setComments(prev => [...prev, { ...data, profiles: Array.isArray(data.profiles) ? data.profiles[0] : data.profiles } as Comment])
+      const comment = { ...data, profiles: Array.isArray(data.profiles) ? data.profiles[0] : data.profiles } as Comment
+      localCommentIds.current.add(comment.id)
+      setComments(prev => [...prev, comment])
       setCommentText('')
       setTimeout(() => commentsEndRef.current?.scrollIntoView({ behavior: 'smooth' }), 100)
     }
