@@ -24,7 +24,10 @@ export default function GroupsPage() {
   const [copied, setCopied] = useState(false)
 
   useEffect(() => { init() }, [init])
-  useEffect(() => { if (!loading && !user) router.replace('/login') }, [user, loading, router])
+  useEffect(() => {
+    if (!loading && !user) router.replace('/login')
+    if (!loading && user?.role === 'admin') router.replace('/admin')
+  }, [user, loading, router])
 
   const loadGroups = async () => {
     if (!user) return

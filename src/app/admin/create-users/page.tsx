@@ -1,7 +1,6 @@
 'use client'
 import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
-import Link from 'next/link'
 import { useAuthStore } from '@/store/auth'
 
 interface UserResult {
@@ -85,9 +84,9 @@ export default function CreateUsersPage() {
 
   return (
     <div className="max-w-2xl mx-auto space-y-5">
-      <div className="flex items-center gap-3">
-        <Link href="/admin" className="text-sm text-slate-500 hover:text-slate-700">← Admin</Link>
-        <h1 className="text-2xl font-bold text-slate-800">Tạo tài khoản hàng loạt</h1>
+      <div>
+        <h2 className="text-lg font-semibold text-slate-800">Tạo tài khoản hàng loạt</h2>
+        <p className="text-sm text-slate-500 mt-0.5">Nhập danh sách tên, hệ thống tự tạo email + mật khẩu ngẫu nhiên</p>
       </div>
 
       <div className="bg-white rounded-xl border border-slate-200 p-5 space-y-4">

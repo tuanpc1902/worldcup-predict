@@ -104,12 +104,14 @@ export default function AdminUsersPage() {
 
   return (
     <div className="space-y-5">
-      <div className="flex items-center gap-3 flex-wrap">
-        <Link href="/admin" className="text-sm text-slate-500 hover:text-slate-700">← Admin</Link>
-        <h1 className="text-2xl font-bold text-slate-800">Quản lý tài khoản</h1>
+      <div className="flex items-center justify-between flex-wrap gap-3">
+        <div>
+          <h2 className="text-lg font-semibold text-slate-800">Quản lý tài khoản</h2>
+          <p className="text-sm text-slate-500 mt-0.5">Đổi mật khẩu, xóa tài khoản đã tạo</p>
+        </div>
         <Link href="/admin/create-users"
-          className="ml-auto text-sm bg-green-600 hover:bg-green-700 text-white font-semibold px-3 py-2 rounded-lg transition-colors">
-          + Tạo mới
+          className="text-sm bg-green-600 hover:bg-green-700 text-white font-semibold px-3 py-2 rounded-lg transition-colors">
+          + Tạo thêm
         </Link>
       </div>
 

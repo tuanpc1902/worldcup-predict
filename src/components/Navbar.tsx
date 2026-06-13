@@ -47,12 +47,12 @@ export default function Navbar() {
 
           {/* Logo */}
           <Link href="/" className="flex items-center gap-2 shrink-0 select-none">
-            <span
+            {/* <span
               className="flex items-center justify-center w-8 h-8 rounded-lg text-white text-base font-black leading-none"
               style={{ background: 'var(--brand)' }}
-            >⚽</span>
-            <span className="font-black text-[22px] tracking-tight leading-none" style={{ color: 'var(--brand)' }}>
-              WC<span style={{ color: 'var(--accent)' }}>{` 88`}</span>
+            >⚽</span> */}
+            <span className="font-black text-[22px] tracking-tight leading-none">
+              WC<span style={{ color: 'var(--accent)' }}>{`.88`}</span>
             </span>
           </Link>
 

@@ -1,8 +1,9 @@
 'use client'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
+import { useAuthStore } from '@/store/auth'
 
-const NAV = [
+const PLAYER_NAV = [
   { href: '/', icon: '📅', label: 'Lịch' },
   { href: '/predict', icon: '🎯', label: 'Dự đoán' },
   { href: '/standings', icon: '📊', label: 'Bảng đấu' },
@@ -10,8 +11,19 @@ const NAV = [
   { href: '/champion', icon: '🌟', label: 'Vô địch' },
 ]
 
+const ADMIN_NAV = [
+  { href: '/admin', icon: '⚽', label: 'Trận đấu' },
+  { href: '/admin/users', icon: '👥', label: 'Tài khoản' },
+  { href: '/admin/create-users', icon: '➕', label: 'Tạo TK' },
+  { href: '/', icon: '📅', label: 'Lịch' },
+  { href: '/leaderboard', icon: '🏆', label: 'Xếp hạng' },
+]
+
 export default function BottomNav() {
   const pathname = usePathname()
+  const { user } = useAuthStore()
+  const NAV = user?.role === 'admin' ? ADMIN_NAV : PLAYER_NAV
+
   return (
     <nav className="fixed bottom-0 left-0 right-0 z-40 bg-white border-t border-slate-200 md:hidden safe-area-pb">
       <div className="flex">

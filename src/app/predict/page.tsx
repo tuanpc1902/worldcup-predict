@@ -32,7 +32,10 @@ export default function PredictPage() {
   const [now, setNow] = useState(() => Date.now())
 
   useEffect(() => { init() }, [init])
-  useEffect(() => { if (!loading && !user) router.replace('/login') }, [user, loading, router])
+  useEffect(() => {
+    if (!loading && !user) router.replace('/login')
+    if (!loading && user?.role === 'admin') router.replace('/admin')
+  }, [user, loading, router])
 
   // Update "now" every 30 seconds to refresh lock state
   useEffect(() => {

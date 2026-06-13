@@ -64,7 +64,10 @@ export default function ChampionClient({ teams, pickCount }: Props) {
   const [confFilter, setConfFilter] = useState('all')
 
   useEffect(() => { init() }, [init])
-  useEffect(() => { if (!loading && !user) router.replace('/login') }, [user, loading, router])
+  useEffect(() => {
+    if (!loading && !user) router.replace('/login')
+    if (!loading && user?.role === 'admin') router.replace('/admin')
+  }, [user, loading, router])
 
   useEffect(() => {
     if (!user) return

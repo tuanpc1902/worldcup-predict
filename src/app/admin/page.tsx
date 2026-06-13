@@ -1,7 +1,6 @@
 'use client'
 import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
-import Link from 'next/link'
 import { createClient } from '@/lib/supabase'
 import { useAuthStore } from '@/store/auth'
 import type { Match } from '@/types'
@@ -91,61 +90,35 @@ export default function AdminPage() {
   if (loading || fetching) return <div className="h-48 bg-white rounded-xl border border-slate-200 animate-pulse" />
 
   return (
-    <div className="space-y-5">
-      {/* Header */}
+    <div className="space-y-4">
+      {/* Stats + actions bar */}
       <div className="flex items-center justify-between flex-wrap gap-3">
-        <div>
-          <h1 className="text-2xl font-bold text-slate-800">Admin Panel</h1>
-          <p className="text-slate-500 text-sm mt-0.5">
-            {matches.length} trận ·
-            <span className="text-red-500 ml-1">{liveCount} live</span> ·
-            <span className="text-slate-400 ml-1">{scheduledCount} sắp</span> ·
-            <span className="text-green-600 ml-1">{finishedCount} xong</span>
-          </p>
+        <div className="flex items-center gap-3 text-sm">
+          <span className="text-slate-500">{matches.length} trận</span>
+          {liveCount > 0 && <span className="text-red-500 font-semibold flex items-center gap-1"><span className="w-1.5 h-1.5 bg-red-500 rounded-full animate-pulse" />{liveCount} live</span>}
+          <span className="text-slate-400">{scheduledCount} sắp</span>
+          <span className="text-green-600">{finishedCount} xong</span>
         </div>
         <div className="flex flex-wrap gap-2">
-          <button
-            onClick={updateLiveStatus}
-            disabled={updatingStatus}
-            className="bg-red-600 hover:bg-red-700 disabled:opacity-50 text-white text-sm font-semibold px-3 py-2 rounded-lg flex items-center gap-1.5 transition-colors"
-          >
+          <button onClick={updateLiveStatus} disabled={updatingStatus}
+            className="bg-red-600 hover:bg-red-700 disabled:opacity-50 text-white text-sm font-semibold px-3 py-2 rounded-lg flex items-center gap-1.5 transition-colors">
             <span className={updatingStatus ? 'animate-spin inline-block' : ''}>⚡</span>
-            {updatingStatus ? 'Đang cập nhật...' : 'Cập nhật trạng thái'}
+            {updatingStatus ? '...' : 'Cập nhật trạng thái'}
           </button>
-          <button
-            onClick={syncGoals}
-            disabled={syncingGoals}
-            className="bg-amber-500 hover:bg-amber-600 disabled:opacity-50 text-white text-sm font-semibold px-3 py-2 rounded-lg flex items-center gap-1.5 transition-colors"
-          >
+          <button onClick={syncGoals} disabled={syncingGoals}
+            className="bg-amber-500 hover:bg-amber-600 disabled:opacity-50 text-white text-sm font-semibold px-3 py-2 rounded-lg flex items-center gap-1.5 transition-colors">
             <span className={syncingGoals ? 'animate-spin inline-block' : ''}>⚽</span>
             {syncingGoals ? '...' : 'Sync Goals'}
           </button>
-          <button
-            onClick={syncFromApi}
-            disabled={syncing}
-            className="bg-blue-600 hover:bg-blue-700 disabled:opacity-50 text-white text-sm font-semibold px-3 py-2 rounded-lg flex items-center gap-1.5 transition-colors"
-          >
+          <button onClick={syncFromApi} disabled={syncing}
+            className="bg-blue-600 hover:bg-blue-700 disabled:opacity-50 text-white text-sm font-semibold px-3 py-2 rounded-lg flex items-center gap-1.5 transition-colors">
             <span className={syncing ? 'animate-spin inline-block' : ''}>🔄</span>
-            {syncing ? 'Đang sync...' : 'Sync lịch thi đấu'}
+            {syncing ? '...' : 'Sync lịch'}
           </button>
-          <button
-            onClick={() => setAddOpen(true)}
-            className="bg-green-600 hover:bg-green-700 text-white text-sm font-semibold px-3 py-2 rounded-lg transition-colors"
-          >
+          <button onClick={() => setAddOpen(true)}
+            className="bg-green-600 hover:bg-green-700 text-white text-sm font-semibold px-3 py-2 rounded-lg transition-colors">
             + Thêm trận
           </button>
-          <Link
-            href="/admin/users"
-            className="bg-slate-600 hover:bg-slate-700 text-white text-sm font-semibold px-3 py-2 rounded-lg transition-colors"
-          >
-            Quản lý TK
-          </Link>
-          <Link
-            href="/admin/create-users"
-            className="bg-slate-800 hover:bg-slate-900 text-white text-sm font-semibold px-3 py-2 rounded-lg transition-colors"
-          >
-            + Tạo tài khoản
-          </Link>
         </div>
       </div>
 
@@ -207,30 +180,37 @@ export default function AdminPage() {
                 </td>
                 <td className="px-4 py-3">
                   <div className="flex gap-1 flex-wrap">
-                    {/* Sửa — tất cả trừ cancelled */}
-                    {m.status !== 'cancelled' && (
-                      <button
-                        onClick={() => setEditMatch(m)}
-                        className={`text-xs px-2.5 py-1 rounded-md transition-colors ${
-                          m.status === 'live'
-                            ? 'bg-red-100 hover:bg-red-200 text-red-700 font-semibold'
-                            : 'bg-slate-100 hover:bg-slate-200 text-slate-700'
-                        }`}
-                      >
-                        {m.status === 'live' ? '📊 Tỉ số' : 'Sửa'}
+                    {/* Sửa — chỉ scheduled */}
+                    {m.status === 'scheduled' && (
+                      <button onClick={() => setEditMatch(m)}
+                        className="text-xs bg-slate-100 hover:bg-slate-200 text-slate-700 px-2.5 py-1 rounded-md transition-colors">
+                        Sửa
                       </button>
+                    )}
+
+                    {/* Cập nhật tỉ số — chỉ live */}
+                    {m.status === 'live' && (
+                      <button onClick={() => setEditMatch(m)}
+                        className="text-xs bg-red-100 hover:bg-red-200 text-red-700 font-semibold px-2.5 py-1 rounded-md transition-colors">
+                        📊 Tỉ số
+                      </button>
+                    )}
+
+                    {/* Finished — locked, read-only */}
+                    {m.status === 'finished' && (
+                      <span className="text-xs text-slate-400 bg-slate-50 border border-slate-200 px-2.5 py-1 rounded-md select-none">
+                        🔒 Đã khóa
+                      </span>
                     )}
 
                     {/* Khóa/Mở khoá — chỉ scheduled */}
                     {m.status === 'scheduled' && (
-                      <button
-                        onClick={() => toggleLock(m)}
+                      <button onClick={() => toggleLock(m)}
                         className={`text-xs px-2.5 py-1 rounded-md transition-colors ${
                           m.is_locked
                             ? 'bg-amber-100 hover:bg-amber-200 text-amber-700'
                             : 'bg-slate-100 hover:bg-slate-200 text-slate-700'
-                        }`}
-                      >
+                        }`}>
                         {m.is_locked ? 'Mở khoá' : 'Khoá'}
                       </button>
                     )}
@@ -300,112 +280,131 @@ function MatchModal({ match, onClose, onSave, saving }: {
     <div className="fixed inset-0 z-50 bg-black/30 backdrop-blur-sm flex items-center justify-center p-4" onClick={onClose}>
       <div className="bg-white rounded-2xl border border-slate-200 shadow-xl p-6 w-full max-w-md" onClick={e => e.stopPropagation()}>
         <h2 className="text-lg font-bold text-slate-800 mb-4">
-          {match ? (isLive ? '📊 Cập nhật tỉ số' : isFinished ? '✓ Sửa kết quả' : 'Sửa trận đấu') : 'Thêm trận mới'}
+          {match ? (isLive ? '📊 Cập nhật tỉ số' : isFinished ? '🔒 Kết quả trận đấu' : 'Sửa trận đấu') : 'Thêm trận mới'}
         </h2>
 
-        <form
-          onSubmit={e => {
-            e.preventDefault()
-            onSave({
-              ...form,
-              home_score: form.home_score !== '' ? Number(form.home_score) : null,
-              away_score: form.away_score !== '' ? Number(form.away_score) : null,
-            } as MatchFormData)
-          }}
-          className="space-y-3"
-        >
-          {/* Warning for finished: re-scoring not supported */}
-          {isFinished && (
-            <div className="bg-amber-50 border border-amber-200 rounded-lg px-3 py-2 text-xs text-amber-700">
-              Trận đã kết thúc — điểm đã được tính tự động. Chỉ sửa nếu tỉ số bị sai.
-            </div>
-          )}
-
-          {/* Score fields — shown first for live matches for quick access */}
-          {showScore && (
-            <div className="bg-slate-50 rounded-xl p-4 space-y-3 border border-slate-200">
-              <p className="text-xs font-semibold text-slate-500 uppercase tracking-wide">Tỉ số</p>
-              <div className="grid grid-cols-2 gap-3">
-                {([['home_score', form.home_team || 'Đội nhà'], ['away_score', form.away_team || 'Đội khách']] as [keyof typeof form, string][]).map(([k, l]) => (
-                  <div key={k}>
-                    <label className="text-xs font-medium text-slate-600 block mb-1">{l}</label>
-                    <input
-                      type="number" min="0"
-                      value={(form[k] as string | number) ?? ''}
-                      onChange={e => set(k, e.target.value)}
-                      className="w-full border border-slate-300 rounded-lg px-3 py-2.5 text-slate-800 text-lg font-bold text-center focus:outline-none focus:ring-2 focus:ring-red-500"
-                    />
-                  </div>
-                ))}
+        {/* FINISHED — read-only view */}
+        {isFinished ? (
+          <div className="space-y-4">
+            <div className="bg-green-50 border border-green-200 rounded-xl p-4 text-center">
+              <p className="text-xs text-green-600 font-semibold uppercase tracking-wide mb-2">Kết quả chính thức</p>
+              <div className="flex items-center justify-center gap-4">
+                <span className="font-semibold text-slate-700 text-sm">{match!.home_team}</span>
+                <span className="text-3xl font-black text-slate-800 tabular-nums">
+                  {match!.home_score} – {match!.away_score}
+                </span>
+                <span className="font-semibold text-slate-700 text-sm">{match!.away_team}</span>
               </div>
             </div>
-          )}
+            <div className="bg-amber-50 border border-amber-200 rounded-lg px-4 py-3 text-xs text-amber-700 flex items-start gap-2">
+              <span className="text-base leading-none flex-shrink-0">🔒</span>
+              <span>Trận đã kết thúc và bị khóa. Điểm đã được tính tự động cho người dự đoán. Không thể chỉnh sửa.</span>
+            </div>
+            <button onClick={onClose}
+              className="w-full border border-slate-300 hover:bg-slate-50 text-slate-700 py-2.5 rounded-lg text-sm font-medium transition-colors">
+              Đóng
+            </button>
+          </div>
+        ) : (
+          <form
+            onSubmit={e => {
+              e.preventDefault()
+              onSave({
+                ...form,
+                home_score: form.home_score !== '' ? Number(form.home_score) : null,
+                away_score: form.away_score !== '' ? Number(form.away_score) : null,
+              } as MatchFormData)
+            }}
+            className="space-y-3"
+          >
+            {/* Score fields — shown first for live matches */}
+            {isLive && (
+              <div className="bg-slate-50 rounded-xl p-4 space-y-3 border border-slate-200">
+                <p className="text-xs font-semibold text-slate-500 uppercase tracking-wide">Tỉ số hiện tại</p>
+                <div className="grid grid-cols-2 gap-3">
+                  {([['home_score', form.home_team || 'Đội nhà'], ['away_score', form.away_team || 'Đội khách']] as [keyof typeof form, string][]).map(([k, l]) => (
+                    <div key={k}>
+                      <label className="text-xs font-medium text-slate-600 block mb-1">{l}</label>
+                      <input
+                        type="number" min="0"
+                        value={(form[k] as string | number) ?? ''}
+                        onChange={e => set(k, e.target.value)}
+                        className="w-full border border-slate-300 rounded-lg px-3 py-2.5 text-slate-800 text-lg font-bold text-center focus:outline-none focus:ring-2 focus:ring-red-500"
+                      />
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
 
-          {/* Metadata — hidden for live/finished (score is the focus) */}
-          {!isLive && !isFinished && (
-            <>
-              <div className="grid grid-cols-2 gap-3">
-                {([['home_team', 'Đội nhà'], ['away_team', 'Đội khách']] as [keyof typeof form, string][]).map(([k, l]) => (
-                  <div key={k}>
-                    <label className="text-xs font-medium text-slate-600 block mb-1">{l}</label>
-                    <input value={form[k] as string} onChange={e => set(k, e.target.value)} required
-                      className="w-full border border-slate-300 rounded-lg px-3 py-2 text-slate-800 text-sm focus:outline-none focus:ring-2 focus:ring-green-500" />
-                  </div>
-                ))}
-              </div>
-              <div>
-                <label className="text-xs font-medium text-slate-600 block mb-1">Thời gian</label>
-                <input type="datetime-local" value={form.match_time} onChange={e => set('match_time', e.target.value)} required
-                  className="w-full border border-slate-300 rounded-lg px-3 py-2 text-slate-800 text-sm focus:outline-none focus:ring-2 focus:ring-green-500" />
-              </div>
-              <div className="grid grid-cols-2 gap-3">
-                <div>
-                  <label className="text-xs font-medium text-slate-600 block mb-1">Giai đoạn</label>
-                  <select value={form.stage} onChange={e => set('stage', e.target.value)}
-                    className="w-full border border-slate-300 rounded-lg px-3 py-2 text-slate-800 text-sm focus:outline-none">
-                    {STAGES.map(s => <option key={s} value={s}>{STAGE_LABELS[s]}</option>)}
-                  </select>
+            {/* Metadata — only for scheduled / new */}
+            {!isLive && (
+              <>
+                <div className="grid grid-cols-2 gap-3">
+                  {([['home_team', 'Đội nhà'], ['away_team', 'Đội khách']] as [keyof typeof form, string][]).map(([k, l]) => (
+                    <div key={k}>
+                      <label className="text-xs font-medium text-slate-600 block mb-1">{l}</label>
+                      <input value={form[k] as string} onChange={e => set(k, e.target.value)} required
+                        className="w-full border border-slate-300 rounded-lg px-3 py-2 text-slate-800 text-sm focus:outline-none focus:ring-2 focus:ring-green-500" />
+                    </div>
+                  ))}
                 </div>
                 <div>
-                  <label className="text-xs font-medium text-slate-600 block mb-1">Tên bảng</label>
-                  <input value={form.group_name} onChange={e => set('group_name', e.target.value)} placeholder="A, B..."
+                  <label className="text-xs font-medium text-slate-600 block mb-1">Thời gian</label>
+                  <input type="datetime-local" value={form.match_time} onChange={e => set('match_time', e.target.value)} required
                     className="w-full border border-slate-300 rounded-lg px-3 py-2 text-slate-800 text-sm focus:outline-none focus:ring-2 focus:ring-green-500" />
                 </div>
-              </div>
-              <div>
-                <label className="text-xs font-medium text-slate-600 block mb-1">Sân vận động</label>
-                <input value={form.venue} onChange={e => set('venue', e.target.value)}
-                  className="w-full border border-slate-300 rounded-lg px-3 py-2 text-slate-800 text-sm focus:outline-none focus:ring-2 focus:ring-green-500" />
-              </div>
-            </>
-          )}
+                <div className="grid grid-cols-2 gap-3">
+                  <div>
+                    <label className="text-xs font-medium text-slate-600 block mb-1">Giai đoạn</label>
+                    <select value={form.stage} onChange={e => set('stage', e.target.value)}
+                      className="w-full border border-slate-300 rounded-lg px-3 py-2 text-slate-800 text-sm focus:outline-none">
+                      {STAGES.map(s => <option key={s} value={s}>{STAGE_LABELS[s]}</option>)}
+                    </select>
+                  </div>
+                  <div>
+                    <label className="text-xs font-medium text-slate-600 block mb-1">Tên bảng</label>
+                    <input value={form.group_name} onChange={e => set('group_name', e.target.value)} placeholder="A, B..."
+                      className="w-full border border-slate-300 rounded-lg px-3 py-2 text-slate-800 text-sm focus:outline-none focus:ring-2 focus:ring-green-500" />
+                  </div>
+                </div>
+                <div>
+                  <label className="text-xs font-medium text-slate-600 block mb-1">Sân vận động</label>
+                  <input value={form.venue} onChange={e => set('venue', e.target.value)}
+                    className="w-full border border-slate-300 rounded-lg px-3 py-2 text-slate-800 text-sm focus:outline-none focus:ring-2 focus:ring-green-500" />
+                </div>
+              </>
+            )}
 
-          <div>
-            <label className="text-xs font-medium text-slate-600 block mb-1">Trạng thái</label>
-            <select value={form.status} onChange={e => set('status', e.target.value)}
-              className="w-full border border-slate-300 rounded-lg px-3 py-2 text-slate-800 text-sm focus:outline-none">
-              {['scheduled', 'live', 'finished', 'cancelled'].map(s => (
-                <option key={s} value={s}>{s}</option>
-              ))}
-            </select>
-          </div>
+            <div>
+              <label className="text-xs font-medium text-slate-600 block mb-1">Trạng thái</label>
+              <select value={form.status} onChange={e => set('status', e.target.value)}
+                className="w-full border border-slate-300 rounded-lg px-3 py-2 text-slate-800 text-sm focus:outline-none">
+                {['scheduled', 'live', 'finished', 'cancelled'].map(s => (
+                  <option key={s} value={s}>{s}</option>
+                ))}
+              </select>
+            </div>
 
-          <label className="flex items-center gap-2 cursor-pointer">
-            <input type="checkbox" checked={form.is_locked} onChange={e => set('is_locked', e.target.checked)} className="rounded" />
-            <span className="text-sm text-slate-600">Khóa dự đoán</span>
-          </label>
+            {!isLive && (
+              <label className="flex items-center gap-2 cursor-pointer">
+                <input type="checkbox" checked={form.is_locked} onChange={e => set('is_locked', e.target.checked)} className="rounded" />
+                <span className="text-sm text-slate-600">Khóa dự đoán</span>
+              </label>
+            )}
 
-          <div className="flex gap-2 pt-1">
-            <button type="button" onClick={onClose}
-              className="flex-1 border border-slate-300 hover:bg-slate-50 text-slate-700 py-2.5 rounded-lg text-sm font-medium transition-colors">
-              Hủy
-            </button>
-            <button type="submit" disabled={saving}
-              className="flex-1 bg-green-600 hover:bg-green-700 disabled:opacity-50 text-white font-semibold py-2.5 rounded-lg text-sm transition-colors">
-              {saving ? 'Đang lưu...' : 'Lưu'}
-            </button>
-          </div>
-        </form>
+            <div className="flex gap-2 pt-1">
+              <button type="button" onClick={onClose}
+                className="flex-1 border border-slate-300 hover:bg-slate-50 text-slate-700 py-2.5 rounded-lg text-sm font-medium transition-colors">
+                Hủy
+              </button>
+              <button type="submit" disabled={saving}
+                className="flex-1 bg-green-600 hover:bg-green-700 disabled:opacity-50 text-white font-semibold py-2.5 rounded-lg text-sm transition-colors">
+                {saving ? 'Đang lưu...' : 'Lưu'}
+              </button>
+            </div>
+          </form>
+        )}
       </div>
     </div>
   )
