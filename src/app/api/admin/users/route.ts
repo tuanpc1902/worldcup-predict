@@ -9,60 +9,88 @@ async function verifyAdmin() {
   return profile?.role === 'admin' ? user : null
 }
 
-// GET /api/admin/users?domain=wc.88  — list users with that email domain
+// GET /api/admin/users?type=all|wc|google
 export async function GET(req: NextRequest) {
   if (!await verifyAdmin()) return NextResponse.json({ message: 'Unauthorized' }, { status: 401 })
 
-  const domain = req.nextUrl.searchParams.get('domain') ?? 'wc.88'
+  const type = req.nextUrl.searchParams.get('type') ?? 'all'
   const service = createServiceSupabase()
 
-  // List all auth users (up to 1000)
   const { data: { users }, error } = await service.auth.admin.listUsers({ perPage: 1000 })
   if (error) return NextResponse.json({ message: error.message }, { status: 500 })
 
-  const filtered = users
-    .filter(u => u.email?.endsWith(`@${domain}`))
-    .map(u => ({
+  const mapped = users.map(u => {
+    const identities = u.identities ?? []
+    const isGoogle = identities.some(i => i.provider === 'google')
+    const isWc = !isGoogle && u.email?.includes('@wc.')
+    return {
       id: u.id,
-      email: u.email,
-      display_name: u.user_metadata?.full_name ?? u.email?.split('@')[0],
+      email: u.email ?? '',
+      display_name: u.user_metadata?.full_name ?? u.email?.split('@')[0] ?? '',
+      provider: isGoogle ? 'google' : 'email',
+      is_wc: isWc,
       created_at: u.created_at,
-      last_sign_in_at: u.last_sign_in_at,
-    }))
+      last_sign_in_at: u.last_sign_in_at ?? null,
+      total_points: 0,
+    }
+  })
 
-  // Merge with profiles for points
+  const filtered = type === 'google'
+    ? mapped.filter(u => u.provider === 'google')
+    : type === 'wc'
+    ? mapped.filter(u => u.is_wc)
+    : mapped
+
+  // Merge with profiles
   const ids = filtered.map(u => u.id)
-  const { data: profiles } = await service
-    .from('profiles')
-    .select('id, display_name, total_points')
-    .in('id', ids)
+  if (ids.length > 0) {
+    const { data: profiles } = await service
+      .from('profiles')
+      .select('id, display_name, total_points, role')
+      .in('id', ids)
 
-  const profileMap = new Map((profiles ?? []).map((p: { id: string; display_name: string; total_points: number }) => [p.id, p]))
+    const profileMap = new Map((profiles ?? []).map(
+      (p: { id: string; display_name: string; total_points: number; role: string }) => [p.id, p]
+    ))
 
-  const result = filtered.map(u => ({
-    ...u,
-    display_name: profileMap.get(u.id)?.display_name ?? u.display_name,
-    total_points: profileMap.get(u.id)?.total_points ?? 0,
-  }))
+    filtered.forEach(u => {
+      const p = profileMap.get(u.id)
+      if (p) {
+        u.display_name = p.display_name ?? u.display_name
+        u.total_points = p.total_points ?? 0
+      }
+    })
+  }
 
-  return NextResponse.json({ users: result })
+  return NextResponse.json({ users: filtered, total: mapped.length })
 }
 
-// PATCH /api/admin/users  — reset password
+// PATCH /api/admin/users — reset password OR update display_name
 export async function PATCH(req: NextRequest) {
   if (!await verifyAdmin()) return NextResponse.json({ message: 'Unauthorized' }, { status: 401 })
 
-  const { user_id, new_password } = await req.json()
-  if (!user_id || !new_password) return NextResponse.json({ message: 'user_id and new_password required' }, { status: 400 })
+  const body = await req.json()
+  const { user_id, new_password, display_name } = body
+  if (!user_id) return NextResponse.json({ message: 'user_id required' }, { status: 400 })
 
   const service = createServiceSupabase()
-  const { error } = await service.auth.admin.updateUserById(user_id, { password: new_password })
-  if (error) return NextResponse.json({ message: error.message }, { status: 500 })
 
-  return NextResponse.json({ success: true })
+  if (display_name !== undefined) {
+    const { error } = await service.from('profiles').update({ display_name }).eq('id', user_id)
+    if (error) return NextResponse.json({ message: error.message }, { status: 500 })
+    return NextResponse.json({ success: true })
+  }
+
+  if (new_password) {
+    const { error } = await service.auth.admin.updateUserById(user_id, { password: new_password })
+    if (error) return NextResponse.json({ message: error.message }, { status: 500 })
+    return NextResponse.json({ success: true })
+  }
+
+  return NextResponse.json({ message: 'Nothing to update' }, { status: 400 })
 }
 
-// DELETE /api/admin/users  — delete user
+// DELETE /api/admin/users — delete user
 export async function DELETE(req: NextRequest) {
   if (!await verifyAdmin()) return NextResponse.json({ message: 'Unauthorized' }, { status: 401 })
 
