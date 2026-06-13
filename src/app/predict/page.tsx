@@ -32,10 +32,9 @@ export default function PredictPage() {
   const [now, setNow] = useState(() => Date.now())
 
   useEffect(() => { init() }, [init])
-  useEffect(() => {
-    if (!loading && !user) router.replace('/login')
-    if (!loading && user?.role === 'admin') router.replace('/admin')
-  }, [user, loading, router])
+  useEffect(() => { if (!loading && !user) router.replace('/login') }, [user, loading, router])
+
+  const isAdmin = user?.role === 'admin'
 
   // Update "now" every 30 seconds to refresh lock state
   useEffect(() => {
@@ -87,7 +86,7 @@ export default function PredictPage() {
   }, [user])
 
   async function saveAll() {
-    if (savingAll) return
+    if (savingAll || isAdmin) return
     const toSave = unlocked.filter(m => {
       const inp = inputs[m.id]
       return inp?.home !== '' && inp?.away !== ''
@@ -112,6 +111,7 @@ export default function PredictPage() {
   }
 
   async function savePrediction(matchId: string) {
+    if (isAdmin) return
     const inp = inputs[matchId]
     if (inp.home === '' || inp.away === '') return
     const h = parseInt(inp.home), a = parseInt(inp.away)
@@ -149,11 +149,17 @@ export default function PredictPage() {
     <div className="max-w-2xl mx-auto space-y-6 fade-in">
       <div>
         <h1 className="text-2xl font-bold text-slate-800">Dự đoán</h1>
-        <div className="flex flex-wrap gap-2 mt-2">
-          <span className="text-xs bg-green-100 text-green-700 px-2.5 py-1 rounded-full font-medium">+5 pts đúng tỉ số</span>
-          <span className="text-xs bg-blue-100 text-blue-700 px-2.5 py-1 rounded-full font-medium">+3 pts đúng kết quả</span>
-          <span className="text-xs bg-red-100 text-red-700 px-2.5 py-1 rounded-full font-medium">-1 pt sai</span>
-        </div>
+        {isAdmin ? (
+          <div className="mt-2 bg-amber-50 border border-amber-200 rounded-lg px-3 py-2 text-xs text-amber-700 flex items-center gap-2">
+            <span>🔒</span> Tài khoản admin chỉ xem — không thể tham gia dự đoán.
+          </div>
+        ) : (
+          <div className="flex flex-wrap gap-2 mt-2">
+            <span className="text-xs bg-green-100 text-green-700 px-2.5 py-1 rounded-full font-medium">+5 pts đúng tỉ số</span>
+            <span className="text-xs bg-blue-100 text-blue-700 px-2.5 py-1 rounded-full font-medium">+3 pts đúng kết quả</span>
+            <span className="text-xs bg-red-100 text-red-700 px-2.5 py-1 rounded-full font-medium">-1 pt sai</span>
+          </div>
+        )}
       </div>
 
       {unlocked.length === 0 && locked.length === 0 && (
@@ -169,17 +175,19 @@ export default function PredictPage() {
             <h2 className="text-sm font-semibold text-slate-500 uppercase tracking-wide">
               Mở dự đoán · {unlocked.length} trận
             </h2>
-            <button
-              onClick={saveAll}
-              disabled={savingAll}
-              className={`text-sm font-semibold px-4 py-1.5 rounded-lg transition-colors ${
-                savedAll
-                  ? 'bg-green-100 text-green-700'
-                  : 'bg-green-600 hover:bg-green-700 text-white disabled:opacity-50'
-              }`}
-            >
-              {savingAll ? 'Đang lưu...' : savedAll ? '✓ Đã lưu tất cả' : 'Lưu tất cả'}
-            </button>
+            {!isAdmin && (
+              <button
+                onClick={saveAll}
+                disabled={savingAll}
+                className={`text-sm font-semibold px-4 py-1.5 rounded-lg transition-colors ${
+                  savedAll
+                    ? 'bg-green-100 text-green-700'
+                    : 'bg-green-600 hover:bg-green-700 text-white disabled:opacity-50'
+                }`}
+              >
+                {savingAll ? 'Đang lưu...' : savedAll ? '✓ Đã lưu tất cả' : 'Lưu tất cả'}
+              </button>
+            )}
           </div>
           {unlocked.map(match => {
             const pred = predictions[match.id]
@@ -221,39 +229,45 @@ export default function PredictPage() {
                     )}
                   </div>
 
-                  {/* Center: score inputs — always centered */}
-                  <div className="flex items-center gap-2">
-                    <input
-                      type="number" min="0" max="20"
-                      value={inputs[match.id]?.home ?? ''}
-                      onChange={e => setInputs(p => ({ ...p, [match.id]: { ...p[match.id], home: e.target.value } }))}
-                      placeholder="0"
-                      className="w-12 text-center border border-slate-300 rounded-lg py-1.5 text-slate-800 text-lg font-bold focus:outline-none focus:ring-2 focus:ring-green-500 bg-white"
-                    />
-                    <span className="text-slate-300 font-bold">–</span>
-                    <input
-                      type="number" min="0" max="20"
-                      value={inputs[match.id]?.away ?? ''}
-                      onChange={e => setInputs(p => ({ ...p, [match.id]: { ...p[match.id], away: e.target.value } }))}
-                      placeholder="0"
-                      className="w-12 text-center border border-slate-300 rounded-lg py-1.5 text-slate-800 text-lg font-bold focus:outline-none focus:ring-2 focus:ring-green-500 bg-white"
-                    />
-                  </div>
+                  {/* Center: score inputs — hidden for admin */}
+                  {isAdmin ? (
+                    <div className="text-xs text-slate-400 italic">Chỉ xem</div>
+                  ) : (
+                    <div className="flex items-center gap-2">
+                      <input
+                        type="number" min="0" max="20"
+                        value={inputs[match.id]?.home ?? ''}
+                        onChange={e => setInputs(p => ({ ...p, [match.id]: { ...p[match.id], home: e.target.value } }))}
+                        placeholder="0"
+                        className="w-12 text-center border border-slate-300 rounded-lg py-1.5 text-slate-800 text-lg font-bold focus:outline-none focus:ring-2 focus:ring-green-500 bg-white"
+                      />
+                      <span className="text-slate-300 font-bold">–</span>
+                      <input
+                        type="number" min="0" max="20"
+                        value={inputs[match.id]?.away ?? ''}
+                        onChange={e => setInputs(p => ({ ...p, [match.id]: { ...p[match.id], away: e.target.value } }))}
+                        placeholder="0"
+                        className="w-12 text-center border border-slate-300 rounded-lg py-1.5 text-slate-800 text-lg font-bold focus:outline-none focus:ring-2 focus:ring-green-500 bg-white"
+                      />
+                    </div>
+                  )}
 
-                  {/* Right: save button */}
-                  <div className="flex justify-end">
-                    <button
-                      onClick={() => savePrediction(match.id)}
-                      disabled={saving === match.id || !inputs[match.id]?.home || !inputs[match.id]?.away}
-                      className={`px-4 py-1.5 rounded-lg font-semibold text-sm transition-colors ${
-                        saved === match.id
-                          ? 'bg-green-100 text-green-700'
-                          : 'bg-green-600 hover:bg-green-700 text-white disabled:opacity-40'
-                      }`}
-                    >
-                      {saved === match.id ? '✓' : saving === match.id ? '...' : pred ? 'Cập nhật' : 'Lưu'}
-                    </button>
-                  </div>
+                  {/* Right: save button — hidden for admin */}
+                  {!isAdmin && (
+                    <div className="flex justify-end">
+                      <button
+                        onClick={() => savePrediction(match.id)}
+                        disabled={saving === match.id || !inputs[match.id]?.home || !inputs[match.id]?.away}
+                        className={`px-4 py-1.5 rounded-lg font-semibold text-sm transition-colors ${
+                          saved === match.id
+                            ? 'bg-green-100 text-green-700'
+                            : 'bg-green-600 hover:bg-green-700 text-white disabled:opacity-40'
+                        }`}
+                      >
+                        {saved === match.id ? '✓' : saving === match.id ? '...' : pred ? 'Cập nhật' : 'Lưu'}
+                      </button>
+                    </div>
+                  )}
                 </div>
               </div>
             )

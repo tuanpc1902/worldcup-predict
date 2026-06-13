@@ -12,11 +12,11 @@ const PLAYER_NAV = [
 ]
 
 const ADMIN_NAV = [
-  { href: '/admin', icon: '⚽', label: 'Trận đấu' },
-  { href: '/admin/users', icon: '👥', label: 'Tài khoản' },
-  { href: '/admin/create-users', icon: '➕', label: 'Tạo TK' },
   { href: '/', icon: '📅', label: 'Lịch' },
+  { href: '/predict', icon: '👁', label: 'Dự đoán' },
   { href: '/leaderboard', icon: '🏆', label: 'Xếp hạng' },
+  { href: '/admin', icon: '⚙️', label: 'Admin' },
+  { href: '/admin/users', icon: '👥', label: 'TK' },
 ]
 
 export default function BottomNav() {

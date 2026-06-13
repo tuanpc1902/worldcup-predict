@@ -66,7 +66,6 @@ export default function ChampionClient({ teams, pickCount }: Props) {
   useEffect(() => { init() }, [init])
   useEffect(() => {
     if (!loading && !user) router.replace('/login')
-    if (!loading && user?.role === 'admin') router.replace('/admin')
   }, [user, loading, router])
 
   useEffect(() => {
@@ -82,8 +81,10 @@ export default function ChampionClient({ teams, pickCount }: Props) {
       })
   }, [user])
 
+  const isAdmin = user?.role === 'admin'
+
   async function savePick(team: string) {
-    if (saving || team === myPick) return
+    if (saving || team === myPick || isAdmin) return
     const prevPick = myPick   // capture before any await
 
     // Optimistic update immediately — before network call
@@ -160,10 +161,16 @@ export default function ChampionClient({ teams, pickCount }: Props) {
       {/* Header */}
       <div>
         <h1 className="text-2xl font-bold text-slate-800">Đoán nhà vô địch</h1>
-        <p className="text-slate-500 text-sm mt-1">
-          Chọn 1 đội · Đúng: <span className="text-amber-600 font-semibold">+20 điểm</span> thưởng cuối giải
-          · {teams.length} đội tham dự
-        </p>
+        {isAdmin ? (
+          <div className="mt-2 bg-amber-50 border border-amber-200 rounded-lg px-3 py-2 text-xs text-amber-700 flex items-center gap-2">
+            <span>🔒</span> Tài khoản admin chỉ xem — không thể tham gia dự đoán.
+          </div>
+        ) : (
+          <p className="text-slate-500 text-sm mt-1">
+            Chọn 1 đội · Đúng: <span className="text-amber-600 font-semibold">+20 điểm</span> thưởng cuối giải
+            · {teams.length} đội tham dự
+          </p>
+        )}
       </div>
 
       {/* Current pick banner */}
