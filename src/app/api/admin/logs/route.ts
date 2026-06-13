@@ -22,15 +22,31 @@ export async function GET(req: NextRequest) {
 
   let query = service
     .from('user_activity_logs')
-    .select('*, profiles!user_activity_logs_user_id_fkey(display_name)', { count: 'exact' })
+    .select('*', { count: 'exact' })
     .order('created_at', { ascending: false })
     .range(offset, offset + limit - 1)
 
   if (action) query = query.eq('action', action)
   if (user_id) query = query.eq('user_id', user_id)
 
-  const { data, count, error } = await query
+  const { data: logs, count, error } = await query
   if (error) return NextResponse.json({ message: error.message }, { status: 500 })
 
-  return NextResponse.json({ logs: data ?? [], total: count ?? 0 })
+  // Manual join with profiles
+  const userIds = [...new Set((logs ?? []).map((l: { user_id: string | null }) => l.user_id).filter(Boolean))]
+  let profileMap: Record<string, string> = {}
+  if (userIds.length > 0) {
+    const { data: profiles } = await service
+      .from('profiles')
+      .select('id, display_name')
+      .in('id', userIds)
+    profileMap = Object.fromEntries((profiles ?? []).map((p: { id: string; display_name: string }) => [p.id, p.display_name]))
+  }
+
+  const enriched = (logs ?? []).map((l: { user_id: string | null }) => ({
+    ...l,
+    profiles: l.user_id ? { display_name: profileMap[l.user_id] ?? null } : null,
+  }))
+
+  return NextResponse.json({ logs: enriched, total: count ?? 0 })
 }
