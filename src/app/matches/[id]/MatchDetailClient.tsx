@@ -35,8 +35,6 @@ interface Props {
   goals: MatchGoal[]
 }
 
-const REACTIONS = ['🔥', '😱', '👍', '😂']
-
 function useElapsed(matchTime: string, active: boolean) {
   const [min, setMin] = useState(0)
   useEffect(() => {
@@ -82,25 +80,6 @@ export default function MatchDetailClient({ match, stats, comments: initialComme
   const commentsEndRef = useRef<HTMLDivElement>(null)
   // IDs of comments we added locally — skip when realtime fires to avoid duplicates
   const localCommentIds = useRef<Set<string>>(new Set())
-
-  // Per-user reaction tracking: { [commentId]: Set<emoji> } — persisted in localStorage
-  const [myReactions, setMyReactions] = useState<Record<string, Set<string>>>(() => {
-    if (typeof window === 'undefined') return {}
-    try {
-      const raw = localStorage.getItem(`reactions:${match.id}`)
-      if (!raw) return {}
-      const parsed = JSON.parse(raw) as Record<string, string[]>
-      return Object.fromEntries(Object.entries(parsed).map(([k, v]) => [k, new Set(v)]))
-    } catch { return {} }
-  })
-
-  // Persist myReactions to localStorage on change
-  useEffect(() => {
-    const toStore = Object.fromEntries(
-      Object.entries(myReactions).map(([k, v]) => [k, Array.from(v)])
-    )
-    localStorage.setItem(`reactions:${match.id}`, JSON.stringify(toStore))
-  }, [myReactions, match.id])
 
   useEffect(() => { init() }, [init])
 
@@ -150,12 +129,6 @@ export default function MatchDetailClient({ match, stats, comments: initialComme
           setComments(prev => prev.some(c => c.id === newId) ? prev : [...prev, comment])
           setTimeout(() => commentsEndRef.current?.scrollIntoView({ behavior: 'smooth' }), 100)
         }
-      })
-      .on('postgres_changes', {
-        event: 'UPDATE', schema: 'public', table: 'match_comments', filter: `match_id=eq.${match.id}`,
-      }, (payload: RealtimePostgresUpdatePayload<{ id: string; reactions: Record<string, number> }>) => {
-        const updated = payload.new
-        setComments(prev => prev.map(c => c.id === updated.id ? { ...c, reactions: updated.reactions } : c))
       })
       .subscribe()
     return () => { supabase.removeChannel(ch) }
@@ -242,36 +215,6 @@ export default function MatchDetailClient({ match, stats, comments: initialComme
       setTimeout(() => commentsEndRef.current?.scrollIntoView({ behavior: 'smooth' }), 100)
     }
     setPosting(false)
-  }
-
-  async function react(commentId: string, emoji: string) {
-    if (!user) return
-
-    const alreadyReacted = myReactions[commentId]?.has(emoji) ?? false
-    const delta = alreadyReacted ? -1 : 1
-
-    // 1. Update per-user tracking
-    setMyReactions(prev => {
-      const set = new Set(prev[commentId] ?? [])
-      alreadyReacted ? set.delete(emoji) : set.add(emoji)
-      return { ...prev, [commentId]: set }
-    })
-
-    // 2. Optimistic UI — read from latest state via callback to avoid stale closure
-    let latestReactions: Record<string, number> = {}
-    setComments(prev => {
-      const updated = prev.map(c => {
-        if (c.id !== commentId) return c
-        const next = { ...c.reactions, [emoji]: Math.max(0, (c.reactions[emoji] ?? 0) + delta) }
-        latestReactions = next
-        return { ...c, reactions: next }
-      })
-      return updated
-    })
-
-    // 3. Persist to DB — wait a tick so latestReactions is populated
-    await Promise.resolve()
-    await supabase.from('match_comments').update({ reactions: latestReactions }).eq('id', commentId)
   }
 
   const pointsBg =
@@ -584,32 +527,6 @@ export default function MatchDetailClient({ match, stats, comments: initialComme
                   <span className="text-xs text-slate-400">{fmtDateTime(c.created_at)}</span>
                 </div>
                 <p className="text-sm text-slate-700 break-words">{c.content}</p>
-                <div className="flex gap-1 mt-1.5">
-                  {REACTIONS.map(emoji => {
-                    const active = myReactions[c.id]?.has(emoji) ?? false
-                    const count  = c.reactions[emoji] ?? 0
-                    return (
-                      <button
-                        key={emoji}
-                        onClick={() => react(c.id, emoji)}
-                        title={user ? undefined : 'Đăng nhập để react'}
-                        disabled={!user}
-                        className={`flex items-center gap-0.5 text-xs px-2 py-0.5 rounded-full border transition-colors ${
-                          active
-                            ? 'bg-blue-50 border-blue-300 text-blue-700'
-                            : 'bg-slate-50 hover:bg-slate-100 border-slate-200 text-slate-600'
-                        } disabled:opacity-50 disabled:cursor-default`}
-                      >
-                        {emoji}
-                        {count > 0 && (
-                          <span className={active ? 'text-blue-600 font-semibold' : 'text-slate-500'}>
-                            {count}
-                          </span>
-                        )}
-                      </button>
-                    )
-                  })}
-                </div>
               </div>
             </div>
           ))}

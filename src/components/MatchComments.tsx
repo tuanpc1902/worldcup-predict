@@ -119,7 +119,7 @@ export default function MatchComments({ matchId }: { matchId: string }) {
             <div className="flex gap-2 mt-2">
               <input
                 value={text}
-                onChange={e => setText(e.target.value)}
+                onChange={e => setText(e.target.value.replace(/\p{Emoji_Presentation}|\p{Extended_Pictographic}/gu, ''))}
                 onKeyDown={e => e.key === 'Enter' && !e.shiftKey && send()}
                 placeholder="Nhập bình luận..."
                 maxLength={280}
