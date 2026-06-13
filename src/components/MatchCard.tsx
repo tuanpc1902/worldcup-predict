@@ -1,3 +1,4 @@
+'use client'
 import Link from 'next/link'
 import { fmtTime, fmtDate, fmtMatchTimes } from '@/lib/time'
 import FlagImg from '@/components/FlagImg'
