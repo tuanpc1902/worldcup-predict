@@ -135,9 +135,21 @@ export default function MatchComments({ matchId }: { matchId: string }) {
       .on(
         'postgres_changes',
         { event: 'DELETE', schema: 'public', table: 'comment_reactions' },
-        (payload: RealtimePostgresDeletePayload<RawReaction>) => {
+        async (payload: RealtimePostgresDeletePayload<RawReaction>) => {
           const { comment_id, user_id: uid, emoji } = payload.old
-          if (!comment_id || !uid || !emoji) return
+          // REPLICA IDENTITY FULL gives us all fields; fallback: re-fetch the comment's reactions
+          if (!comment_id || !uid || !emoji) {
+            // Only have id — refetch all reactions for visible comments
+            const ids = comments.map(c => c.id)
+            if (ids.length > 0) {
+              const { data } = await supabase
+                .from('comment_reactions')
+                .select('id, comment_id, user_id, emoji')
+                .in('comment_id', ids)
+              buildReactionMap(data ?? [])
+            }
+            return
+          }
           setReactions(prev => {
             const next = { ...prev }
             if (!next[comment_id]?.[emoji]) return prev

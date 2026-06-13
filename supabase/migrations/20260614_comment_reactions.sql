@@ -13,6 +13,10 @@ CREATE TABLE IF NOT EXISTS public.comment_reactions (
 CREATE INDEX IF NOT EXISTS idx_comment_reactions_comment ON public.comment_reactions(comment_id);
 CREATE INDEX IF NOT EXISTS idx_comment_reactions_user    ON public.comment_reactions(user_id);
 
+-- Required so Supabase Realtime DELETE events include full row (comment_id, user_id, emoji)
+-- Without this, payload.old only contains {id}
+ALTER TABLE public.comment_reactions REPLICA IDENTITY FULL;
+
 -- RLS
 ALTER TABLE public.comment_reactions ENABLE ROW LEVEL SECURITY;
 
