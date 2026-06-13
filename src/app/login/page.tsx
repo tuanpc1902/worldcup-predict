@@ -2,6 +2,7 @@
 import { useState } from 'react'
 import { createClient } from '@/lib/supabase'
 import { useRouter } from 'next/navigation'
+import { logActivity } from '@/lib/activity'
 
 export default function LoginPage() {
   const [email, setEmail] = useState('')
@@ -23,6 +24,7 @@ export default function LoginPage() {
       if (mode === 'login') {
         const { error } = await supabase.auth.signInWithPassword({ email, password })
         if (error) throw error
+        logActivity({ action: 'login', detail: { email, method: 'password' } })
         router.push('/')
         router.refresh()
       } else {
@@ -59,6 +61,7 @@ export default function LoginPage() {
   }
 
   async function handleGoogle() {
+    logActivity({ action: 'login', detail: { method: 'google' } })
     await supabase.auth.signInWithOAuth({
       provider: 'google',
       options: { redirectTo: `${location.origin}/auth/callback` },

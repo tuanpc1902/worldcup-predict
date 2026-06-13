@@ -4,6 +4,7 @@ import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase'
 import { useAuthStore } from '@/store/auth'
 import FlagImg from '@/components/FlagImg'
+import { logActivity } from '@/lib/activity'
 
 interface Team { name: string; flag: string | null }
 interface Props { teams: Team[]; pickCount: Record<string, number> }
@@ -67,6 +68,7 @@ export default function ChampionClient({ teams, pickCount }: Props) {
   useEffect(() => {
     if (!loading && !user) router.replace('/login')
   }, [user, loading, router])
+  useEffect(() => { if (user) logActivity({ action: 'page_view', page: '/champion', detail: { user_id: user.id } }) }, [user])
 
   useEffect(() => {
     if (!user) return
@@ -113,6 +115,7 @@ export default function ChampionClient({ teams, pickCount }: Props) {
     } else {
       setSaved(true)
       setTimeout(() => setSaved(false), 2500)
+      logActivity({ action: 'champion_pick', detail: { team, prev_pick: prevPick, user_id: user?.id } })
     }
     setSaving(false)
   }

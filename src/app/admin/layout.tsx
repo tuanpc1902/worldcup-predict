@@ -3,22 +3,10 @@ import { usePathname } from 'next/navigation'
 import Link from 'next/link'
 
 const NAV = [
-  {
-    label: 'Trận đấu',
-    href: '/admin',
-    icon: '⚽',
-    exact: true,
-  },
-  {
-    label: 'Tạo tài khoản',
-    href: '/admin/create-users',
-    icon: '➕',
-  },
-  {
-    label: 'Quản lý tài khoản',
-    href: '/admin/users',
-    icon: '👥',
-  },
+  { label: 'Trận đấu', href: '/admin', icon: '⚽', exact: true },
+  { label: 'Tạo tài khoản', href: '/admin/create-users', icon: '➕' },
+  { label: 'Tài khoản', href: '/admin/users', icon: '👥' },
+  { label: 'Logs', href: '/admin/logs', icon: '📋' },
 ]
 
 export default function AdminLayout({ children }: { children: React.ReactNode }) {

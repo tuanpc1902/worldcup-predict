@@ -3,6 +3,7 @@ import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase'
 import { useAuthStore } from '@/store/auth'
+import { logActivity } from '@/lib/activity'
 
 interface Group { id: string; name: string; invite_code: string; owner_id: string }
 interface Member {
@@ -74,6 +75,7 @@ export default function GroupsPage() {
       loadMembers(group.id)
       setShowCreate(false)
       setNewName('')
+      logActivity({ action: 'group_create', detail: { group_id: group.id, name: group.name, user_id: user?.id } })
     }
     setCreating(false)
   }
@@ -95,6 +97,7 @@ export default function GroupsPage() {
       setMsg(`✓ Đã gửi yêu cầu tham gia "${group.name}". Chờ trưởng nhóm duyệt.`)
       setShowJoin(false)
       setJoinCode('')
+      logActivity({ action: 'group_join_request', detail: { group_id: group.id, group_name: group.name, user_id: user?.id } })
     } else {
       setMsg(error.message)
     }
@@ -109,6 +112,7 @@ export default function GroupsPage() {
     setMembers(prev => prev.map(m =>
       m.user_id === userId ? { ...m, status: 'approved' } : m
     ))
+    logActivity({ action: 'group_join_approve', detail: { group_id: groupId, approved_user_id: userId, by: user?.id } })
   }
 
   async function rejectRequest(groupId: string, userId: string) {
@@ -117,6 +121,7 @@ export default function GroupsPage() {
       .eq('group_id', groupId)
       .eq('user_id', userId)
     setMembers(prev => prev.filter(m => m.user_id !== userId))
+    logActivity({ action: 'group_join_reject', detail: { group_id: groupId, rejected_user_id: userId, by: user?.id } })
   }
 
   async function removeMember(groupId: string, userId: string) {

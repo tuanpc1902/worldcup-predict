@@ -5,6 +5,7 @@ import { createClient } from '@/lib/supabase'
 import FlagImg from '@/components/FlagImg'
 import Link from 'next/link'
 import type { H2HResult } from '@/types'
+import { logActivity } from '@/lib/activity'
 
 interface ProfileSummary {
   id: string
@@ -65,6 +66,7 @@ function H2HContent() {
 
     setResults(combined)
     setLoading(false)
+    logActivity({ action: 'h2h_compare', detail: { user_a: userA, user_b: userB, matches_found: combined.length } })
   }
 
   const profA = profiles.find(p => p.id === userA)

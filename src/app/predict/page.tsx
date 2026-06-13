@@ -10,6 +10,7 @@ import LazyList from '@/components/LazyList'
 import { MatchCardSkeleton } from '@/components/Skeleton'
 import type { RealtimePostgresUpdatePayload } from '@supabase/supabase-js'
 import type { Match, Prediction } from '@/types'
+import { logActivity } from '@/lib/activity'
 
 const STAGE_LABELS: Record<string, string> = {
   group: 'Vòng bảng', round_of_32: 'Vòng 1/16', round_of_16: 'Vòng 1/8',
@@ -33,6 +34,7 @@ export default function PredictPage() {
 
   useEffect(() => { init() }, [init])
   useEffect(() => { if (!loading && !user) router.replace('/login') }, [user, loading, router])
+  useEffect(() => { if (user) logActivity({ action: 'page_view', page: '/predict', detail: { user_id: user.id } }) }, [user])
 
   const isAdmin = user?.role === 'admin'
 
@@ -106,6 +108,7 @@ export default function PredictPage() {
       setPredictions(newPreds)
       setSavedAll(true)
       setTimeout(() => setSavedAll(false), 3000)
+      logActivity({ action: 'predict_save_all', detail: { count: rows.length, user_id: user?.id } })
     }
     setSavingAll(false)
   }
@@ -125,6 +128,7 @@ export default function PredictPage() {
       setPredictions(prev => ({ ...prev, [matchId]: { id: '', user_id: user!.id, match_id: matchId, predicted_home: h, predicted_away: a, points_earned: null, scored_at: null, created_at: '' } }))
       setSaved(matchId)
       setTimeout(() => setSaved(null), 2000)
+      logActivity({ action: 'predict_submit', detail: { match_id: matchId, home: h, away: a, user_id: user?.id } })
     }
     setSaving(null)
   }

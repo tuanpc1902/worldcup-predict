@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react'
 import { useAuthStore } from '@/store/auth'
 import { useThemeStore } from '@/store/theme'
 import { useRouter, usePathname } from 'next/navigation'
+import { logActivity } from '@/lib/activity'
 
 const ALL_LINKS = [
   { href: '/', label: 'Lịch thi đấu' },
@@ -37,32 +38,25 @@ export default function Navbar() {
   const ptsColor = pts < 0 ? (dark ? '#fca5a5' : '#dc2626')  : pts > 0 ? (dark ? '#7db3e0' : 'var(--brand)')   : (dark ? '#64748b' : '#94a3b8')
   const menuBg   = dark ? '#001a35' : '#f8fafc'
 
-  // Desktop shows first 4 links
-  const desktopLinks = ALL_LINKS.slice(0, 4)
-
   return (
     <>
       <nav className="sticky top-0 z-50 border-b shadow-sm" style={{ background: bg, borderColor: border }}>
-        <div className="max-w-5xl mx-auto px-4 h-14 flex items-center justify-between gap-4">
+        <div className="max-w-6xl mx-auto px-4 h-14 flex items-center justify-between gap-2">
 
           {/* Logo */}
           <Link href="/" className="flex items-center gap-2 shrink-0 select-none">
-            {/* <span
-              className="flex items-center justify-center w-8 h-8 rounded-lg text-white text-base font-black leading-none"
-              style={{ background: 'var(--brand)' }}
-            >⚽</span> */}
             <span className="font-black text-[22px] tracking-tight leading-none">
               WC<span style={{ color: 'var(--accent)' }}>{`.88`}</span>
             </span>
           </Link>
 
-          {/* Desktop nav — always visible on md+ */}
-          <div className="hidden md:flex items-center gap-0.5 flex-1">
-            {desktopLinks.map(l => {
+          {/* Desktop nav — all links on md+ */}
+          <div className="hidden md:flex items-center gap-0.5 flex-1 overflow-x-auto">
+            {ALL_LINKS.map(l => {
               const active = pathname === l.href
               return (
                 <Link key={l.href} href={l.href}
-                  className="px-3 py-1.5 rounded-md text-sm transition-colors whitespace-nowrap"
+                  className="px-2.5 py-1.5 rounded-md text-[13px] transition-colors whitespace-nowrap shrink-0"
                   style={{
                     background: active ? (dark ? '#003366' : 'var(--brand-bg)') : undefined,
                     color: active ? (dark ? '#7db3e0' : 'var(--brand)') : textMid,
@@ -77,7 +71,7 @@ export default function Navbar() {
             })}
             {user?.role === 'admin' && (
               <Link href="/admin"
-                className="px-3 py-1.5 rounded-md text-sm font-medium transition-colors"
+                className="px-2.5 py-1.5 rounded-md text-[13px] font-medium transition-colors shrink-0"
                 style={{ color: 'var(--accent)' }}
               >Admin</Link>
             )}
@@ -134,7 +128,11 @@ export default function Navbar() {
                   {user.total_points} pts
                 </span>
                 <button
-                  onClick={async () => { await signOut(); router.push('/login') }}
+                  onClick={async () => {
+                    logActivity({ action: 'logout', detail: { user_id: user?.id } })
+                    await signOut()
+                    router.push('/login')
+                  }}
                   className="text-sm px-2 py-1 rounded transition-colors"
                   style={{ color: textMute }}
                 >
