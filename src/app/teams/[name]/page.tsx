@@ -4,7 +4,7 @@ import { useParams } from 'next/navigation'
 import Link from 'next/link'
 import { createClient } from '@/lib/supabase'
 import FlagImg from '@/components/FlagImg'
-import { fmtTime, fmtDate, fmtMatchTimes } from '@/lib/time'
+import { fmtMatchTimes, teamHref, teamSlug } from '@/lib/time'
 import type { Match, MatchGoal } from '@/types'
 
 const STAGE_LABELS: Record<string, string> = {
@@ -26,21 +26,34 @@ interface PlayerStat {
 
 export default function TeamPage() {
   const params = useParams()
-  const teamName = decodeURIComponent(params.name as string)
+  const slug = decodeURIComponent(params.name as string)
   const supabase = createClient()
 
   const [matches, setMatches] = useState<Match[]>([])
+  const [teamName, setTeamName] = useState('')
   const [goals, setGoals] = useState<GoalWithMatch[]>([])
   const [teamFlag, setTeamFlag] = useState<string | null>(null)
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
     async function load() {
+      // Find the canonical team name from the slug by fetching a sample match
       const [{ data: homeMatches }, { data: awayMatches }] = await Promise.all([
-        supabase.from('matches').select('*').eq('home_team', teamName).order('match_time'),
-        supabase.from('matches').select('*').eq('away_team', teamName).order('match_time'),
+        supabase.from('matches').select('*').order('match_time'),
+        supabase.from('matches').select('home_team,away_team').order('match_time'),
       ])
-      const all = [...(homeMatches ?? []), ...(awayMatches ?? [])]
+      const allM = (homeMatches ?? []) as Match[]
+      // Find team whose slug matches
+      const allTeams = new Set<string>()
+      allM.forEach(m => { allTeams.add(m.home_team); allTeams.add(m.away_team) })
+      const canonical = [...allTeams].find(t => teamSlug(t) === slug) ?? slug.replace(/-/g, ' ')
+      setTeamName(canonical)
+
+      const [{ data: hm }, { data: am }] = await Promise.all([
+        supabase.from('matches').select('*').eq('home_team', canonical).order('match_time'),
+        supabase.from('matches').select('*').eq('away_team', canonical).order('match_time'),
+      ])
+      const all = [...(hm ?? []), ...(am ?? [])]
         .sort((a, b) => new Date(a.match_time).getTime() - new Date(b.match_time).getTime())
       setMatches(all)
 

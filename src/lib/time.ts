@@ -44,3 +44,13 @@ export function fmtMatchTimes(utc: string) {
 export function isStarted(utc: string): boolean {
   return Date.now() >= new Date(utc).getTime()
 }
+
+/** Convert team name to URL slug: "United States" → "united-states" */
+export function teamSlug(name: string): string {
+  return name.trim().toLowerCase().replace(/\s+/g, '-').replace(/['"]/g, '')
+}
+
+/** Full href for a team page */
+export function teamHref(name: string): string {
+  return `/teams/${encodeURIComponent(teamSlug(name))}`
+}

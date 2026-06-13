@@ -6,7 +6,7 @@ import { createClient } from '@/lib/supabase'
 import { useAuthStore } from '@/store/auth'
 import FlagImg from '@/components/FlagImg'
 import ShareCard from '@/components/ShareCard'
-import { fmtDate, fmtTime, fmtDateTime, isStarted } from '@/lib/time'
+import { fmtDate, fmtTime, fmtDateTime, isStarted, teamHref } from '@/lib/time'
 import type { Match, Comment, PredictionStats, MatchGoal } from '@/types'
 import type { RealtimePostgresInsertPayload, RealtimePostgresUpdatePayload } from '@supabase/supabase-js'
 
@@ -284,8 +284,8 @@ export default function MatchDetailClient({ match, stats, comments: initialComme
         {/* Teams */}
         <div className="flex items-center justify-between gap-4">
           <div className="flex-1 min-w-0 flex flex-col items-center gap-2 text-center">
-            <FlagImg team={liveMatch.home_team} flag={liveMatch.home_flag} size="xl" />
-            <p className="font-bold text-slate-800 text-base leading-tight line-clamp-2 w-full px-1 break-words">{liveMatch.home_team}</p>
+            <FlagImg team={liveMatch.home_team} flag={liveMatch.home_flag} size="xl" href={teamHref(liveMatch.home_team)} />
+            <Link href={teamHref(liveMatch.home_team)} className="font-bold text-slate-800 text-base leading-tight line-clamp-2 w-full px-1 break-words text-center hover:text-green-600 transition-colors">{liveMatch.home_team}</Link>
             {/* Home scorers under flag */}
             {homeGoals.length > 0 && (
               <div className="text-xs text-slate-500 space-y-0.5 w-full">
@@ -313,8 +313,8 @@ export default function MatchDetailClient({ match, stats, comments: initialComme
           </div>
 
           <div className="flex-1 min-w-0 flex flex-col items-center gap-2 text-center">
-            <FlagImg team={liveMatch.away_team} flag={liveMatch.away_flag} size="xl" />
-            <p className="font-bold text-slate-800 text-base leading-tight line-clamp-2 w-full px-1 break-words">{liveMatch.away_team}</p>
+            <FlagImg team={liveMatch.away_team} flag={liveMatch.away_flag} size="xl" href={teamHref(liveMatch.away_team)} />
+            <Link href={teamHref(liveMatch.away_team)} className="font-bold text-slate-800 text-base leading-tight line-clamp-2 w-full px-1 break-words text-center hover:text-green-600 transition-colors">{liveMatch.away_team}</Link>
             {awayGoals.length > 0 && (
               <div className="text-xs text-slate-500 space-y-0.5 w-full">
                 {awayGoals.map(g => (
@@ -365,7 +365,7 @@ export default function MatchDetailClient({ match, stats, comments: initialComme
                     </div>
                     {/* Flag side */}
                     <div className="flex-1 flex items-center gap-1.5 min-w-0" style={{ flexDirection: isHome ? 'row-reverse' : 'row' }}>
-                      <FlagImg team={g.team_name} flag={g.team_flag} size="xs" />
+                      <FlagImg team={g.team_name} flag={g.team_flag} size="xs" href={teamHref(g.team_name)} />
                     </div>
                   </div>
                 )

@@ -1,6 +1,7 @@
 'use client'
 import { useMemo, useState } from 'react'
 import FlagImg from '@/components/FlagImg'
+import { teamHref } from '@/lib/time'
 import type { Match, TopScorer } from '@/types'
 
 interface Standing {
@@ -174,10 +175,10 @@ export default function StandingsClient({ matches, topScorers }: Props) {
                               )}
                             </td>
                             <td className="px-2 py-2">
-                              <div className="flex items-center gap-1.5 min-w-0">
+                              <a href={teamHref(row.team)} className="flex items-center gap-1.5 min-w-0 hover:opacity-80 transition-opacity">
                                 <FlagImg team={row.team} flag={row.flag} size="xs" />
-                                <span className="font-medium text-slate-800 truncate max-w-[80px]">{row.team}</span>
-                              </div>
+                                <span className="font-medium text-slate-800 truncate max-w-[80px] hover:text-green-600">{row.team}</span>
+                              </a>
                             </td>
                             <td className="text-center px-2 py-2 text-slate-600">{row.mp}</td>
                             <td className="text-center px-2 py-2 text-slate-600">{row.w}</td>
@@ -242,13 +243,12 @@ export default function StandingsClient({ matches, topScorers }: Props) {
 
                     {/* Flag + player info */}
                     <div className="flex items-center gap-2.5 flex-1 min-w-0">
-                      {/* Team flag as visual */}
-                      <div className="flex-shrink-0">
+                      <a href={teamHref(s.team_name)} className="flex-shrink-0 hover:opacity-80 transition-opacity">
                         <FlagImg team={s.team_name} flag={s.team_flag} size="sm" />
-                      </div>
+                      </a>
                       <div className="min-w-0">
                         <p className="text-sm font-semibold text-slate-800 truncate">{s.player_name}</p>
-                        <p className="text-xs text-slate-400 truncate">{s.team_name}</p>
+                        <a href={teamHref(s.team_name)} className="text-xs text-slate-400 truncate hover:text-green-600 transition-colors">{s.team_name}</a>
                       </div>
                     </div>
 
