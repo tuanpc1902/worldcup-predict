@@ -82,7 +82,7 @@ export default function LeaderboardPage() {
           <table className="w-full">
             <thead>
               <tr className="border-b border-slate-100 bg-slate-50">
-                {['#', 'Người chơi', 'Điểm', 'Đúng tỉ số', 'Đúng KQ', 'Sai'].map(h => (
+                {['#', 'Người chơi', 'Điểm', 'Dự đoán', 'Đúng tỉ số', 'Đúng KQ', 'Sai'].map(h => (
                   <th key={h} className="text-left text-xs text-slate-400 font-semibold px-4 py-3">{h}</th>
                 ))}
               </tr>
@@ -103,6 +103,10 @@ export default function LeaderboardPage() {
                     <span className={`font-bold text-lg ${e.total_points > 0 ? 'text-green-600' : e.total_points < 0 ? 'text-red-500' : 'text-slate-400'}`}>
                       {e.total_points}
                     </span>
+                  </td>
+                  <td className="px-4 py-3">
+                    <span className="text-sm text-slate-600 font-medium">{e.total_predicted}</span>
+                    <span className="text-xs text-slate-400 ml-0.5">trận</span>
                   </td>
                   <td className="px-4 py-3 text-green-600 text-sm font-medium">{e.exact_scores}</td>
                   <td className="px-4 py-3 text-blue-600 text-sm font-medium">{e.correct_results}</td>
