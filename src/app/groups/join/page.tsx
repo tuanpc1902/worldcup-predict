@@ -27,7 +27,7 @@ export default function JoinGroupPage() {
   useEffect(() => { if (!loading && !user) router.replace(`/login?redirect=/groups/join?code=${code}`) }, [user, loading])
 
   useEffect(() => {
-    if (!user || !code) { setFetching(false); return }
+    if (!user?.id || !code) { setFetching(false); return }
 
     async function load() {
       // Lookup group by invite_code
@@ -53,7 +53,7 @@ export default function JoinGroupPage() {
         .from('group_members')
         .select('status')
         .eq('group_id', g.id)
-        .eq('user_id', user.id)
+        .eq('user_id', user!.id)
         .maybeSingle()
 
       if (existing?.status === 'approved') setAlreadyMember(true)
