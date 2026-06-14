@@ -30,30 +30,14 @@ export async function GET(req: NextRequest) {
     return NextResponse.json({ message: e1.message }, { status: 500 })
   }
 
-  // 2. live → finished guard: if a 'live' match has home_score set it means
-  //    sync-matches already gave it a result but forgot to flip status — fix it.
-  const { data: stuckLive, error: e2 } = await supabase
-    .from('matches')
-    .update({ status: 'finished' })
-    .eq('status', 'live')
-    .not('home_score', 'is', null)
-    .not('away_score', 'is', null)
-    .select('id, home_team, away_team')
-
-  if (e2) {
-    return NextResponse.json({ message: e2.message }, { status: 500 })
-  }
-
   const toActivate = activated ?? []
-  const toFinish   = stuckLive ?? []
 
   return NextResponse.json({
     now,
     activated: toActivate.length,
-    finished:  toFinish.length,
+    finished: 0,
     details: {
       activated: toActivate.map((m: { home_team: string; away_team: string }) => `${m.home_team} vs ${m.away_team}`),
-      finished:  toFinish.map((m: { home_team: string; away_team: string }) => `${m.home_team} vs ${m.away_team}`),
     },
   })
 }

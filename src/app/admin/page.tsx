@@ -427,7 +427,7 @@ function MatchModal({ match, onClose, onSave, saving }: {
               <select value={form.status} onChange={e => set('status', e.target.value)}
                 className="w-full border border-slate-300 rounded-lg px-3 py-2 text-slate-800 text-sm focus:outline-none">
                 {['scheduled', 'live', 'finished', 'cancelled'].map(s => (
-                  <option key={s} value={s}>{s}</option>
+                  <option key={s} value={s}>{s?.toUpperCase()}</option>
                 ))}
               </select>
             </div>
