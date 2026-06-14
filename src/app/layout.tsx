@@ -14,12 +14,7 @@ export const metadata: Metadata = {
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="vi">
-      <head>
-        {/* Preconnect so first-request DNS + TLS for flagcdn.com is resolved early */}
-        <link rel="preconnect" href="https://flagcdn.com" />
-        <link rel="dns-prefetch" href="https://flagcdn.com" />
-      </head>
-      <body className="bg-slate-50 text-slate-900 min-h-screen">
+<body className="bg-slate-50 text-slate-900 min-h-screen">
         <NavigationLoader />
         <Navbar />
         <MaintenanceGate>

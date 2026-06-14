@@ -25,11 +25,11 @@ export default function FlagImg({ team, flag, size = 'md', className = '', href 
   const [error, setError] = useState(false)
   const { w, h } = SIZE_PX[size]
 
-  // Route flagcdn.com URLs through local proxy for long-term browser/CDN caching.
-  // Always use w80 for best quality; w40 stored in DB is upgraded here.
+  // Convert flagcdn.com URLs (stored in DB) to bundled local files.
+  // Local files are always w80 quality, served instantly from CDN/static assets.
   const flagSrc = flag?.replace(
-    /^https:\/\/flagcdn\.com\/w(40|80)\/([a-z0-9-]+)\.png$/,
-    (_m, _w, code) => `/api/flag/${code}?w=80`
+    /^https:\/\/flagcdn\.com\/w(?:40|80)\/([a-z0-9-]+)\.png$/,
+    (_m, code) => `/flags/${code}.png`
   ) ?? flag
 
   const inner = (!flagSrc || error) ? (
