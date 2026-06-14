@@ -5,6 +5,7 @@ import { createClient } from '@/lib/supabase'
 import { useAuthStore } from '@/store/auth'
 import type { Match } from '@/types'
 import { fmtDateTime, isAdminEditExpired } from '@/lib/time'
+import FlagImg from '@/components/FlagImg'
 
 const STAGES = ['group', 'round_of_32', 'round_of_16', 'quarter', 'semi', 'final']
 const STAGE_LABELS: Record<string, string> = {
@@ -322,13 +323,19 @@ function MatchModal({ match, onClose, onSave, saving }: {
         {isFinished ? (
           <div className="space-y-4">
             <div className="bg-green-50 border border-green-200 rounded-xl p-4 text-center">
-              <p className="text-xs text-green-600 font-semibold uppercase tracking-wide mb-2">Kết quả chính thức</p>
-              <div className="flex items-center justify-center gap-4">
-                <span className="font-semibold text-slate-700 text-sm">{match!.home_team}</span>
-                <span className="text-3xl font-black text-slate-800 tabular-nums">
+              <p className="text-xs text-green-600 font-semibold uppercase tracking-wide mb-3">Kết quả chính thức</p>
+              <div className="flex items-center justify-center gap-3">
+                <div className="flex flex-col items-center gap-1.5">
+                  <FlagImg team={match!.home_team} flag={match!.home_flag} size="sm" />
+                  <span className="font-semibold text-slate-700 text-xs">{match!.home_team}</span>
+                </div>
+                <span className="text-3xl font-black text-slate-800 tabular-nums px-2">
                   {match!.home_score} – {match!.away_score}
                 </span>
-                <span className="font-semibold text-slate-700 text-sm">{match!.away_team}</span>
+                <div className="flex flex-col items-center gap-1.5">
+                  <FlagImg team={match!.away_team} flag={match!.away_flag} size="sm" />
+                  <span className="font-semibold text-slate-700 text-xs">{match!.away_team}</span>
+                </div>
               </div>
             </div>
             <div className="bg-amber-50 border border-amber-200 rounded-lg px-4 py-3 text-xs text-amber-700 flex items-start gap-2">
@@ -357,14 +364,18 @@ function MatchModal({ match, onClose, onSave, saving }: {
               <div className="bg-slate-50 rounded-xl p-4 space-y-3 border border-slate-200">
                 <p className="text-xs font-semibold text-slate-500 uppercase tracking-wide">Tỉ số hiện tại</p>
                 <div className="grid grid-cols-2 gap-3">
-                  {([['home_score', form.home_team || 'Đội nhà'], ['away_score', form.away_team || 'Đội khách']] as [keyof typeof form, string][]).map(([k, l]) => (
-                    <div key={k}>
-                      <label className="text-xs font-medium text-slate-600 block mb-1">{l}</label>
+                  {([
+                    ['home_score', form.home_team || 'Đội nhà', match?.home_flag ?? null] as [keyof typeof form, string, string | null],
+                    ['away_score', form.away_team || 'Đội khách', match?.away_flag ?? null] as [keyof typeof form, string, string | null],
+                  ]).map(([k, l, flag]) => (
+                    <div key={k} className="flex flex-col items-center gap-2">
+                      <FlagImg team={l} flag={flag} size="sm" />
+                      <label className="text-xs font-medium text-slate-600">{l}</label>
                       <input
                         type="number" min="0"
                         value={(form[k] as string | number) ?? ''}
                         onChange={e => set(k, e.target.value)}
-                        className="w-full border border-slate-300 rounded-lg px-3 py-2.5 text-slate-800 text-lg font-bold text-center focus:outline-none focus:ring-2 focus:ring-red-500"
+                        className="w-full border border-slate-300 rounded-lg px-3 py-2.5 text-slate-800 text-xl font-bold text-center focus:outline-none focus:ring-2 focus:ring-red-500"
                       />
                     </div>
                   ))}
