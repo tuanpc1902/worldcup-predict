@@ -85,10 +85,11 @@ const FLAG_MAP: Record<string, string> = {
   Indonesia:              'id',
 }
 
-export function getFlagUrl(teamName: string, size: 40 | 80 = 40): string | null {
+export function getFlagUrl(teamName: string, size: 40 | 80 = 80): string | null {
   const code = FLAG_MAP[teamName] ?? FLAG_MAP[teamName?.trim()]
   if (!code) return null
-  return `https://flagcdn.com/w${size}/${code}.png`
+  // Route through local proxy so browser + CDN cache the image long-term
+  return `/api/flag/${code}?w=${size}`
 }
 
 export function getAllTeams(): string[] {
