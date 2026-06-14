@@ -196,7 +196,7 @@ export default function AdminPage() {
                     m.status === 'finished' ? 'bg-green-100 text-green-700' :
                     m.status === 'cancelled' ? 'bg-slate-100 text-slate-400' :
                     'bg-slate-100 text-slate-500'
-                  }`}>{m.status}</span>
+                  }`}>{m.status?.toUpperCase()}</span>
                   {m.is_locked && <span className="ml-1 text-xs text-slate-400">🔒</span>}
                 </td>
                 <td className="px-4 py-3 text-slate-700 tabular-nums font-medium">
