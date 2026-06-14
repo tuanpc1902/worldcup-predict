@@ -26,6 +26,7 @@ export default function AdminPage() {
   const [saving, setSaving] = useState(false)
   const [msg, setMsg] = useState<{ text: string; ok: boolean } | null>(null)
   const [filter, setFilter] = useState<'all' | 'scheduled' | 'live' | 'finished'>('all')
+  const [syncingMatch, setSyncingMatch] = useState<string | null>(null)
 
   useEffect(() => { init() }, [init])
   useEffect(() => {
@@ -76,6 +77,26 @@ export default function AdminPage() {
       await loadMatches()
     } catch { flash('Lỗi cập nhật trạng thái', false) }
     setUpdatingStatus(false)
+  }
+
+  async function syncMatch(match: Match) {
+    if (!match.api_fixture_id) return
+    setSyncingMatch(match.id)
+    try {
+      const res = await fetch('/api/sync-live-scores', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ match_id: match.id }),
+      })
+      const json = await res.json()
+      if (res.ok) {
+        flash(`✓ ${match.home_team} vs ${match.away_team}: ${json.score ?? 'cập nhật'} (${json.status})${json.scored ? ' · Đã chấm điểm' : ''}`, true)
+        await loadMatches()
+      } else {
+        flash('❌ ' + (json.error ?? 'Sync thất bại'), false)
+      }
+    } catch { flash('❌ Lỗi khi sync', false) }
+    setSyncingMatch(null)
   }
 
   async function toggleLock(match: Match) {
@@ -203,6 +224,18 @@ export default function AdminPage() {
                       <span className="text-xs text-slate-400 bg-slate-50 border border-slate-200 px-2.5 py-1 rounded-md select-none">
                         🔒 Đã khóa
                       </span>
+                    )}
+
+                    {/* Sync từ api-sports.io — chỉ khi có api_fixture_id */}
+                    {m.api_fixture_id && (
+                      <button
+                        onClick={() => syncMatch(m)}
+                        disabled={syncingMatch === m.id}
+                        className="text-xs bg-blue-50 hover:bg-blue-100 text-blue-700 px-2.5 py-1 rounded-md transition-colors disabled:opacity-50"
+                        title="Sync kết quả từ api-sports.io"
+                      >
+                        {syncingMatch === m.id ? '...' : '⟳ Sync'}
+                      </button>
                     )}
 
                     {/* Khóa/Mở khoá — chỉ scheduled */}
