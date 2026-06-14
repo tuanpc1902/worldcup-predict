@@ -1,9 +1,12 @@
 'use client'
+import { useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import FlagImg from '@/components/FlagImg'
+import AchievementBadges from '@/components/AchievementBadges'
 import { fmtDate, fmtTime } from '@/lib/time'
 import LazyList from '@/components/LazyList'
+import { useAuthStore } from '@/store/auth'
 import type { Profile, PredictionWithMatch } from '@/types'
 
 const STAGE_LABELS: Record<string, string> = {
@@ -26,6 +29,14 @@ interface Props {
 
 export default function ProfileClient({ profile, predictions, rank }: Props) {
   const router = useRouter()
+  const { user } = useAuthStore()
+
+  // Trigger achievement check when viewing own profile
+  useEffect(() => {
+    if (user?.id === profile.id) {
+      fetch('/api/achievements', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ user_id: profile.id }) })
+    }
+  }, [user, profile.id])
 
   const finished = predictions.filter(p => p.points_earned !== null)
   const exact = finished.filter(p => (p.points_earned ?? 0) >= 5).length
@@ -88,6 +99,9 @@ export default function ProfileClient({ profile, predictions, rank }: Props) {
           </div>
         )}
       </div>
+
+      {/* Achievements */}
+      <AchievementBadges userId={profile.id} />
 
       {/* Head to head link */}
       <div className="bg-white rounded-xl border border-slate-200 p-4 flex items-center justify-between">

@@ -4,6 +4,7 @@ import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase'
 import { useAuthStore } from '@/store/auth'
 import MatchCard from '@/components/MatchCard'
+import ShareCard from '@/components/ShareCard'
 import type { PredictionWithMatch } from '@/types'
 
 export default function HistoryPage() {
@@ -75,7 +76,22 @@ export default function HistoryPage() {
       ) : (
         <div className="space-y-3">
           {items.map(item => (
-            <MatchCard key={item.id} match={item.matches} prediction={item} showResult />
+            <div key={item.id} className="relative">
+              <MatchCard match={item.matches} prediction={item} showResult />
+              {item.points_earned !== null && (
+                <div className="absolute bottom-2 right-2">
+                  <ShareCard data={{
+                    homeTeam: item.matches.home_team,
+                    awayTeam: item.matches.away_team,
+                    homeScore: item.matches.home_score,
+                    awayScore: item.matches.away_score,
+                    predictedHome: item.predicted_home,
+                    predictedAway: item.predicted_away,
+                    pointsEarned: item.points_earned,
+                  }} />
+                </div>
+              )}
+            </div>
           ))}
         </div>
       )}

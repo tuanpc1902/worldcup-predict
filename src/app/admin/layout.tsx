@@ -4,8 +4,9 @@ import Link from 'next/link'
 
 const NAV = [
   { label: 'Trận đấu', href: '/admin', icon: '⚽', exact: true },
-  { label: 'Tạo tài khoản', href: '/admin/create-users', icon: '➕' },
+  { label: 'Tạo TK', href: '/admin/create-users', icon: '➕' },
   { label: 'Tài khoản', href: '/admin/users', icon: '👥' },
+  { label: 'Thống kê', href: '/admin/stats', icon: '📊' },
   { label: 'Logs', href: '/admin/logs', icon: '📋' },
   { label: 'Config', href: '/admin/config', icon: '⚙️' },
   { label: 'Reset', href: '/admin/reset', icon: '🗑️' },

@@ -138,3 +138,29 @@ export interface PredictionStats {
   awayWin: number
   topScores: { score: string; count: number; pct: number }[]
 }
+
+export interface Achievement {
+  id: string
+  name: string
+  description: string
+  icon: string
+  points: number
+}
+
+export interface UserAchievement {
+  id: number
+  user_id: string
+  achievement_id: string
+  awarded_at: string
+  achievements: Achievement
+}
+
+export interface BracketPrediction {
+  id: string
+  user_id: string
+  round: 'round_of_16' | 'quarter' | 'semi' | 'final' | 'champion'
+  slot: number
+  team_name: string
+  points_earned: number | null
+  created_at: string
+}

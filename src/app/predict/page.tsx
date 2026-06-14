@@ -12,6 +12,7 @@ import type { RealtimePostgresUpdatePayload } from '@supabase/supabase-js'
 import type { Match, Prediction } from '@/types'
 import { logActivity } from '@/lib/activity'
 import { useConfigStore } from '@/store/config'
+import MatchReminder from '@/components/MatchReminder'
 
 const STAGE_LABELS: Record<string, string> = {
   group: 'Vòng bảng', round_of_32: 'Vòng 1/16', round_of_16: 'Vòng 1/8',
@@ -209,9 +210,12 @@ export default function PredictPage() {
                     <span className="text-xs text-slate-400 font-medium">
                       {STAGE_LABELS[match.stage]}{match.group_name && ` · ${match.group_name}`}
                     </span>
-                    <span className="text-xs text-slate-400">
-                      {fmtTime(match.match_time)} · {fmtDate(match.match_time)}
-                    </span>
+                    <div className="flex items-center gap-2">
+                      <span className="text-xs text-slate-400">
+                        {fmtTime(match.match_time)} · {fmtDate(match.match_time)}
+                      </span>
+                      <MatchReminder match={match} />
+                    </div>
                   </div>
                   <div className="flex items-center justify-between gap-3">
                     {/* Home */}
