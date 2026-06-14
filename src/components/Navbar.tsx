@@ -18,6 +18,7 @@ const ALL_LINKS = [
   { href: '/bracket-predict', label: 'Đoán Bracket', configKey: 'nav_bracket' },
   { href: '/h2h',             label: 'H2H',           configKey: 'nav_h2h' },
   { href: '/groups',      label: 'Nhóm',           configKey: 'nav_groups' },
+  { href: '/huong-dan',  label: 'Hướng dẫn',     configKey: null },
 ]
 
 export default function Navbar() {
