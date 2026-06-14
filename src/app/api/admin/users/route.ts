@@ -89,6 +89,15 @@ export async function PATCH(req: NextRequest) {
   }
 
   if (new_password) {
+    // Chỉ admin được đổi mật khẩu
+    const supabase = await createServerSupabase()
+    const { data: { user: caller } } = await supabase.auth.getUser()
+    const { data: callerProfile } = caller
+      ? await service.from('profiles').select('role').eq('id', caller.id).maybeSingle()
+      : { data: null }
+    if (callerProfile?.role !== 'admin')
+      return NextResponse.json({ message: 'Chỉ admin được đổi mật khẩu' }, { status: 403 })
+
     const { error } = await service.auth.admin.updateUserById(user_id, { password: new_password })
     if (error) return NextResponse.json({ message: error.message }, { status: 500 })
     return NextResponse.json({ success: true })

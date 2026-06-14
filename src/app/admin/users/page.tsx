@@ -207,10 +207,12 @@ export default function AdminUsersPage() {
                           {roleLoading === u.id ? '...' : u.role === 'staff' ? 'Bỏ Staff' : 'Cấp Staff'}
                         </button>
                       )}
-                      <button onClick={() => { setResetTarget(u); setNewPw(randomPassword()) }}
-                        className="text-xs bg-slate-100 hover:bg-slate-200 text-slate-700 px-3 py-1.5 rounded-lg transition-colors">
-                        Đổi MK
-                      </button>
+                      {user?.role === 'admin' && (
+                        <button onClick={() => { setResetTarget(u); setNewPw(randomPassword()) }}
+                          className="text-xs bg-slate-100 hover:bg-slate-200 text-slate-700 px-3 py-1.5 rounded-lg transition-colors">
+                          Đổi MK
+                        </button>
+                      )}
                       {u.role !== 'admin' && (
                         <button onClick={() => setDeleteTarget(u)}
                           className="text-xs bg-red-50 hover:bg-red-100 text-red-600 px-3 py-1.5 rounded-lg transition-colors">
