@@ -71,7 +71,7 @@ export default function MatchCard({ match, prediction, showResult, showPredictLi
           </div>
         </div>
 
-        <div className="text-center flex-shrink-0 w-[76px]">
+        <div className="text-center flex-shrink-0 w-[100px]">
           {isFinished || isLive ? (
             <div className={`text-xl font-bold tabular-nums px-2 py-1 rounded-lg ${
               isFinished ? 'bg-slate-100 text-slate-800' : 'bg-red-50 text-red-600'
@@ -79,12 +79,12 @@ export default function MatchCard({ match, prediction, showResult, showPredictLi
               {showScores ? `${match.home_score ?? 0}–${match.away_score ?? 0}` : '?–?'}
             </div>
           ) : times ? (
-            <div className="bg-slate-50 rounded-lg px-3 py-2 w-[110px] flex-shrink-0 text-center">
-              <div className="text-[10px] text-slate-400 font-medium mb-0.5 whitespace-nowrap">🇻🇳 GMT+7</div>
-              <div className="font-bold text-slate-800 text-lg tabular-nums leading-none whitespace-nowrap">{times.vnTime}</div>
-              <div className="text-xs text-slate-400 mt-0.5 whitespace-nowrap">{times.vnDate}</div>
+            <div className="bg-slate-50 rounded-lg px-2 py-2 w-full text-center">
+              <div className="text-[10px] text-slate-400 font-medium mb-0.5">🇻🇳 GMT+7</div>
+              <div className="font-bold text-slate-800 text-base tabular-nums leading-none">{times.vnTime}</div>
+              <div className="text-[10px] text-slate-400 mt-0.5">{times.vnDate}</div>
               <div className="border-t border-slate-200 mt-1.5 pt-1">
-                <span className="text-[10px] text-slate-400 font-medium whitespace-nowrap">UTC &nbsp;{times.utcTime} · {times.utcDate}</span>
+                <span className="text-[10px] text-slate-400">{times.utcTime} UTC</span>
               </div>
             </div>
           ) : null}
