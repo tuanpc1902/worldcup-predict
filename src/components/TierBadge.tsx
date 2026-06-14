@@ -1,13 +1,13 @@
 import { getTier } from '@/lib/tier'
 
 interface Props {
-  points: number
+  points: number | null | undefined
   showName?: boolean
   size?: 'sm' | 'md'
 }
 
 export default function TierBadge({ points, showName = false, size = 'sm' }: Props) {
-  const tier = getTier(points)
+  const tier = getTier(points ?? 0)
   const px = size === 'md' ? 'px-2.5 py-1' : 'px-1.5 py-0.5'
   const text = size === 'md' ? 'text-xs' : 'text-[10px]'
 

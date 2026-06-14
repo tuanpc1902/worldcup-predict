@@ -21,8 +21,9 @@ export function getTier(points: number | null | undefined): Tier {
 
 export function getNextTier(points: number | null | undefined): { tier: Tier; remaining: number } | null {
   const p = points ?? 0
-  const idx = TIERS.findIndex(t => p >= t.min)
-  if (idx === 0) return null // already Platinum
+  let idx = TIERS.findIndex(t => p >= t.min)
+  if (idx === -1) idx = TIERS.length - 1 // dưới Bronze (điểm âm) — coi như Bronze
+  if (idx === 0) return null // đã Platinum
   const next = TIERS[idx - 1]
   return { tier: next, remaining: next.min - p }
 }

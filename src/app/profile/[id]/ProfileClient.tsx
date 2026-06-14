@@ -76,7 +76,7 @@ export default function ProfileClient({ profile, predictions, rank }: Props) {
                   <div
                     className="h-full rounded-full transition-all"
                     style={{
-                      width: `${Math.round(((profile.total_points - tier.min) / (nextTier.tier.min - tier.min)) * 100)}%`,
+                      width: `${Math.max(0, Math.min(100, Math.round(((profile.total_points - tier.min) / (nextTier.tier.min - tier.min)) * 100)))}%`,
                       background: nextTier.tier.color,
                     }}
                   />
