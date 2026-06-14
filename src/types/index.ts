@@ -2,7 +2,7 @@ export interface Profile {
   id: string
   display_name: string
   avatar_url: string | null
-  role: 'user' | 'admin'
+  role: 'user' | 'staff' | 'admin'
   total_points: number
   created_at: string
   ip_address?: string | null

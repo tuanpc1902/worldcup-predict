@@ -58,7 +58,7 @@ export default function AdminLogsPage() {
   const [expandedId, setExpandedId] = useState<number | null>(null)
 
   useEffect(() => { init() }, [init])
-  useEffect(() => { if (user && user.role !== 'admin') router.replace('/') }, [user, router])
+  useEffect(() => { if (user && user.role !== 'admin' && user.role !== 'staff') router.replace('/') }, [user, router])
 
   const load = useCallback(async () => {
     setLoading(true)
@@ -73,7 +73,7 @@ export default function AdminLogsPage() {
     setLoading(false)
   }, [offset, filterAction])
 
-  useEffect(() => { if (user?.role === 'admin') load() }, [user, load])
+  useEffect(() => { if (user?.role === 'admin' || user?.role === 'staff') load() }, [user, load])
 
   const deviceIcon = (dt: string | null) =>
     dt === 'mobile' ? '📱' : dt === 'tablet' ? '📟' : '🖥️'

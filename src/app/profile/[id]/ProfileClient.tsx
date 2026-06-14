@@ -4,6 +4,8 @@ import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import FlagImg from '@/components/FlagImg'
 import AchievementBadges from '@/components/AchievementBadges'
+import TierBadge from '@/components/TierBadge'
+import { getTier, getNextTier } from '@/lib/tier'
 import { fmtDate, fmtTime } from '@/lib/time'
 import LazyList from '@/components/LazyList'
 import { useAuthStore } from '@/store/auth'
@@ -43,6 +45,8 @@ export default function ProfileClient({ profile, predictions, rank }: Props) {
   const correct = finished.filter(p => { const e = p.points_earned ?? 0; return e > 0 && e < 5 }).length
   const wrong = finished.filter(p => (p.points_earned ?? 0) < 0).length
   const accuracy = finished.length > 0 ? Math.round(((exact + correct) / finished.length) * 100) : 0
+  const tier = getTier(profile.total_points)
+  const nextTier = getNextTier(profile.total_points)
 
   return (
     <div className="max-w-2xl mx-auto space-y-5 fade-in pb-20">
@@ -57,8 +61,28 @@ export default function ProfileClient({ profile, predictions, rank }: Props) {
             {profile.display_name[0]?.toUpperCase()}
           </div>
           <div className="flex-1 min-w-0">
-            <h1 className="text-xl font-bold text-slate-800 truncate">{profile.display_name}</h1>
-            {rank && <p className="text-slate-500 text-sm">Hạng #{rank} · Tham gia {fmtDate(profile.created_at)}</p>}
+            <div className="flex items-center gap-2 flex-wrap">
+              <h1 className="text-xl font-bold text-slate-800 truncate">{profile.display_name}</h1>
+              <TierBadge points={profile.total_points} showName size="md" />
+            </div>
+            {rank && <p className="text-slate-500 text-sm mt-0.5">Hạng #{rank} · Tham gia {fmtDate(profile.created_at)}</p>}
+            {nextTier && (
+              <div className="mt-2">
+                <div className="flex items-center justify-between text-[10px] text-slate-400 mb-1">
+                  <span>{tier.icon} {tier.name}</span>
+                  <span>còn {nextTier.remaining} pts → {nextTier.tier.icon} {nextTier.tier.name}</span>
+                </div>
+                <div className="h-1 bg-slate-100 rounded-full overflow-hidden">
+                  <div
+                    className="h-full rounded-full transition-all"
+                    style={{
+                      width: `${Math.round(((profile.total_points - tier.min) / (nextTier.tier.min - tier.min)) * 100)}%`,
+                      background: nextTier.tier.color,
+                    }}
+                  />
+                </div>
+              </div>
+            )}
           </div>
           <div className="text-right flex-shrink-0">
             <div className={`text-3xl font-black ${profile.total_points < 0 ? 'text-red-500' : profile.total_points > 0 ? 'text-green-600' : 'text-slate-400'}`}>

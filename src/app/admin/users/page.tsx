@@ -3,25 +3,22 @@ import { useEffect, useState, useCallback } from 'react'
 import { useRouter } from 'next/navigation'
 import { useAuthStore } from '@/store/auth'
 
-type Provider = 'email' | 'google'
-
 interface User {
   id: string
   email: string
   display_name: string
-  provider: Provider
   is_wc: boolean
   created_at: string
   last_sign_in_at: string | null
   total_points: number
+  role: 'user' | 'staff' | 'admin'
 }
 
-type TabType = 'all' | 'wc' | 'google'
+type TabType = 'all' | 'wc'
 
 const TABS: { id: TabType; label: string; icon: string }[] = [
   { id: 'all', label: 'Tất cả', icon: '👤' },
   { id: 'wc', label: '@wc.88', icon: '⚽' },
-  { id: 'google', label: 'Google', icon: '🔵' },
 ]
 
 function randomPassword(len = 10) {
@@ -32,6 +29,12 @@ function randomPassword(len = 10) {
 function fmt(dt: string | null) {
   if (!dt) return '—'
   return new Date(dt).toLocaleDateString('vi-VN', { day: '2-digit', month: '2-digit', year: '2-digit', hour: '2-digit', minute: '2-digit' })
+}
+
+function RoleBadge({ role }: { role: string }) {
+  if (role === 'admin') return <span className="text-[10px] bg-red-100 text-red-700 px-1.5 py-0.5 rounded-full font-semibold">Admin</span>
+  if (role === 'staff') return <span className="text-[10px] bg-amber-100 text-amber-700 px-1.5 py-0.5 rounded-full font-semibold">Staff</span>
+  return null
 }
 
 export default function AdminUsersPage() {
@@ -50,6 +53,8 @@ export default function AdminUsersPage() {
 
   const [deleteTarget, setDeleteTarget] = useState<User | null>(null)
   const [deleting, setDeleting] = useState(false)
+
+  const [roleLoading, setRoleLoading] = useState<string | null>(null)
 
   useEffect(() => { init() }, [init])
   useEffect(() => {
@@ -100,6 +105,20 @@ export default function AdminUsersPage() {
       setUsers(prev => prev.filter(u => u.id !== deleteTarget.id))
       setTotal(prev => prev - 1)
       setDeleteTarget(null)
+    }
+  }
+
+  async function toggleStaff(u: User) {
+    const new_role = u.role === 'staff' ? 'user' : 'staff'
+    setRoleLoading(u.id)
+    const res = await fetch('/api/admin/users', {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ user_id: u.id, new_role }),
+    })
+    setRoleLoading(null)
+    if (res.ok) {
+      setUsers(prev => prev.map(x => x.id === u.id ? { ...x, role: new_role } : x))
     }
   }
 
@@ -158,18 +177,14 @@ export default function AdminUsersPage() {
                 <tr key={u.id} className="hover:bg-slate-50/50">
                   <td className="px-4 py-3">
                     <div className="flex items-center gap-2">
-                      {u.provider === 'google' ? (
-                        <span className="w-6 h-6 rounded-full bg-blue-100 flex items-center justify-center text-xs font-bold text-blue-600">G</span>
-                      ) : (
-                        <span className="w-6 h-6 rounded-full bg-green-100 flex items-center justify-center text-xs">⚽</span>
-                      )}
+                      <span className="w-6 h-6 rounded-full bg-green-100 flex items-center justify-center text-xs">⚽</span>
                       <div>
-                        <div className="font-medium text-slate-800 truncate max-w-[140px]">{u.display_name}</div>
+                        <div className="flex items-center gap-1.5">
+                          <span className="font-medium text-slate-800 truncate max-w-[140px]">{u.display_name}</span>
+                          <RoleBadge role={u.role} />
+                        </div>
                         <div className="text-xs text-slate-400 truncate max-w-[180px]">{u.email}</div>
                       </div>
-                      {u.provider === 'google' && (
-                        <span className="text-[10px] bg-blue-100 text-blue-700 px-1.5 py-0.5 rounded-full font-medium hidden sm:inline">Google</span>
-                      )}
                     </div>
                   </td>
                   <td className="px-4 py-3 text-right hidden sm:table-cell">
@@ -178,19 +193,30 @@ export default function AdminUsersPage() {
                   <td className="px-4 py-3 text-right text-slate-400 text-xs hidden md:table-cell">{fmt(u.last_sign_in_at)}</td>
                   <td className="px-4 py-3">
                     <div className="flex items-center justify-end gap-2">
-                      {u.provider === 'email' && (
-                        <button onClick={() => { setResetTarget(u); setNewPw(randomPassword()) }}
-                          className="text-xs bg-slate-100 hover:bg-slate-200 text-slate-700 px-3 py-1.5 rounded-lg transition-colors">
-                          Đổi MK
+                      {/* Staff toggle — only for non-admin users */}
+                      {u.role !== 'admin' && (
+                        <button
+                          onClick={() => toggleStaff(u)}
+                          disabled={roleLoading === u.id}
+                          className={`text-xs px-3 py-1.5 rounded-lg transition-colors disabled:opacity-50 ${
+                            u.role === 'staff'
+                              ? 'bg-amber-50 hover:bg-amber-100 text-amber-700'
+                              : 'bg-slate-100 hover:bg-slate-200 text-slate-700'
+                          }`}
+                        >
+                          {roleLoading === u.id ? '...' : u.role === 'staff' ? 'Bỏ Staff' : 'Cấp Staff'}
                         </button>
                       )}
-                      {u.provider === 'google' && (
-                        <span className="text-xs text-slate-400 italic px-1">OAuth</span>
-                      )}
-                      <button onClick={() => setDeleteTarget(u)}
-                        className="text-xs bg-red-50 hover:bg-red-100 text-red-600 px-3 py-1.5 rounded-lg transition-colors">
-                        Xóa
+                      <button onClick={() => { setResetTarget(u); setNewPw(randomPassword()) }}
+                        className="text-xs bg-slate-100 hover:bg-slate-200 text-slate-700 px-3 py-1.5 rounded-lg transition-colors">
+                        Đổi MK
                       </button>
+                      {u.role !== 'admin' && (
+                        <button onClick={() => setDeleteTarget(u)}
+                          className="text-xs bg-red-50 hover:bg-red-100 text-red-600 px-3 py-1.5 rounded-lg transition-colors">
+                          Xóa
+                        </button>
+                      )}
                     </div>
                   </td>
                 </tr>

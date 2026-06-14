@@ -43,15 +43,26 @@ export default function ShareCard(props: ShareCardProps) {
   }
   const hasScore = d.homeScore !== null && d.homeScore !== undefined
 
+  // Build OG image URL for rich preview when sharing link
+  const ogParams = new URLSearchParams({
+    home: d.homeTeam,
+    away: d.awayTeam,
+    ...(hasScore ? { hs: String(d.homeScore), as: String(d.awayScore) } : {}),
+    ph: String(d.predictedHome),
+    pa: String(d.predictedAway),
+    ...(d.pointsEarned !== null && d.pointsEarned !== undefined ? { pts: String(d.pointsEarned) } : {}),
+  })
+  const shareUrl = `${typeof window !== 'undefined' ? window.location.origin : ''}/api/og?${ogParams}`
+
   const text = `⚽ Dự đoán của tôi: ${d.homeTeam} ${d.predictedHome}–${d.predictedAway} ${d.awayTeam}` +
     (hasScore ? `\nKết quả: ${d.homeScore}–${d.awayScore}` : '') +
     (d.pointsEarned !== null && d.pointsEarned !== undefined
       ? `\n${getResultLabel(d.pointsEarned)} (${d.pointsEarned > 0 ? '+' : ''}${d.pointsEarned} điểm)` : '') +
-    `\n\nCùng dự đoán World Cup! 🏆`
+    `\n🏆 worldcup-bet.vercel.app`
 
   async function share() {
     if (navigator.share) {
-      await navigator.share({ text }).catch(() => {})
+      await navigator.share({ text, url: shareUrl }).catch(() => {})
     } else {
       await navigator.clipboard.writeText(text)
       setCopied(true)

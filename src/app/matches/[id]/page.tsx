@@ -1,9 +1,28 @@
 import { createServiceSupabase } from '@/lib/supabase-server'
 import { notFound } from 'next/navigation'
+import type { Metadata } from 'next'
 import MatchDetailClient from './MatchDetailClient'
 import type { Match, Comment, PredictionStats, MatchGoal } from '@/types'
 
 export const dynamic = 'force-dynamic'
+
+export async function generateMetadata({ params }: { params: Promise<{ id: string }> }): Promise<Metadata> {
+  const { id } = await params
+  const supabase = createServiceSupabase()
+  const { data: match } = await supabase.from('matches').select('home_team, away_team, home_score, away_score, status').eq('id', id).maybeSingle()
+  if (!match) return {}
+
+  const hasScore = match.status === 'finished' && match.home_score !== null
+  const title = `${match.home_team} vs ${match.away_team}${hasScore ? ` | ${match.home_score}–${match.away_score}` : ''} · WC-88`
+  const ogUrl = `/api/og?home=${encodeURIComponent(match.home_team)}&away=${encodeURIComponent(match.away_team)}` +
+    (hasScore ? `&hs=${match.home_score}&as=${match.away_score}` : '')
+
+  return {
+    title,
+    openGraph: { title, images: [{ url: ogUrl, width: 1200, height: 630 }] },
+    twitter: { card: 'summary_large_image', title, images: [ogUrl] },
+  }
+}
 
 interface RawPrediction {
   predicted_home: number

@@ -28,7 +28,9 @@ export default function AdminPage() {
   const [filter, setFilter] = useState<'all' | 'scheduled' | 'live' | 'finished'>('all')
 
   useEffect(() => { init() }, [init])
-  useEffect(() => { if (!loading && (!user || user.role !== 'admin')) router.replace('/') }, [user, loading, router])
+  useEffect(() => {
+    if (!loading && (!user || (user.role !== 'admin' && user.role !== 'staff'))) router.replace('/')
+  }, [user, loading, router])
 
   const loadMatches = async () => {
     const { data } = await supabase.from('matches').select('*').order('match_time')
@@ -36,7 +38,7 @@ export default function AdminPage() {
     setFetching(false)
   }
 
-  useEffect(() => { if (user?.role === 'admin') loadMatches() }, [user])
+  useEffect(() => { if (user?.role === 'admin' || user?.role === 'staff') loadMatches() }, [user])
 
   function flash(text: string, ok: boolean) {
     setMsg({ text, ok })

@@ -3,6 +3,7 @@ import { useEffect, useState } from 'react'
 import { createClient } from '@/lib/supabase'
 import { LeaderboardRowSkeleton } from '@/components/Skeleton'
 import { useConfigStore } from '@/store/config'
+import TierBadge from '@/components/TierBadge'
 import type { LeaderboardEntry } from '@/types'
 
 export default function LeaderboardPage() {
@@ -74,6 +75,7 @@ export default function LeaderboardPage() {
                     </div>
                     <span className="text-xl">{medals[actualRank - 1]}</span>
                     <span className="text-slate-700 text-xs font-semibold text-center line-clamp-1">{e.display_name}</span>
+                    <TierBadge points={e.total_points} showName />
                     {showPoints && (
                       <span className={`font-bold text-sm ${e.total_points < 0 ? 'text-red-500' : e.total_points > 0 ? 'text-green-600' : 'text-slate-400'}`}>
                         {e.total_points} pts
@@ -105,6 +107,7 @@ export default function LeaderboardPage() {
                         {e.display_name.charAt(0).toUpperCase()}
                       </div>
                       <span className="text-slate-800 text-sm font-medium hover:text-green-600 transition-colors">{e.display_name}</span>
+                      <TierBadge points={e.total_points} />
                     </a>
                   </td>
                   {showPoints && (

@@ -9,7 +9,7 @@ async function verifyAdmin() {
   return profile?.role === 'admin' ? user : null
 }
 
-// GET /api/admin/users?type=all|wc|google
+// GET /api/admin/users?type=all|wc
 export async function GET(req: NextRequest) {
   if (!await verifyAdmin()) return NextResponse.json({ message: 'Unauthorized' }, { status: 401 })
 
@@ -21,23 +21,20 @@ export async function GET(req: NextRequest) {
 
   const mapped = users.map(u => {
     const identities = u.identities ?? []
-    const isGoogle = identities.some(i => i.provider === 'google')
-    const isWc = !isGoogle && u.email?.includes('@wc.')
+    const isWc = identities.length === 0 || u.email?.includes('@wc.')
     return {
       id: u.id,
       email: u.email ?? '',
       display_name: u.user_metadata?.full_name ?? u.email?.split('@')[0] ?? '',
-      provider: isGoogle ? 'google' : 'email',
       is_wc: isWc,
       created_at: u.created_at,
       last_sign_in_at: u.last_sign_in_at ?? null,
       total_points: 0,
+      role: 'user' as string,
     }
   })
 
-  const filtered = type === 'google'
-    ? mapped.filter(u => u.provider === 'google')
-    : type === 'wc'
+  const filtered = type === 'wc'
     ? mapped.filter(u => u.is_wc)
     : mapped
 
@@ -58,6 +55,7 @@ export async function GET(req: NextRequest) {
       if (p) {
         u.display_name = p.display_name ?? u.display_name
         u.total_points = p.total_points ?? 0
+        u.role = p.role ?? 'user'
       }
     })
   }
@@ -65,15 +63,24 @@ export async function GET(req: NextRequest) {
   return NextResponse.json({ users: filtered, total: mapped.length })
 }
 
-// PATCH /api/admin/users — reset password OR update display_name
+// PATCH /api/admin/users — reset password, update display_name, or change role
 export async function PATCH(req: NextRequest) {
   if (!await verifyAdmin()) return NextResponse.json({ message: 'Unauthorized' }, { status: 401 })
 
   const body = await req.json()
-  const { user_id, new_password, display_name } = body
+  const { user_id, new_password, display_name, new_role } = body
   if (!user_id) return NextResponse.json({ message: 'user_id required' }, { status: 400 })
 
   const service = createServiceSupabase()
+
+  // Grant/revoke staff — only admin can do this, cannot promote to admin
+  if (new_role !== undefined) {
+    if (!['staff', 'user'].includes(new_role))
+      return NextResponse.json({ message: 'Invalid role. Only staff or user allowed.' }, { status: 400 })
+    const { error } = await service.from('profiles').update({ role: new_role }).eq('id', user_id)
+    if (error) return NextResponse.json({ message: error.message }, { status: 500 })
+    return NextResponse.json({ success: true })
+  }
 
   if (display_name !== undefined) {
     const { error } = await service.from('profiles').update({ display_name }).eq('id', user_id)
