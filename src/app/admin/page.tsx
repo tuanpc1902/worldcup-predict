@@ -4,7 +4,7 @@ import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase'
 import { useAuthStore } from '@/store/auth'
 import type { Match } from '@/types'
-import { fmtDateTime } from '@/lib/time'
+import { fmtDateTime, isAdminEditExpired } from '@/lib/time'
 
 const STAGES = ['group', 'round_of_32', 'round_of_16', 'quarter', 'semi', 'final']
 const STAGE_LABELS: Record<string, string> = {
@@ -180,7 +180,7 @@ export default function AdminPage() {
                 </td>
                 <td className="px-4 py-3">
                   <div className="flex gap-1 flex-wrap">
-                    {/* Sửa — chỉ scheduled */}
+                    {/* Sửa — scheduled chưa bắt đầu */}
                     {m.status === 'scheduled' && (
                       <button onClick={() => setEditMatch(m)}
                         className="text-xs bg-slate-100 hover:bg-slate-200 text-slate-700 px-2.5 py-1 rounded-md transition-colors">
@@ -188,16 +188,16 @@ export default function AdminPage() {
                       </button>
                     )}
 
-                    {/* Cập nhật tỉ số — chỉ live */}
-                    {m.status === 'live' && (
+                    {/* Cập nhật tỉ số — live hoặc finished nhưng còn trong cửa sổ 180 phút */}
+                    {(m.status === 'live' || (m.status === 'finished' && !isAdminEditExpired(m.match_time))) && (
                       <button onClick={() => setEditMatch(m)}
                         className="text-xs bg-red-100 hover:bg-red-200 text-red-700 font-semibold px-2.5 py-1 rounded-md transition-colors">
                         📊 Tỉ số
                       </button>
                     )}
 
-                    {/* Finished — locked, read-only */}
-                    {m.status === 'finished' && (
+                    {/* Finished + hết cửa sổ chỉnh sửa — read-only */}
+                    {m.status === 'finished' && isAdminEditExpired(m.match_time) && (
                       <span className="text-xs text-slate-400 bg-slate-50 border border-slate-200 px-2.5 py-1 rounded-md select-none">
                         🔒 Đã khóa
                       </span>
@@ -258,7 +258,7 @@ function MatchModal({ match, onClose, onSave, saving }: {
   match: Match | null; onClose: () => void; onSave: (data: MatchFormData) => void; saving: boolean
 }) {
   const isLive = match?.status === 'live'
-  const isFinished = match?.status === 'finished'
+  const isFinished = match?.status === 'finished' && isAdminEditExpired(match?.match_time ?? '')
 
   const [form, setForm] = useState({
     home_team: match?.home_team ?? '',

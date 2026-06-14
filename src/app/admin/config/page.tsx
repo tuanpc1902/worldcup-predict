@@ -14,6 +14,11 @@ interface ConfigRow {
 
 const GROUPS = [
   {
+    title: 'Hệ thống',
+    icon: '🚨',
+    keys: ['maintenance_mode', 'registration_open'],
+  },
+  {
     title: 'Realtime',
     icon: '⚡',
     keys: ['realtime_leaderboard', 'realtime_match', 'realtime_profile'],
@@ -21,7 +26,12 @@ const GROUPS = [
   {
     title: 'Tính năng',
     icon: '🔧',
-    keys: ['predictions_open', 'comments_enabled', 'champion_picks_open'],
+    keys: ['predictions_open', 'predictions_editable', 'comments_enabled', 'champion_picks_open', 'group_creation_open'],
+  },
+  {
+    title: 'Hiển thị',
+    icon: '👁️',
+    keys: ['show_scores', 'show_prediction_stats', 'show_goals', 'show_leaderboard_points'],
   },
   {
     title: 'Navbar — Tabs hiển thị',

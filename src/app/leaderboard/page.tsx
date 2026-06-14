@@ -2,6 +2,7 @@
 import { useEffect, useState } from 'react'
 import { createClient } from '@/lib/supabase'
 import { LeaderboardRowSkeleton } from '@/components/Skeleton'
+import { useConfigStore } from '@/store/config'
 import type { LeaderboardEntry } from '@/types'
 
 export default function LeaderboardPage() {
@@ -25,6 +26,9 @@ export default function LeaderboardPage() {
     return () => { supabase.removeChannel(channel) }
   }, [])
 
+  const { config, load: loadConfig } = useConfigStore()
+  useEffect(() => { loadConfig() }, [loadConfig])
+  const showPoints = config.show_leaderboard_points
   const medals = ['🥇', '🥈', '🥉']
 
   if (loading) return (
@@ -70,9 +74,11 @@ export default function LeaderboardPage() {
                     </div>
                     <span className="text-xl">{medals[actualRank - 1]}</span>
                     <span className="text-slate-700 text-xs font-semibold text-center line-clamp-1">{e.display_name}</span>
-                    <span className={`font-bold text-sm ${e.total_points < 0 ? 'text-red-500' : e.total_points > 0 ? 'text-green-600' : 'text-slate-400'}`}>
-                      {e.total_points} pts
-                    </span>
+                    {showPoints && (
+                      <span className={`font-bold text-sm ${e.total_points < 0 ? 'text-red-500' : e.total_points > 0 ? 'text-green-600' : 'text-slate-400'}`}>
+                        {e.total_points} pts
+                      </span>
+                    )}
                   </div>
                 )
               })}
@@ -82,9 +88,11 @@ export default function LeaderboardPage() {
           <table className="w-full">
             <thead>
               <tr className="border-b border-slate-100 bg-slate-50">
-                {['#', 'Người chơi', 'Điểm', 'Dự đoán', 'Đúng tỉ số', 'Đúng KQ', 'Sai'].map(h => (
-                  <th key={h} className="text-left text-xs text-slate-400 font-semibold px-4 py-3">{h}</th>
-                ))}
+                {['#', 'Người chơi', 'Điểm', 'Dự đoán', 'Đúng tỉ số', 'Đúng KQ', 'Sai'].map(h =>
+                  (h !== 'Điểm' || showPoints) ? (
+                    <th key={h} className="text-left text-xs text-slate-400 font-semibold px-4 py-3">{h}</th>
+                  ) : null
+                )}
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-50">
@@ -99,11 +107,13 @@ export default function LeaderboardPage() {
                       <span className="text-slate-800 text-sm font-medium hover:text-green-600 transition-colors">{e.display_name}</span>
                     </a>
                   </td>
-                  <td className="px-4 py-3">
-                    <span className={`font-bold text-lg ${e.total_points > 0 ? 'text-green-600' : e.total_points < 0 ? 'text-red-500' : 'text-slate-400'}`}>
-                      {e.total_points}
-                    </span>
-                  </td>
+                  {showPoints && (
+                    <td className="px-4 py-3">
+                      <span className={`font-bold text-lg ${e.total_points > 0 ? 'text-green-600' : e.total_points < 0 ? 'text-red-500' : 'text-slate-400'}`}>
+                        {e.total_points}
+                      </span>
+                    </td>
+                  )}
                   <td className="px-4 py-3">
                     <span className="text-sm text-slate-600 font-medium">{e.total_predicted}</span>
                     <span className="text-xs text-slate-400 ml-0.5">trận</span>

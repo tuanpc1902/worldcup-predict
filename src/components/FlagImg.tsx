@@ -25,7 +25,12 @@ export default function FlagImg({ team, flag, size = 'md', className = '', href 
   const [error, setError] = useState(false)
   const { w, h } = SIZE_PX[size]
 
-  const inner = (!flag || error) ? (
+  // Upgrade to w80 for large displays instead of the w40 stored in DB
+  const flagSrc = (flag && (size === 'lg' || size === 'xl'))
+    ? flag.replace('/w40/', '/w80/')
+    : flag
+
+  const inner = (!flagSrc || error) ? (
     <div
       style={{ width: w, height: h, minWidth: w, minHeight: h }}
       className={`bg-slate-200 rounded flex-shrink-0 flex items-center justify-center ${className}`}
@@ -45,7 +50,7 @@ export default function FlagImg({ team, flag, size = 'md', className = '', href 
       )}
       {/* eslint-disable-next-line @next/next/no-img-element */}
       <img
-        src={flag}
+        src={flagSrc}
         alt={team}
         style={{ width: w, height: h, objectFit: 'cover' }}
         className={`rounded shadow-sm transition-opacity duration-200 ${loaded ? 'opacity-100' : 'opacity-0'}`}

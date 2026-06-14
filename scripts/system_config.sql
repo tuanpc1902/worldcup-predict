@@ -45,3 +45,19 @@ INSERT INTO public.system_config (key, value, label, description) VALUES
   ('nav_groups',            'true',  'Nav: Nhóm',              'Hiện tab Nhóm'),
   ('nav_history_public',    'false', 'Nav: Lịch sử (public)', 'Hiện Lịch sử cho cả user chưa đăng nhập')
 ON CONFLICT (key) DO NOTHING;
+
+-- Bổ sung các toggle mới (chạy riêng nếu bảng đã tồn tại)
+INSERT INTO public.system_config (key, value, label, description) VALUES
+  -- Hệ thống
+  ('maintenance_mode',       'false', 'Bảo trì',                   'Chuyển tất cả user (trừ admin) sang trang thông báo bảo trì'),
+  ('registration_open',      'true',  'Đăng ký tài khoản',         'Cho phép tạo tài khoản mới từ trang đăng nhập'),
+  -- Dự đoán
+  ('predictions_editable',   'true',  'Sửa dự đoán',               'Cho phép user sửa dự đoán đã nộp (trước khi trận khóa)'),
+  -- Nhóm
+  ('group_creation_open',    'true',  'Tạo nhóm mới',              'Cho phép user tạo nhóm mới'),
+  -- Hiển thị
+  ('show_scores',            'true',  'Hiện tỉ số',                'Hiển thị kết quả tỉ số các trận đã kết thúc'),
+  ('show_prediction_stats',  'true',  'Hiện thống kê dự đoán',     'Hiển thị % dự đoán của cộng đồng trong trang chi tiết trận'),
+  ('show_goals',             'true',  'Hiện cầu thủ ghi bàn',      'Hiển thị tên cầu thủ và phút ghi bàn'),
+  ('show_leaderboard_points','true',  'Hiện điểm XH',              'Hiển thị điểm số thực tế trên bảng xếp hạng (tắt = chỉ hiện thứ hạng)')
+ON CONFLICT (key) DO NOTHING;

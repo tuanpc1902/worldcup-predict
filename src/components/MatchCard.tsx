@@ -1,7 +1,9 @@
 'use client'
 import Link from 'next/link'
+import { useEffect } from 'react'
 import { fmtTime, fmtDate, fmtMatchTimes, teamHref } from '@/lib/time'
 import FlagImg from '@/components/FlagImg'
+import { useConfigStore } from '@/store/config'
 import type { Match, Prediction } from '@/types'
 
 
@@ -25,6 +27,9 @@ export default function MatchCard({ match, prediction, showResult, showPredictLi
   const isFinished = match.status === 'finished'
   const isLive = match.status === 'live'
   const times = (!isFinished && !isLive) ? fmtMatchTimes(match.match_time) : null
+  const { config, load: loadConfig } = useConfigStore()
+  useEffect(() => { loadConfig() }, [loadConfig])
+  const showScores = config.show_scores
 
   const pts = prediction?.points_earned ?? null
   const pointsBg =
@@ -71,7 +76,7 @@ export default function MatchCard({ match, prediction, showResult, showPredictLi
             <div className={`text-xl font-bold tabular-nums px-2 py-1 rounded-lg ${
               isFinished ? 'bg-slate-100 text-slate-800' : 'bg-red-50 text-red-600'
             }`}>
-              {match.home_score ?? 0}–{match.away_score ?? 0}
+              {showScores ? `${match.home_score ?? 0}–${match.away_score ?? 0}` : '?–?'}
             </div>
           ) : times ? (
             <div className="bg-slate-50 rounded-lg px-3 py-2 w-[110px] flex-shrink-0 text-center">

@@ -1,8 +1,9 @@
 'use client'
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { createClient } from '@/lib/supabase'
 import { useRouter } from 'next/navigation'
 import { logActivity } from '@/lib/activity'
+import { useConfigStore } from '@/store/config'
 
 export default function LoginPage() {
   const [email, setEmail] = useState('')
@@ -14,6 +15,9 @@ export default function LoginPage() {
   const [loading, setLoading] = useState(false)
   const router = useRouter()
   const supabase = createClient()
+  const { config, load: loadConfig } = useConfigStore()
+  useEffect(() => { loadConfig() }, [loadConfig])
+  const registrationOpen = config.registration_open
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
@@ -21,6 +25,10 @@ export default function LoginPage() {
     setSuccess('')
     setLoading(true)
     try {
+      if (mode === 'register' && !registrationOpen) {
+        setError('Đăng ký tài khoản mới hiện đã đóng.')
+        return
+      }
       if (mode === 'login') {
         const { error } = await supabase.auth.signInWithPassword({ email, password })
         if (error) throw error
@@ -166,15 +174,19 @@ export default function LoginPage() {
             Tiếp tục với Google
           </button>
 
-          <p className="text-center text-sm text-slate-500 mt-5">
-            {mode === 'login' ? 'Chưa có tài khoản? ' : 'Đã có tài khoản? '}
-            <button
-              onClick={() => { setMode(mode === 'login' ? 'register' : 'login'); setError(''); setSuccess('') }}
-              className="text-green-600 hover:underline font-semibold"
-            >
-              {mode === 'login' ? 'Đăng ký' : 'Đăng nhập'}
-            </button>
-          </p>
+          {registrationOpen ? (
+            <p className="text-center text-sm text-slate-500 mt-5">
+              {mode === 'login' ? 'Chưa có tài khoản? ' : 'Đã có tài khoản? '}
+              <button
+                onClick={() => { setMode(mode === 'login' ? 'register' : 'login'); setError(''); setSuccess('') }}
+                className="text-green-600 hover:underline font-semibold"
+              >
+                {mode === 'login' ? 'Đăng ký' : 'Đăng nhập'}
+              </button>
+            </p>
+          ) : (
+            <p className="text-center text-xs text-slate-400 mt-5">Đăng ký tài khoản mới hiện đã đóng.</p>
+          )}
         </div>
       </div>
     </div>

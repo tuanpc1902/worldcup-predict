@@ -4,12 +4,25 @@ import { createClient } from '@/lib/supabase'
 import type { RealtimeChannel } from '@supabase/supabase-js'
 
 export interface SystemConfig {
+  // Realtime
   realtime_leaderboard: boolean
   realtime_match: boolean
   realtime_profile: boolean
+  // Hệ thống
+  maintenance_mode: boolean
+  registration_open: boolean
+  // Tính năng
   predictions_open: boolean
+  predictions_editable: boolean
   comments_enabled: boolean
   champion_picks_open: boolean
+  group_creation_open: boolean
+  // Hiển thị
+  show_scores: boolean
+  show_prediction_stats: boolean
+  show_goals: boolean
+  show_leaderboard_points: boolean
+  // Nav
   nav_predict: boolean
   nav_history: boolean
   nav_standings: boolean
@@ -24,9 +37,17 @@ const DEFAULTS: SystemConfig = {
   realtime_leaderboard: true,
   realtime_match: true,
   realtime_profile: true,
+  maintenance_mode: false,
+  registration_open: true,
   predictions_open: true,
+  predictions_editable: true,
   comments_enabled: true,
   champion_picks_open: true,
+  group_creation_open: true,
+  show_scores: true,
+  show_prediction_stats: true,
+  show_goals: true,
+  show_leaderboard_points: true,
   nav_predict: true,
   nav_history: true,
   nav_standings: true,

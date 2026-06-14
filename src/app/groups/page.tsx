@@ -4,6 +4,7 @@ import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase'
 import { useAuthStore } from '@/store/auth'
 import { logActivity } from '@/lib/activity'
+import { useConfigStore } from '@/store/config'
 
 interface Group { id: string; name: string; invite_code: string; owner_id: string; total_points: number }
 interface Member {
@@ -28,6 +29,9 @@ export default function GroupsPage() {
   const [showCreate, setShowCreate] = useState(false)
   const [showJoin, setShowJoin] = useState(false)
   const [copied, setCopied] = useState(false)
+  const { config, load: loadConfig } = useConfigStore()
+  useEffect(() => { loadConfig() }, [loadConfig])
+  const groupCreationOpen = config.group_creation_open
 
   useEffect(() => { init() }, [init])
   useEffect(() => {
@@ -166,10 +170,12 @@ export default function GroupsPage() {
             className="text-sm border border-slate-300 hover:bg-slate-50 text-slate-700 px-3 py-2 rounded-lg font-medium">
             Nhập mã
           </button>
-          <button onClick={() => setShowCreate(true)}
-            className="text-sm bg-green-600 hover:bg-green-700 text-white px-3 py-2 rounded-lg font-medium">
-            + Tạo nhóm
-          </button>
+          {groupCreationOpen && (
+            <button onClick={() => setShowCreate(true)}
+              className="text-sm bg-green-600 hover:bg-green-700 text-white px-3 py-2 rounded-lg font-medium">
+              + Tạo nhóm
+            </button>
+          )}
         </div>
       </div>
 
@@ -191,10 +197,12 @@ export default function GroupsPage() {
               className="border border-slate-300 text-slate-700 px-4 py-2 rounded-lg text-sm font-medium hover:bg-slate-50">
               Nhập mã tham gia
             </button>
-            <button onClick={() => setShowCreate(true)}
-              className="bg-green-600 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-green-700">
-              Tạo nhóm
-            </button>
+            {groupCreationOpen && (
+              <button onClick={() => setShowCreate(true)}
+                className="bg-green-600 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-green-700">
+                Tạo nhóm
+              </button>
+            )}
           </div>
         </div>
       ) : (

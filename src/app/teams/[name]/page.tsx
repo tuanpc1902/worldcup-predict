@@ -5,6 +5,7 @@ import Link from 'next/link'
 import { createClient } from '@/lib/supabase'
 import FlagImg from '@/components/FlagImg'
 import { fmtMatchTimes, fmtDate, teamHref, teamSlug } from '@/lib/time'
+import { useConfigStore } from '@/store/config'
 import type { Match, MatchGoal } from '@/types'
 
 const STAGE_LABELS: Record<string, string> = {
@@ -28,6 +29,9 @@ export default function TeamPage() {
 
   const [matches, setMatches] = useState<Match[]>([])
   const [teamName, setTeamName] = useState('')
+  const { config, load: loadConfig } = useConfigStore()
+  useEffect(() => { loadConfig() }, [loadConfig])
+  const showGoals = config.show_goals
   const [goals, setGoals] = useState<MatchGoal[]>([])
   const [teamFlag, setTeamFlag] = useState<string | null>(null)
   const [loading, setLoading] = useState(true)
@@ -164,26 +168,26 @@ export default function TeamPage() {
       {/* ── Live ── */}
       {live.length > 0 && (
         <MatchSection title="Đang thi đấu" accent="text-red-500">
-          {live.map(m => <MatchRow key={m.id} match={m} teamName={teamName} goals={goalsByMatch[m.id] ?? []} />)}
+          {live.map(m => <MatchRow key={m.id} match={m} teamName={teamName} goals={goalsByMatch[m.id] ?? []} showGoals={showGoals} />)}
         </MatchSection>
       )}
 
       {/* ── Upcoming ── */}
       {upcoming.length > 0 && (
         <MatchSection title="Sắp thi đấu">
-          {upcoming.map(m => <MatchRow key={m.id} match={m} teamName={teamName} goals={[]} />)}
+          {upcoming.map(m => <MatchRow key={m.id} match={m} teamName={teamName} goals={[]} showGoals={showGoals} />)}
         </MatchSection>
       )}
 
       {/* ── Finished ── */}
       {finished.length > 0 && (
         <MatchSection title="Đã thi đấu">
-          {finished.map(m => <MatchRow key={m.id} match={m} teamName={teamName} goals={goalsByMatch[m.id] ?? []} />)}
+          {finished.map(m => <MatchRow key={m.id} match={m} teamName={teamName} goals={goalsByMatch[m.id] ?? []} showGoals={showGoals} />)}
         </MatchSection>
       )}
 
       {/* ── Player scorer stats ── */}
-      {playerStats.length > 0 && (
+      {showGoals && playerStats.length > 0 && (
         <div className="bg-white rounded-2xl border border-slate-200 overflow-hidden">
           <div className="px-5 py-4 border-b border-slate-100 flex items-center justify-between">
             <h2 className="font-bold text-slate-800">Thống kê cầu thủ</h2>
@@ -283,7 +287,7 @@ export default function TeamPage() {
       )}
 
       {/* ── Own goals against ── */}
-      {ownGoalsAgainst.length > 0 && (
+      {showGoals && ownGoalsAgainst.length > 0 && (
         <div className="bg-white rounded-2xl border border-slate-200 overflow-hidden">
           <div className="px-5 py-3 border-b border-slate-100 bg-slate-50">
             <h2 className="font-bold text-sm text-slate-700">Bàn thắng từ phản lưới đối thủ</h2>
@@ -318,7 +322,7 @@ function MatchSection({ title, accent = 'text-slate-700', children }: { title: s
   )
 }
 
-function MatchRow({ match: m, teamName, goals }: { match: Match; teamName: string; goals: MatchGoal[] }) {
+function MatchRow({ match: m, teamName, goals, showGoals }: { match: Match; teamName: string; goals: MatchGoal[]; showGoals: boolean }) {
   const isHome     = m.home_team === teamName
   const opponent   = isHome ? m.away_team : m.home_team
   const oppFlag    = isHome ? m.away_flag : m.home_flag
@@ -381,7 +385,7 @@ function MatchRow({ match: m, teamName, goals }: { match: Match; teamName: strin
       </div>
 
       {/* Goals breakdown inline under the row */}
-      {(allMyGoals.length > 0 || allConceded.length > 0) && (
+      {showGoals && (allMyGoals.length > 0 || allConceded.length > 0) && (
         <div className="mt-2 ml-[4.5rem] flex gap-4 flex-wrap">
           {allMyGoals.length > 0 && (
             <div className="flex flex-wrap gap-1">

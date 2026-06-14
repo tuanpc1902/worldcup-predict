@@ -9,6 +9,7 @@ import ShareCard from '@/components/ShareCard'
 import { fmtDate, fmtTime, fmtDateTime, isStarted, teamHref } from '@/lib/time'
 import type { Match, Comment, PredictionStats, MatchGoal } from '@/types'
 import type { RealtimePostgresInsertPayload, RealtimePostgresUpdatePayload } from '@supabase/supabase-js'
+import { useConfigStore } from '@/store/config'
 
 const STAGE_LABELS: Record<string, string> = {
   group: 'Vòng bảng', round_of_32: 'Vòng 1/16', round_of_16: 'Vòng 1/8',
@@ -53,6 +54,11 @@ export default function MatchDetailClient({ match, stats, comments: initialComme
   const { user, init } = useAuthStore()
   const router = useRouter()
   const supabase = createClient()
+  const { config, load: loadConfig } = useConfigStore()
+  useEffect(() => { loadConfig() }, [loadConfig])
+  const showScores = config.show_scores
+  const showPredictionStats = config.show_prediction_stats
+  const showGoals = config.show_goals
 
   // Realtime match state (score/status updates)
   const [liveMatch, setLiveMatch] = useState<Match>(match)
@@ -287,7 +293,7 @@ export default function MatchDetailClient({ match, stats, comments: initialComme
             <FlagImg team={liveMatch.home_team} flag={liveMatch.home_flag} size="xl" href={teamHref(liveMatch.home_team)} />
             <Link href={teamHref(liveMatch.home_team)} className="font-bold text-slate-800 text-base leading-tight line-clamp-2 w-full px-1 break-words text-center hover:text-green-600 transition-colors">{liveMatch.home_team}</Link>
             {/* Home scorers under flag */}
-            {homeGoals.length > 0 && (
+            {showGoals && homeGoals.length > 0 && (
               <div className="text-xs text-slate-500 space-y-0.5 w-full">
                 {homeGoals.map(g => (
                   <p key={g.id} className="truncate">⚽ {g.player_name}{g.minute ? ` ${g.minute}'` : ''}{g.is_penalty ? ' (pen)' : ''}</p>
@@ -301,7 +307,7 @@ export default function MatchDetailClient({ match, stats, comments: initialComme
               <div className={`text-4xl font-black tabular-nums px-4 py-2 rounded-2xl ${
                 isLive ? 'text-red-600 bg-red-50' : 'text-slate-800 bg-slate-100'
               }`}>
-                {liveMatch.home_score ?? 0} – {liveMatch.away_score ?? 0}
+                {showScores ? `${liveMatch.home_score ?? 0} – ${liveMatch.away_score ?? 0}` : '? – ?'}
               </div>
             ) : (
               <div className="bg-slate-50 rounded-2xl px-6 py-3 text-center">
@@ -315,7 +321,7 @@ export default function MatchDetailClient({ match, stats, comments: initialComme
           <div className="flex-1 min-w-0 flex flex-col items-center gap-2 text-center">
             <FlagImg team={liveMatch.away_team} flag={liveMatch.away_flag} size="xl" href={teamHref(liveMatch.away_team)} />
             <Link href={teamHref(liveMatch.away_team)} className="font-bold text-slate-800 text-base leading-tight line-clamp-2 w-full px-1 break-words text-center hover:text-green-600 transition-colors">{liveMatch.away_team}</Link>
-            {awayGoals.length > 0 && (
+            {showGoals && awayGoals.length > 0 && (
               <div className="text-xs text-slate-500 space-y-0.5 w-full">
                 {awayGoals.map(g => (
                   <p key={g.id} className="truncate">⚽ {g.player_name}{g.minute ? ` ${g.minute}'` : ''}{g.is_penalty ? ' (pen)' : ''}</p>
@@ -326,7 +332,7 @@ export default function MatchDetailClient({ match, stats, comments: initialComme
         </div>
 
         {/* Own goals */}
-        {ownGoals.length > 0 && (
+        {showGoals && ownGoals.length > 0 && (
           <p className="text-center text-xs text-slate-400 mt-2">
             OG: {ownGoals.map(g => `${g.player_name}${g.minute ? ` ${g.minute}'` : ''}`).join(', ')}
           </p>
@@ -338,7 +344,7 @@ export default function MatchDetailClient({ match, stats, comments: initialComme
       </div>
 
       {/* ── GOAL TIMELINE ── */}
-      {liveGoals.length > 0 && (
+      {showGoals && liveGoals.length > 0 && (
         <div className="bg-white rounded-2xl border border-slate-200 p-5">
           <h2 className="font-bold text-sm text-slate-700 mb-4">Diễn biến bàn thắng</h2>
           <div className="relative">
@@ -485,7 +491,7 @@ export default function MatchDetailClient({ match, stats, comments: initialComme
       )}
 
       {/* ── COMMUNITY STATS ── */}
-      {liveStats.total > 0 && (isFinished || locked) && (
+      {showPredictionStats && liveStats.total > 0 && (isFinished || locked) && (
         <div className="bg-white rounded-2xl border border-slate-200 p-5">
           <h2 className="font-bold text-sm text-slate-700 mb-4">Dự đoán cộng đồng · {liveStats.total} người</h2>
           <div className="mb-4">

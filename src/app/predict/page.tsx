@@ -11,6 +11,7 @@ import { MatchCardSkeleton } from '@/components/Skeleton'
 import type { RealtimePostgresUpdatePayload } from '@supabase/supabase-js'
 import type { Match, Prediction } from '@/types'
 import { logActivity } from '@/lib/activity'
+import { useConfigStore } from '@/store/config'
 
 const STAGE_LABELS: Record<string, string> = {
   group: 'Vòng bảng', round_of_32: 'Vòng 1/16', round_of_16: 'Vòng 1/8',
@@ -37,6 +38,9 @@ export default function PredictPage() {
   useEffect(() => { if (user) logActivity({ action: 'page_view', page: '/predict', detail: { user_id: user.id } }) }, [user])
 
   const isAdmin = user?.role === 'admin'
+  const { config, load: loadConfig } = useConfigStore()
+  useEffect(() => { loadConfig() }, [loadConfig])
+  const predictionsEditable = config.predictions_editable
 
   // Update "now" every 30 seconds to refresh lock state
   useEffect(() => {
@@ -89,9 +93,11 @@ export default function PredictPage() {
 
   async function saveAll() {
     if (savingAll || isAdmin) return
+    // When editing disabled, only save NEW predictions (no existing pred)
+    const canSave = (m: Match) => predictionsEditable || !predictions[m.id]
     const toSave = unlocked.filter(m => {
       const inp = inputs[m.id]
-      return inp?.home !== '' && inp?.away !== ''
+      return inp?.home !== '' && inp?.away !== '' && canSave(m)
     })
     if (toSave.length === 0) return
     setSavingAll(true)
@@ -142,7 +148,7 @@ export default function PredictPage() {
     )
   }
 
-  // A match is locked if finished, live, DB flag set, or kick-off time has passed
+  // Predictions lock immediately at kick-off, or when DB flag is set by admin
   const isLocked = (m: Match) =>
     m.status === 'finished' || m.status === 'live' || m.is_locked || now >= new Date(m.match_time).getTime()
 
@@ -259,17 +265,21 @@ export default function PredictPage() {
                   {/* Right: save button — hidden for admin */}
                   {!isAdmin && (
                     <div className="flex justify-end">
-                      <button
-                        onClick={() => savePrediction(match.id)}
-                        disabled={saving === match.id || inputs[match.id]?.home === '' || inputs[match.id]?.home === undefined || inputs[match.id]?.away === '' || inputs[match.id]?.away === undefined}
-                        className={`px-4 py-1.5 rounded-lg font-semibold text-sm transition-colors ${
-                          saved === match.id
-                            ? 'bg-green-100 text-green-700'
-                            : 'bg-green-600 hover:bg-green-700 text-white disabled:opacity-40'
-                        }`}
-                      >
-                        {saved === match.id ? '✓' : saving === match.id ? '...' : pred ? 'Cập nhật' : 'Lưu'}
-                      </button>
+                      {!predictionsEditable && pred ? (
+                        <span className="text-xs text-slate-400 italic px-2">Chỉnh sửa đã khoá</span>
+                      ) : (
+                        <button
+                          onClick={() => savePrediction(match.id)}
+                          disabled={saving === match.id || inputs[match.id]?.home === '' || inputs[match.id]?.home === undefined || inputs[match.id]?.away === '' || inputs[match.id]?.away === undefined}
+                          className={`px-4 py-1.5 rounded-lg font-semibold text-sm transition-colors ${
+                            saved === match.id
+                              ? 'bg-green-100 text-green-700'
+                              : 'bg-green-600 hover:bg-green-700 text-white disabled:opacity-40'
+                          }`}
+                        >
+                          {saved === match.id ? '✓' : saving === match.id ? '...' : pred ? 'Cập nhật' : 'Lưu'}
+                        </button>
+                      )}
                     </div>
                   )}
                 </div>

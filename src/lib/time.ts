@@ -40,9 +40,14 @@ export function fmtMatchTimes(utc: string) {
   return { vnTime, vnDate, utcTime, utcDate }
 }
 
-/** True if the match kick-off time has already passed (Vietnam time) */
+/** True if the match kick-off time has already passed — used to lock predictions */
 export function isStarted(utc: string): boolean {
   return Date.now() >= new Date(utc).getTime()
+}
+
+/** True when the admin edit window has expired: kick-off + 90min (match) + 90min (grace) */
+export function isAdminEditExpired(utc: string): boolean {
+  return Date.now() >= new Date(utc).getTime() + 180 * 60 * 1000
 }
 
 /** Convert team name to URL slug: "United States" → "united-states" */
