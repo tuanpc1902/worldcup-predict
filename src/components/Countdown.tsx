@@ -117,9 +117,9 @@ export default function Countdown({ matchId, matchTime, homeTeam, awayTeam, home
             </Link>
           </div>
         ) : (
-          <div className="flex items-center gap-3">
-            <span className="text-white/70 text-xs flex-shrink-0">Dự đoán</span>
-            <div className="flex items-center gap-2 flex-1 justify-center">
+          <div className="flex flex-col gap-2">
+            <div className="flex items-center justify-center gap-3">
+              <span className="text-white/70 text-xs">Dự đoán</span>
               <ScoreInput value={homeScore} onChange={setHomeScore} />
               <span className="text-white/50 font-bold text-lg">–</span>
               <ScoreInput value={awayScore} onChange={setAwayScore} />
@@ -127,10 +127,10 @@ export default function Countdown({ matchId, matchTime, homeTeam, awayTeam, home
             <button
               onClick={savePrediction}
               disabled={saving}
-              className="flex-shrink-0 text-xs font-bold px-3 py-1.5 rounded-lg text-white transition-opacity disabled:opacity-50"
+              className="w-full text-xs font-bold px-3 py-1.5 rounded-lg text-white transition-opacity disabled:opacity-50"
               style={{ background: saved ? '#16a34a' : 'var(--accent)' }}
             >
-              {saved ? '✓ Lưu' : saving ? '...' : existing ? 'Cập nhật' : 'Lưu'}
+              {saved ? '✓ Đã lưu' : saving ? '...' : existing ? 'Cập nhật' : 'Lưu dự đoán'}
             </button>
           </div>
         )}
