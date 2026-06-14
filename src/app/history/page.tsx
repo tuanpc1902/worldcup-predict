@@ -35,7 +35,7 @@ export default function HistoryPage() {
   }, [user])
 
   const stats = {
-    exact: items.filter(i => i.points_earned === 5).length,
+    exact: items.filter(i => (i.points_earned ?? 0) >= 5).length,
     correct: items.filter(i => i.points_earned === 3).length,
     wrong: items.filter(i => i.points_earned === -1).length,
     pending: items.filter(i => i.points_earned === null).length,

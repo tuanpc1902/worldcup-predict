@@ -33,7 +33,7 @@ export default function StatsPage() {
   )
 
   const total = data.length
-  const exact = data.filter(d => d.points_earned === 5)
+  const exact = data.filter(d => (d.points_earned ?? 0) >= 5)
   const correct = data.filter(d => d.points_earned === 3)
   const wrong = data.filter(d => d.points_earned === -1)
   const totalPts = data.reduce((s, d) => s + (d.points_earned ?? 0), 0)
