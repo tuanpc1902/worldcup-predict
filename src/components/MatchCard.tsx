@@ -76,7 +76,7 @@ export default function MatchCard({ match, prediction, showResult, showPredictLi
             <div className={`text-xl font-bold tabular-nums px-2 py-1 rounded-lg ${
               isFinished ? 'bg-slate-100 text-slate-800' : 'bg-red-50 text-red-600'
             }`}>
-              {showScores ? `${match.home_score ?? 0}–${match.away_score ?? 0}` : '?–?'}
+              {showScores ? `${match.home_score ?? 0} – ${match.away_score ?? 0}` : '? – ?'}
             </div>
           ) : times ? (
             <div className="bg-slate-50 rounded-lg px-2 py-2 w-full text-center">
